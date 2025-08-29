@@ -17,6 +17,7 @@ package com.alibaba.langengine.scann.vectorstore;
 
 import com.alibaba.langengine.core.embeddings.FakeEmbeddings;
 import com.alibaba.langengine.core.indexes.Document;
+import com.alibaba.langengine.scann.exception.ScannSearchException;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -232,10 +233,11 @@ public class ScannTest {
     @DisplayName("测试相似性搜索 - 无 embedding 模型")
     public void testSimilaritySearchNoEmbedding() {
         scann.setEmbedding(null);
-        
-        List<Document> results = scann.similaritySearch("test query", 5);
-        assertNotNull(results);
-        assertTrue(results.isEmpty());
+
+        // 现在应该抛出 ScannSearchException 而不是返回空列表
+        assertThrows(ScannSearchException.class, () -> {
+            scann.similaritySearch("test query", 5);
+        });
     }
 
     @Test

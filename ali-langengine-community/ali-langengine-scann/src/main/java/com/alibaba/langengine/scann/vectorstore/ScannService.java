@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.langengine.core.indexes.Document;
+import com.alibaba.langengine.scann.exception.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -112,15 +113,18 @@ public class ScannService {
             String url = scannParam.getFullUrl("/api/v1/indexes/" + indexName);
             HttpGet request = new HttpGet(url);
             request.setHeader("Content-Type", "application/json");
-            
+
             HttpResponse response = httpClient.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();
-            
+
             EntityUtils.consume(response.getEntity());
             return statusCode == 200;
+        } catch (IOException e) {
+            log.warn("Network error while checking index existence: {}", e.getMessage());
+            throw new ScannConnectionException("Failed to connect to ScaNN server while checking index existence", e);
         } catch (Exception e) {
-            log.warn("Failed to check index existence: {}", e.getMessage());
-            return false;
+            log.warn("Unexpected error while checking index existence: {}", e.getMessage());
+            throw new ScannIndexException("Failed to check index existence", e);
         }
     }
 
@@ -129,36 +133,46 @@ public class ScannService {
      *
      * @throws Exception 创建异常
      */
-    private void createIndex() throws Exception {
+    private void createIndex() {
         log.info("Creating ScaNN index: {}", indexName);
-        
-        JSONObject indexConfig = new JSONObject();
-        indexConfig.put("name", indexName);
-        indexConfig.put("dimensions", scannParam.getDimensions());
-        indexConfig.put("index_type", scannParam.getIndexType());
-        indexConfig.put("distance_measure", scannParam.getDistanceMeasure());
-        indexConfig.put("training_sample_size", scannParam.getTrainingSampleSize());
-        indexConfig.put("leaves_to_search", scannParam.getLeavesToSearch());
-        indexConfig.put("reorder_num_neighbors", scannParam.getReorderNumNeighbors());
-        indexConfig.put("enable_reordering", scannParam.isEnableReordering());
-        indexConfig.put("quantization_type", scannParam.getQuantizationType());
-        indexConfig.put("enable_parallel_search", scannParam.isEnableParallelSearch());
-        indexConfig.put("search_threads", scannParam.getSearchThreads());
-        
-        String url = scannParam.getFullUrl("/api/v1/indexes");
-        HttpPost request = new HttpPost(url);
-        request.setHeader("Content-Type", "application/json");
-        request.setEntity(new StringEntity(indexConfig.toJSONString(), StandardCharsets.UTF_8));
-        
-        HttpResponse response = httpClient.execute(request);
-        int statusCode = response.getStatusLine().getStatusCode();
-        String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-        
-        if (statusCode != 200 && statusCode != 201) {
-            throw new RuntimeException("Failed to create ScaNN index: " + responseBody);
+
+        try {
+            JSONObject indexConfig = new JSONObject();
+            indexConfig.put("name", indexName);
+            indexConfig.put("dimensions", scannParam.getDimensions());
+            indexConfig.put("index_type", scannParam.getIndexType());
+            indexConfig.put("distance_measure", scannParam.getDistanceMeasure());
+            indexConfig.put("training_sample_size", scannParam.getTrainingSampleSize());
+            indexConfig.put("leaves_to_search", scannParam.getLeavesToSearch());
+            indexConfig.put("reorder_num_neighbors", scannParam.getReorderNumNeighbors());
+            indexConfig.put("enable_reordering", scannParam.isEnableReordering());
+            indexConfig.put("quantization_type", scannParam.getQuantizationType());
+            indexConfig.put("enable_parallel_search", scannParam.isEnableParallelSearch());
+            indexConfig.put("search_threads", scannParam.getSearchThreads());
+
+            String url = scannParam.getFullUrl("/api/v1/indexes");
+            HttpPost request = new HttpPost(url);
+            request.setHeader("Content-Type", "application/json");
+            request.setEntity(new StringEntity(indexConfig.toJSONString(), StandardCharsets.UTF_8));
+
+            HttpResponse response = httpClient.execute(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+            if (statusCode != 200 && statusCode != 201) {
+                throw new ScannIndexException("Failed to create ScaNN index. Status: " + statusCode + ", Response: " + responseBody);
+            }
+
+            log.info("ScaNN index {} created successfully", indexName);
+        } catch (IOException e) {
+            log.error("Network error while creating index: {}", e.getMessage());
+            throw new ScannConnectionException("Failed to connect to ScaNN server while creating index", e);
+        } catch (ScannIndexException e) {
+            throw e; // Re-throw ScaNN specific exceptions
+        } catch (Exception e) {
+            log.error("Unexpected error while creating index: {}", e.getMessage());
+            throw new ScannIndexException("Failed to create ScaNN index", e);
         }
-        
-        log.info("ScaNN index {} created successfully", indexName);
     }
 
     /**
@@ -173,18 +187,23 @@ public class ScannService {
         
         try {
             log.info("Adding {} documents to ScaNN index: {}", documents.size(), indexName);
-            
+
             // 分批处理文档
             List<List<Document>> batches = partitionDocuments(documents, scannParam.getBatchSize());
-            
+
             for (List<Document> batch : batches) {
                 addDocumentBatch(batch);
             }
-            
+
             log.info("Successfully added {} documents to ScaNN index: {}", documents.size(), indexName);
+        } catch (IOException e) {
+            log.error("Network error while adding documents: {}", e.getMessage(), e);
+            throw new ScannConnectionException("Failed to connect to ScaNN server while adding documents", e);
+        } catch (ScannDocumentException e) {
+            throw e; // Re-throw ScaNN specific exceptions
         } catch (Exception e) {
-            log.error("Failed to add documents to ScaNN index: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to add documents to ScaNN index", e);
+            log.error("Unexpected error while adding documents: {}", e.getMessage(), e);
+            throw new ScannDocumentException("Failed to add documents to ScaNN index", e);
         }
     }
 
@@ -210,7 +229,7 @@ public class ScannService {
      * @param documents 文档批次
      * @throws Exception 添加异常
      */
-    private void addDocumentBatch(List<Document> documents) throws Exception {
+    private void addDocumentBatch(List<Document> documents) throws IOException, ScannDocumentException {
         JSONObject request = new JSONObject();
         JSONArray vectors = new JSONArray();
         JSONArray metadata = new JSONArray();
@@ -249,7 +268,7 @@ public class ScannService {
         String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
         
         if (statusCode != 200 && statusCode != 201) {
-            throw new RuntimeException("Failed to add document batch: " + responseBody);
+            throw new ScannDocumentException("Failed to add document batch. Status: " + statusCode + ", Response: " + responseBody);
         }
     }
 

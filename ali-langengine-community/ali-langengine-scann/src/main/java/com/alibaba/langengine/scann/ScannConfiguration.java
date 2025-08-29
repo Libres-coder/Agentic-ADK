@@ -148,4 +148,60 @@ public class ScannConfiguration {
     public static void printAllConfigurations() {
         ScannConfigLoader.printAllConfigurations();
     }
+
+
+    /**
+     * 获取字符串配置值
+     *
+     * @param key 配置键
+     * @param defaultValue 默认值
+     * @return 配置值
+     */
+    public static String getString(String key, String defaultValue) {
+        return ScannConfigLoader.getString(key, defaultValue);
+    }
+
+    /**
+     * 获取整数配置值
+     *
+     * @param key 配置键
+     * @param defaultValue 默认值
+     * @return 配置值
+     */
+    public static int getInt(String key, int defaultValue) {
+        return ScannConfigLoader.getInt(key, defaultValue);
+    }
+
+    /**
+     * 获取长整数配置值
+     *
+     * @param key 配置键
+     * @param defaultValue 默认值
+     * @return 配置值
+     */
+    public static long getLong(String key, long defaultValue) {
+        return ScannConfigLoader.getLong(key, defaultValue);
+    }
+
+    /**
+     * 获取布尔配置值
+     *
+     * @param key 配置键
+     * @param defaultValue 默认值
+     * @return 配置值
+     */
+    public static boolean getBoolean(String key, boolean defaultValue) {
+        return ScannConfigLoader.getBoolean(key, defaultValue);
+    }
+
+    /**
+     * 获取双精度浮点数配置值
+     *
+     * @param key 配置键
+     * @param defaultValue 默认值
+     * @return 配置值
+     */
+    public static double getDouble(String key, double defaultValue) {
+        return ScannConfigLoader.getDouble(key, defaultValue);
+    }
 }

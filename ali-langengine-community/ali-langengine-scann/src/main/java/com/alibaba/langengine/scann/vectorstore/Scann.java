@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
 import com.alibaba.langengine.core.vectorstore.VectorStore;
+import com.alibaba.langengine.scann.exception.*;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -223,7 +224,7 @@ public class Scann extends VectorStore {
             // 使用 embedding 模型生成查询向量
             if (embedding == null) {
                 log.error("No embedding model configured for similarity search");
-                return Lists.newArrayList();
+                throw new ScannSearchException("No embedding model configured for similarity search");
             }
             
             List<String> embeddingStrings = embedding.embedQuery(query, k);
@@ -245,9 +246,11 @@ public class Scann extends VectorStore {
             log.debug("Found {} similar documents for query: '{}'", results.size(), query);
             return results;
             
+        } catch (ScannSearchException e) {
+            throw e; // Re-throw ScaNN specific exceptions
         } catch (Exception e) {
-            log.error("Failed to perform similarity search in ScaNN index: {}", indexName, e);
-            return Lists.newArrayList();
+            log.error("Unexpected error during similarity search in ScaNN index: {}", indexName, e);
+            throw new ScannSearchException("Failed to perform similarity search in ScaNN index: " + indexName, e);
         }
     }
 
