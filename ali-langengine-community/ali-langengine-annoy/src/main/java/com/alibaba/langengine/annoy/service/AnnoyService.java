@@ -48,19 +48,19 @@ public class AnnoyService {
     private final AtomicInteger vectorIdCounter = new AtomicInteger(0);
 
     /**
-     * 文档ID到向量ID的映射
+     * 每个索引的文档ID到向量ID的映射
      */
-    private final Map<String, Integer> documentIdToVectorId = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Integer>> indexDocumentIdToVectorId = new ConcurrentHashMap<>();
 
     /**
-     * 向量ID到文档的映射
+     * 每个索引的向量ID到文档的映射
      */
-    private final Map<Integer, Document> vectorIdToDocument = new ConcurrentHashMap<>();
+    private final Map<String, Map<Integer, Document>> indexVectorIdToDocument = new ConcurrentHashMap<>();
 
     /**
-     * 向量数据存储（内存中的向量数据）
+     * 每个索引的向量数据存储
      */
-    private final Map<Integer, List<Float>> vectorData = new ConcurrentHashMap<>();
+    private final Map<String, Map<Integer, List<Float>>> indexVectorData = new ConcurrentHashMap<>();
 
     /**
      * 默认索引ID
@@ -97,6 +97,11 @@ public class AnnoyService {
         // 存储索引
         indexMap.put(indexId, index);
 
+        // 初始化索引相关的数据映射
+        indexDocumentIdToVectorId.put(indexId, new ConcurrentHashMap<>());
+        indexVectorIdToDocument.put(indexId, new ConcurrentHashMap<>());
+        indexVectorData.put(indexId, new ConcurrentHashMap<>());
+
         log.info("Created Annoy index: {}", index.getSummary());
         return index;
     }
@@ -105,7 +110,26 @@ public class AnnoyService {
      * 获取或创建默认索引
      */
     public AnnoyIndex getOrCreateDefaultIndex(AnnoyParam param) {
-        return indexMap.computeIfAbsent(DEFAULT_INDEX_ID, k -> createIndex(DEFAULT_INDEX_ID, param));
+        AnnoyIndex existingIndex = indexMap.get(DEFAULT_INDEX_ID);
+        if (existingIndex != null) {
+            return existingIndex;
+        }
+
+        // 直接创建索引，避免递归调用
+        param.validate();
+        String indexPath = generateIndexPath(DEFAULT_INDEX_ID);
+        AnnoyIndex index = AnnoyIndex.create(DEFAULT_INDEX_ID, DEFAULT_INDEX_ID, indexPath, param);
+
+        // 存储索引
+        indexMap.put(DEFAULT_INDEX_ID, index);
+
+        // 初始化索引相关的数据映射
+        indexDocumentIdToVectorId.put(DEFAULT_INDEX_ID, new ConcurrentHashMap<>());
+        indexVectorIdToDocument.put(DEFAULT_INDEX_ID, new ConcurrentHashMap<>());
+        indexVectorData.put(DEFAULT_INDEX_ID, new ConcurrentHashMap<>());
+
+        log.info("Created default Annoy index: {}", index.getSummary());
+        return index;
     }
 
     /**
@@ -161,12 +185,17 @@ public class AnnoyService {
         // 生成向量ID
         int vectorId = vectorIdCounter.getAndIncrement();
 
+        // 获取索引相关的数据映射
+        Map<String, Integer> docToVectorMap = indexDocumentIdToVectorId.get(index.getIndexId());
+        Map<Integer, Document> vectorToDocMap = indexVectorIdToDocument.get(index.getIndexId());
+        Map<Integer, List<Float>> vectorDataMap = indexVectorData.get(index.getIndexId());
+
         // 存储映射关系
         if (StringUtils.isNotEmpty(document.getUniqueId())) {
-            documentIdToVectorId.put(document.getUniqueId(), vectorId);
+            docToVectorMap.put(document.getUniqueId(), vectorId);
         }
-        vectorIdToDocument.put(vectorId, document);
-        vectorData.put(vectorId, vector);
+        vectorToDocMap.put(vectorId, document);
+        vectorDataMap.put(vectorId, vector);
 
         // 更新索引统计
         index.incrementVectorCount();
@@ -188,12 +217,9 @@ public class AnnoyService {
         try {
             index.setStatus(AnnoyIndex.IndexStatus.BUILDING);
             
-            // 模拟索引构建过程（实际实现中会调用Annoy C++库）
+            // 使用原生库构建索引
             log.info("Building index {} with {} vectors...", indexId, index.getVectorCount().get());
-            
-            // 这里应该调用Annoy C++库进行实际的索引构建
-            // 由于没有实际的C++库，我们模拟构建过程
-            simulateIndexBuild(index);
+            buildIndexWithNativeLibrary(index);
             
             index.setBuildCompleted();
             log.info("Index {} built successfully", indexId);
@@ -220,9 +246,9 @@ public class AnnoyService {
         try {
             index.setStatus(AnnoyIndex.IndexStatus.LOADING);
             
-            // 模拟索引加载过程
+            // 使用原生库加载索引
             log.info("Loading index {}...", indexId);
-            simulateIndexLoad(index);
+            loadIndexWithNativeLibrary(index);
             
             index.setLoadCompleted();
             log.info("Index {} loaded successfully", indexId);
@@ -253,8 +279,8 @@ public class AnnoyService {
         }
 
         try {
-            // 模拟相似性搜索（实际实现中会调用Annoy C++库）
-            List<AnnoySearchResult> results = simulateSearch(queryVector, k, index);
+            // 使用原生库进行相似性搜索
+            List<AnnoySearchResult> results = searchWithNativeLibrary(queryVector, k, index);
             
             log.debug("Found {} similar vectors for query in index {}", results.size(), indexId);
             return results;
@@ -267,15 +293,43 @@ public class AnnoyService {
     /**
      * 获取文档通过向量ID
      */
-    public Document getDocumentByVectorId(Integer vectorId) {
-        return vectorIdToDocument.get(vectorId);
+    public Document getDocumentByVectorId(Integer vectorId, String indexId) {
+        Map<Integer, Document> vectorToDocMap = indexVectorIdToDocument.get(indexId);
+        return vectorToDocMap != null ? vectorToDocMap.get(vectorId) : null;
     }
 
     /**
      * 获取向量ID通过文档ID
      */
+    public Integer getVectorIdByDocumentId(String documentId, String indexId) {
+        Map<String, Integer> docToVectorMap = indexDocumentIdToVectorId.get(indexId);
+        return docToVectorMap != null ? docToVectorMap.get(documentId) : null;
+    }
+
+    /**
+     * 获取文档通过向量ID（兼容性方法，搜索所有索引）
+     */
+    public Document getDocumentByVectorId(Integer vectorId) {
+        for (Map<Integer, Document> vectorToDocMap : indexVectorIdToDocument.values()) {
+            Document doc = vectorToDocMap.get(vectorId);
+            if (doc != null) {
+                return doc;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取向量ID通过文档ID（兼容性方法，搜索所有索引）
+     */
     public Integer getVectorIdByDocumentId(String documentId) {
-        return documentIdToVectorId.get(documentId);
+        for (Map<String, Integer> docToVectorMap : indexDocumentIdToVectorId.values()) {
+            Integer vectorId = docToVectorMap.get(documentId);
+            if (vectorId != null) {
+                return vectorId;
+            }
+        }
+        return null;
     }
 
     /**
@@ -332,12 +386,237 @@ public class AnnoyService {
     }
 
     /**
-     * 模拟索引构建
+     * 实际的索引构建实现
+     */
+    private void buildIndexWithNativeLibrary(AnnoyIndex index) {
+        try {
+            // 检查原生库是否可用
+            if (!com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.isLibraryAvailable()) {
+                log.warn("Annoy native library not available, falling back to simulation mode");
+                try {
+                    simulateIndexBuild(index);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new AnnoyException.IndexBuildException("Index build was interrupted", e);
+                }
+                return;
+            }
+
+            com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary library =
+                com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.INSTANCE;
+
+            // 创建原生索引
+            com.sun.jna.Pointer nativeIndex = library.annoy_create_index(
+                index.getParam().getVectorDimension(),
+                index.getParam().getDistanceMetric()
+            );
+
+            if (nativeIndex == null) {
+                throw new AnnoyException.IndexBuildException("Failed to create native index");
+            }
+
+            try {
+                // 获取该索引的向量数据
+                Map<Integer, List<Float>> vectorDataMap = indexVectorData.get(index.getIndexId());
+
+                // 添加所有向量到原生索引
+                for (Map.Entry<Integer, List<Float>> entry : vectorDataMap.entrySet()) {
+                    Integer vectorId = entry.getKey();
+                    List<Float> vector = entry.getValue();
+
+                    float[] vectorArray = new float[vector.size()];
+                    for (int i = 0; i < vector.size(); i++) {
+                        vectorArray[i] = vector.get(i);
+                    }
+
+                    if (!library.annoy_add_item(nativeIndex, vectorId, vectorArray)) {
+                        throw new AnnoyException.IndexBuildException(
+                            "Failed to add vector " + vectorId + " to native index");
+                    }
+                }
+
+                // 构建索引
+                if (!library.annoy_build(nativeIndex, index.getParam().getNTrees())) {
+                    throw new AnnoyException.IndexBuildException("Failed to build native index");
+                }
+
+                // 保存索引到文件
+                File indexFile = index.getIndexFile();
+                indexFile.getParentFile().mkdirs();
+
+                if (!library.annoy_save(nativeIndex, indexFile.getAbsolutePath())) {
+                    throw new AnnoyException.IndexBuildException("Failed to save index to file");
+                }
+
+                log.info("Successfully built native Annoy index with {} vectors",
+                        index.getVectorCount().get());
+
+            } finally {
+                // 清理原生资源
+                library.annoy_destroy_index(nativeIndex);
+            }
+
+        } catch (Exception e) {
+            if (e instanceof AnnoyException) {
+                throw e;
+            }
+            throw new AnnoyException.IndexBuildException("Failed to build index with native library", e);
+        }
+    }
+
+    /**
+     * 实际的索引加载实现
+     */
+    private void loadIndexWithNativeLibrary(AnnoyIndex index) {
+        try {
+            // 检查原生库是否可用
+            if (!com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.isLibraryAvailable()) {
+                log.warn("Annoy native library not available, falling back to simulation mode");
+                try {
+                    simulateIndexLoad(index);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new AnnoyException.IndexLoadException("Index load was interrupted", e);
+                }
+                return;
+            }
+
+            com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary library =
+                com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.INSTANCE;
+
+            // 创建原生索引
+            com.sun.jna.Pointer nativeIndex = library.annoy_create_index(
+                index.getParam().getVectorDimension(),
+                index.getParam().getDistanceMetric()
+            );
+
+            if (nativeIndex == null) {
+                throw new AnnoyException.IndexLoadException("Failed to create native index for loading");
+            }
+
+            try {
+                // 从文件加载索引
+                File indexFile = index.getIndexFile();
+                if (!indexFile.exists()) {
+                    throw new AnnoyException.IndexLoadException("Index file does not exist: " + indexFile.getAbsolutePath());
+                }
+
+                if (!library.annoy_load(nativeIndex, indexFile.getAbsolutePath())) {
+                    throw new AnnoyException.IndexLoadException("Failed to load index from file");
+                }
+
+                // 验证加载的索引
+                int loadedItems = library.annoy_get_n_items(nativeIndex);
+                int expectedDimension = library.annoy_get_dimension(nativeIndex);
+
+                if (expectedDimension != index.getParam().getVectorDimension()) {
+                    throw new AnnoyException.IndexLoadException(
+                        String.format("Dimension mismatch: expected %d, got %d",
+                            index.getParam().getVectorDimension(), expectedDimension));
+                }
+
+                log.info("Successfully loaded native Annoy index with {} items, dimension {}",
+                        loadedItems, expectedDimension);
+
+                // 存储原生索引指针到索引对象中（注意：这需要在AnnoyIndex中添加相应字段）
+                // index.setNativeIndexPointer(nativeIndex); // 这需要修改AnnoyIndex类
+
+            } catch (Exception e) {
+                // 如果加载失败，清理资源
+                library.annoy_destroy_index(nativeIndex);
+                throw e;
+            }
+
+        } catch (Exception e) {
+            if (e instanceof AnnoyException) {
+                throw e;
+            }
+            throw new AnnoyException.IndexLoadException("Failed to load index with native library", e);
+        }
+    }
+
+    /**
+     * 实际的相似性搜索实现
+     */
+    private List<AnnoySearchResult> searchWithNativeLibrary(List<Float> queryVector, int k, AnnoyIndex index) {
+        try {
+            // 检查原生库是否可用
+            if (!com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.isLibraryAvailable()) {
+                log.warn("Annoy native library not available, falling back to simulation mode");
+                return simulateSearch(queryVector, k, index);
+            }
+
+            com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary library =
+                com.alibaba.langengine.annoy.native_.AnnoyNativeLibrary.INSTANCE;
+
+            // 创建并加载索引（在实际实现中，应该重用已加载的索引）
+            com.sun.jna.Pointer nativeIndex = library.annoy_create_index(
+                index.getParam().getVectorDimension(),
+                index.getParam().getDistanceMetric()
+            );
+
+            if (nativeIndex == null) {
+                throw new AnnoyException.SearchException("Failed to create native index for search");
+            }
+
+            try {
+                // 加载索引
+                File indexFile = index.getIndexFile();
+                if (!library.annoy_load(nativeIndex, indexFile.getAbsolutePath())) {
+                    throw new AnnoyException.SearchException("Failed to load index for search");
+                }
+
+                // 准备查询向量
+                float[] queryArray = new float[queryVector.size()];
+                for (int i = 0; i < queryVector.size(); i++) {
+                    queryArray[i] = queryVector.get(i);
+                }
+
+                // 准备结果数组
+                int[] resultIds = new int[k];
+                float[] distances = new float[k];
+
+                int searchK = index.getParam().getSearchK();
+                if (searchK <= 0) {
+                    searchK = -1; // 使用默认值
+                }
+
+                // 执行搜索
+                int actualResults = library.annoy_get_nns_by_vector(
+                    nativeIndex, queryArray, k, searchK, resultIds, distances);
+
+                // 构建结果列表
+                List<AnnoySearchResult> results = new ArrayList<>();
+                for (int i = 0; i < actualResults; i++) {
+                    AnnoySearchResult result = AnnoySearchResult.create(resultIds[i], distances[i]);
+                    result.calculateSimilarity(index.getParam().getDistanceMetric());
+                    results.add(result);
+                }
+
+                log.debug("Native search returned {} results for query", actualResults);
+                return results;
+
+            } finally {
+                // 清理原生资源
+                library.annoy_destroy_index(nativeIndex);
+            }
+
+        } catch (Exception e) {
+            if (e instanceof AnnoyException) {
+                throw e;
+            }
+            throw new AnnoyException.SearchException("Failed to search with native library", e);
+        }
+    }
+
+    /**
+     * 模拟索引构建（备用方案）
      */
     private void simulateIndexBuild(AnnoyIndex index) throws InterruptedException {
+        log.info("Using simulation mode for index building");
         // 模拟构建时间
         Thread.sleep(100);
-        
+
         // 创建索引文件
         try {
             File indexFile = index.getIndexFile();
@@ -349,37 +628,45 @@ public class AnnoyService {
     }
 
     /**
-     * 模拟索引加载
+     * 模拟索引加载（备用方案）
      */
     private void simulateIndexLoad(AnnoyIndex index) throws InterruptedException {
+        log.info("Using simulation mode for index loading");
         // 模拟加载时间
         Thread.sleep(50);
     }
 
     /**
-     * 模拟相似性搜索
+     * 模拟相似性搜索（备用方案）
      */
     private List<AnnoySearchResult> simulateSearch(List<Float> queryVector, int k, AnnoyIndex index) {
+        log.debug("Using simulation mode for similarity search");
         List<AnnoySearchResult> results = new ArrayList<>();
-        
+
+        // 获取该索引的向量数据
+        Map<Integer, List<Float>> vectorDataMap = indexVectorData.get(index.getIndexId());
+        if (vectorDataMap == null || vectorDataMap.isEmpty()) {
+            return results;
+        }
+
         // 简单的线性搜索实现（实际中会使用Annoy的近似搜索）
         List<Map.Entry<Integer, Float>> distances = new ArrayList<>();
-        
-        for (Map.Entry<Integer, List<Float>> entry : vectorData.entrySet()) {
+
+        for (Map.Entry<Integer, List<Float>> entry : vectorDataMap.entrySet()) {
             float distance = calculateDistance(queryVector, entry.getValue(), index.getParam().getDistanceMetric());
             distances.add(new AbstractMap.SimpleEntry<>(entry.getKey(), distance));
         }
-        
+
         // 排序并取前k个
         distances.sort(Map.Entry.comparingByValue());
-        
+
         for (int i = 0; i < Math.min(k, distances.size()); i++) {
             Map.Entry<Integer, Float> entry = distances.get(i);
             AnnoySearchResult result = AnnoySearchResult.create(entry.getKey(), entry.getValue());
             result.calculateSimilarity(index.getParam().getDistanceMetric());
             results.add(result);
         }
-        
+
         return results;
     }
 
@@ -442,19 +729,19 @@ public class AnnoyService {
      * 清理索引数据
      */
     private void cleanupIndexData(AnnoyIndex index) {
-        // 清理与该索引相关的向量数据
-        Set<Integer> vectorIdsToRemove = new HashSet<>();
-        for (Map.Entry<Integer, Document> entry : vectorIdToDocument.entrySet()) {
-            // 这里简化处理，实际中需要更精确的索引关联
-            vectorIdsToRemove.add(entry.getKey());
-        }
-        
-        for (Integer vectorId : vectorIdsToRemove) {
-            Document doc = vectorIdToDocument.remove(vectorId);
-            if (doc != null && StringUtils.isNotEmpty(doc.getUniqueId())) {
-                documentIdToVectorId.remove(doc.getUniqueId());
-            }
-            vectorData.remove(vectorId);
-        }
+        String indexId = index.getIndexId();
+
+        // 清理该索引相关的所有数据映射
+        Map<String, Integer> docToVectorMap = indexDocumentIdToVectorId.remove(indexId);
+        Map<Integer, Document> vectorToDocMap = indexVectorIdToDocument.remove(indexId);
+        Map<Integer, List<Float>> vectorDataMap = indexVectorData.remove(indexId);
+
+        // 记录清理的数据量
+        int docMappings = docToVectorMap != null ? docToVectorMap.size() : 0;
+        int vectorMappings = vectorToDocMap != null ? vectorToDocMap.size() : 0;
+        int vectorDataCount = vectorDataMap != null ? vectorDataMap.size() : 0;
+
+        log.info("Cleaned up index {} data: {} document mappings, {} vector mappings, {} vector data entries",
+                indexId, docMappings, vectorMappings, vectorDataCount);
     }
 }

@@ -117,45 +117,12 @@ public class AnnoyParam {
      * 验证参数有效性
      */
     public void validate() {
-        if (vectorDimension == null || vectorDimension <= 0) {
-            throw new IllegalArgumentException("Vector dimension must be positive");
-        }
-        
-        if (distanceMetric == null || distanceMetric.trim().isEmpty()) {
-            throw new IllegalArgumentException("Distance metric cannot be null or empty");
-        }
-        
-        if (!isValidDistanceMetric(distanceMetric)) {
-            throw new IllegalArgumentException("Invalid distance metric: " + distanceMetric + 
-                ". Supported metrics: angular, euclidean, manhattan, hamming, dot");
-        }
-        
-        if (nTrees == null || nTrees <= 0) {
-            throw new IllegalArgumentException("Number of trees must be positive");
-        }
-        
-        if (batchSize == null || batchSize <= 0) {
-            throw new IllegalArgumentException("Batch size must be positive");
-        }
-        
-        if (buildTimeout == null || buildTimeout <= 0) {
-            throw new IllegalArgumentException("Build timeout must be positive");
-        }
-        
-        if (buildThreads == null || buildThreads <= 0) {
-            throw new IllegalArgumentException("Build threads must be positive");
-        }
-    }
-
-    /**
-     * 检查距离度量类型是否有效
-     */
-    private boolean isValidDistanceMetric(String metric) {
-        return "angular".equalsIgnoreCase(metric) ||
-               "euclidean".equalsIgnoreCase(metric) ||
-               "manhattan".equalsIgnoreCase(metric) ||
-               "hamming".equalsIgnoreCase(metric) ||
-               "dot".equalsIgnoreCase(metric);
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validatePositiveInteger(vectorDimension, "Vector dimension");
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validateDistanceMetric(distanceMetric);
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validatePositiveInteger(nTrees, "Number of trees");
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validatePositiveInteger(batchSize, "Batch size");
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validatePositiveLong(buildTimeout, "Build timeout");
+        com.alibaba.langengine.annoy.util.AnnoyUtils.validatePositiveInteger(buildThreads, "Build threads");
     }
 
     /**

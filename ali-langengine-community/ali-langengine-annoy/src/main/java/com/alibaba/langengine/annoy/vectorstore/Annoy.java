@@ -28,11 +28,13 @@ import com.alibaba.langengine.core.indexes.Document;
 import com.alibaba.langengine.core.vectorstore.VectorStore;
 import com.google.common.collect.Lists;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +43,7 @@ import static com.alibaba.langengine.annoy.AnnoyConfiguration.*;
 
 @Slf4j
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class Annoy extends VectorStore {
 
     /**
@@ -173,6 +176,7 @@ public class Annoy extends VectorStore {
             ensureIndexReady();
 
             // 使用embedding模型生成查询向量
+            // 注意：这里的k参数对于embedding服务来说通常不是直接相关的，但保持接口一致性
             List<String> embeddingStrings = embedding.embedQuery(query, k);
             if (CollectionUtils.isEmpty(embeddingStrings) || !embeddingStrings.get(0).startsWith("[")) {
                 return Lists.newArrayList();
@@ -192,8 +196,12 @@ public class Annoy extends VectorStore {
                     continue;
                 }
 
-                Document document = annoyService.getDocumentByVectorId(result.getVectorId());
+                Document document = annoyService.getDocumentByVectorId(result.getVectorId(), indexId);
                 if (document != null) {
+                    // 确保元数据不为null
+                    if (document.getMetadata() == null) {
+                        document.setMetadata(new HashMap<>());
+                    }
                     // 设置相似度分数
                     document.getMetadata().put("similarity", result.getSimilarity());
                     document.getMetadata().put("distance", result.getDistance());

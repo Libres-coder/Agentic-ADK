@@ -138,7 +138,7 @@ class AnnoyTest {
         // 模拟查询embedding
         String query = "test query";
         List<String> queryEmbedding = Arrays.asList("[1.0, 2.0, 3.0]");
-        when(mockEmbedding.embedQuery(eq(query), anyInt())).thenReturn(queryEmbedding);
+        when(mockEmbedding.embedQuery(eq(query), eq(2))).thenReturn(queryEmbedding);
         
         // 执行搜索
         List<Document> results = annoyVectorStore.similaritySearch(query, 2, null, null);
@@ -182,7 +182,7 @@ class AnnoyTest {
         // 模拟无效的embedding格式
         String query = "test query";
         List<String> invalidEmbedding = Arrays.asList("invalid_format");
-        when(mockEmbedding.embedQuery(eq(query), anyInt())).thenReturn(invalidEmbedding);
+        when(mockEmbedding.embedQuery(eq(query), eq(2))).thenReturn(invalidEmbedding);
         
         List<Document> results = annoyVectorStore.similaritySearch(query, 2, null, null);
         
@@ -233,16 +233,16 @@ class AnnoyTest {
         assertTrue(annoyVectorStore.indexExists());
         
         assertDoesNotThrow(() -> annoyVectorStore.deleteIndex());
-        
-        // 注意：删除后索引对象仍然存在，但文件被删除
-        assertNotNull(annoyVectorStore.getIndexInfo());
+
+        // 删除后索引信息应该为null
+        assertNull(annoyVectorStore.getIndexInfo());
     }
 
     @Test
     @DisplayName("测试索引状态检查")
     void testIndexStatusChecks() {
-        // 初始状态
-        assertNotNull(annoyVectorStore.getIndexStatus());
+        // 初始状态 - 索引还未创建，状态应该为null
+        assertNull(annoyVectorStore.getIndexStatus());
         
         // 添加文档后
         setupDocumentsForSearch();
@@ -279,7 +279,7 @@ class AnnoyTest {
         
         String query = "test query";
         List<String> queryEmbedding = Arrays.asList("[1.0, 2.0, 3.0]");
-        when(mockEmbedding.embedQuery(eq(query), anyInt())).thenReturn(queryEmbedding);
+        when(mockEmbedding.embedQuery(eq(query), eq(5))).thenReturn(queryEmbedding);
         
         // 使用距离过滤
         Double maxDistance = 0.5;
@@ -296,14 +296,18 @@ class AnnoyTest {
         Document doc1 = createTestDocument("doc1", "Content 1");
         Document doc2 = createTestDocument("doc2", "Content 2");
         List<Document> inputDocs = Arrays.asList(doc1, doc2);
-        
+
         Document embeddedDoc1 = createTestDocumentWithEmbedding("doc1", "Content 1", Arrays.asList(1.0, 2.0, 3.0));
         Document embeddedDoc2 = createTestDocumentWithEmbedding("doc2", "Content 2", Arrays.asList(4.0, 5.0, 6.0));
         List<Document> embeddedDocs = Arrays.asList(embeddedDoc1, embeddedDoc2);
-        
+
         when(mockEmbedding.embedDocument(inputDocs)).thenReturn(embeddedDocs);
-        
+
         annoyVectorStore.addDocuments(inputDocs);
+
+        // 手动构建和加载索引，因为自动构建被禁用了
+        annoyVectorStore.buildIndex();
+        annoyVectorStore.loadIndex();
     }
 
     /**

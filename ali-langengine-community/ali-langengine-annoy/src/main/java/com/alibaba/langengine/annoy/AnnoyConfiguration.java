@@ -18,8 +18,10 @@
 package com.alibaba.langengine.annoy;
 
 import com.alibaba.langengine.core.util.WorkPropertiesUtils;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class AnnoyConfiguration {
 
     /**
@@ -35,7 +37,7 @@ public class AnnoyConfiguration {
     /**
      * 默认向量维度
      */
-    public static Integer ANNOY_VECTOR_DIMENSION = Integer.valueOf(WorkPropertiesUtils.get("annoy_vector_dimension", "1536"));
+    public static Integer ANNOY_VECTOR_DIMENSION = getIntegerProperty("annoy_vector_dimension", 1536);
 
     /**
      * 默认距离度量类型
@@ -46,12 +48,12 @@ public class AnnoyConfiguration {
     /**
      * 构建索引时的树数量，更多的树意味着更好的精度但更大的内存使用
      */
-    public static Integer ANNOY_N_TREES = Integer.valueOf(WorkPropertiesUtils.get("annoy_n_trees", "10"));
+    public static Integer ANNOY_N_TREES = getIntegerProperty("annoy_n_trees", 10);
 
     /**
      * 搜索时检查的节点数，更多的节点意味着更好的精度但更慢的搜索
      */
-    public static Integer ANNOY_SEARCH_K = Integer.valueOf(WorkPropertiesUtils.get("annoy_search_k", "-1"));
+    public static Integer ANNOY_SEARCH_K = getIntegerProperty("annoy_search_k", -1);
 
     /**
      * 是否启用内存映射模式
@@ -61,7 +63,7 @@ public class AnnoyConfiguration {
     /**
      * 索引构建超时时间（秒）
      */
-    public static Long ANNOY_BUILD_TIMEOUT = Long.valueOf(WorkPropertiesUtils.get("annoy_build_timeout", "300"));
+    public static Long ANNOY_BUILD_TIMEOUT = getLongProperty("annoy_build_timeout", 300L);
 
     /**
      * 是否启用索引预加载
@@ -71,7 +73,7 @@ public class AnnoyConfiguration {
     /**
      * 批量添加向量的批次大小
      */
-    public static Integer ANNOY_BATCH_SIZE = Integer.valueOf(WorkPropertiesUtils.get("annoy_batch_size", "1000"));
+    public static Integer ANNOY_BATCH_SIZE = getIntegerProperty("annoy_batch_size", 1000);
 
     /**
      * 是否启用索引自动保存
@@ -81,12 +83,12 @@ public class AnnoyConfiguration {
     /**
      * 索引自动保存间隔（秒）
      */
-    public static Long ANNOY_AUTO_SAVE_INTERVAL = Long.valueOf(WorkPropertiesUtils.get("annoy_auto_save_interval", "60"));
+    public static Long ANNOY_AUTO_SAVE_INTERVAL = getLongProperty("annoy_auto_save_interval", 60L);
 
     /**
      * 最大索引文件大小（MB）
      */
-    public static Long ANNOY_MAX_INDEX_SIZE = Long.valueOf(WorkPropertiesUtils.get("annoy_max_index_size", "1024"));
+    public static Long ANNOY_MAX_INDEX_SIZE = getLongProperty("annoy_max_index_size", 1024L);
 
     /**
      * 是否启用并发构建
@@ -96,5 +98,36 @@ public class AnnoyConfiguration {
     /**
      * 并发构建线程数
      */
-    public static Integer ANNOY_BUILD_THREADS = Integer.valueOf(WorkPropertiesUtils.get("annoy_build_threads", "4"));
+    public static Integer ANNOY_BUILD_THREADS = getIntegerProperty("annoy_build_threads", 4);
+
+    /**
+     * Annoy原生库路径
+     */
+    public static String ANNOY_NATIVE_LIBRARY_PATH = WorkPropertiesUtils.get("annoy_native_library_path", "");
+
+    /**
+     * 安全地获取整数配置属性
+     */
+    private static Integer getIntegerProperty(String key, Integer defaultValue) {
+        String value = WorkPropertiesUtils.get(key, String.valueOf(defaultValue));
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid integer value for property {}: {}, using default {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * 安全地获取长整数配置属性
+     */
+    private static Long getLongProperty(String key, Long defaultValue) {
+        String value = WorkPropertiesUtils.get(key, String.valueOf(defaultValue));
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid long value for property {}: {}, using default {}", key, value, defaultValue);
+            return defaultValue;
+        }
+    }
 }

@@ -116,8 +116,10 @@ public class AnnoySearchResult {
                 this.similarity = 1.0f / (1.0f + distance);
                 break;
             case "dot":
-                // Dot product can be negative, so we normalize differently
-                this.similarity = Math.max(0.0f, -distance);
+                // For dot product, if vectors are normalized, distance is typically -dot_product
+                // Convert to similarity in [0, 1] range: (1 + dot_product) / 2
+                // Since distance = -dot_product, similarity = (1 - distance) / 2
+                this.similarity = Math.max(0.0f, Math.min(1.0f, (1.0f - distance) / 2.0f));
                 break;
             case "hamming":
                 // Hamming distance is integer, normalize by vector dimension

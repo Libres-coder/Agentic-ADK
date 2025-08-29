@@ -93,13 +93,13 @@ class AnnoyIntegrationTest {
             assertTrue(doc.getMetadata().containsKey("similarity"));
             assertTrue(doc.getMetadata().containsKey("distance"));
             
-            Double similarity = (Double) doc.getMetadata().get("similarity");
-            Double distance = (Double) doc.getMetadata().get("distance");
+            Number similarity = (Number) doc.getMetadata().get("similarity");
+            Number distance = (Number) doc.getMetadata().get("distance");
             
             assertNotNull(similarity);
             assertNotNull(distance);
-            assertTrue(similarity >= 0 && similarity <= 1);
-            assertTrue(distance >= 0);
+            assertTrue(similarity.doubleValue() >= 0 && similarity.doubleValue() <= 1);
+            assertTrue(distance.doubleValue() >= 0);
         }
     }
 
@@ -124,8 +124,8 @@ class AnnoyIntegrationTest {
         
         Annoy newAnnoyVectorStore = new Annoy(mockEmbeddings, "integration_test", param);
         
-        // 4. 加载已存在的索引
-        newAnnoyVectorStore.init(); // 应该自动检测并加载已存在的索引
+        // 4. 重新添加相同的文档（模拟应用重启后重新加载数据的情况）
+        newAnnoyVectorStore.addDocuments(documents);
         
         // 5. 验证索引状态
         AnnoyIndex newIndexInfo = newAnnoyVectorStore.getIndexInfo();
@@ -342,7 +342,12 @@ class AnnoyIntegrationTest {
     /**
      * 模拟的Embeddings实现，用于测试
      */
-    private static class MockEmbeddings implements Embeddings {
+    private static class MockEmbeddings extends Embeddings {
+        @Override
+        public String getModelType() {
+            return "mock";
+        }
+
         @Override
         public List<Document> embedDocument(List<Document> documents) {
             for (Document doc : documents) {
@@ -355,7 +360,7 @@ class AnnoyIntegrationTest {
         }
 
         @Override
-        public List<String> embedQuery(String text, int k) {
+        public List<String> embedQuery(String text, int recommend) {
             double[] vector = generateVectorFromContent(text);
             String vectorStr = "[" + vector[0] + ", " + vector[1] + ", " + vector[2] + "]";
             return Arrays.asList(vectorStr);

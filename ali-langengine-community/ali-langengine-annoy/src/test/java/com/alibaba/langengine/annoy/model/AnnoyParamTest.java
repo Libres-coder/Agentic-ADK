@@ -102,33 +102,33 @@ class AnnoyParamTest {
                 .vectorDimension(null)
                 .build();
         
-        IllegalArgumentException exception1 = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception1 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param1::validate
         );
-        assertTrue(exception1.getMessage().contains("Vector dimension must be positive"));
+        assertTrue(exception1.getMessage().contains("Vector dimension must be a positive integer"));
 
         // 测试负向量维度
         AnnoyParam param2 = AnnoyParam.builder()
                 .vectorDimension(-1)
                 .build();
-        
-        IllegalArgumentException exception2 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception2 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param2::validate
         );
-        assertTrue(exception2.getMessage().contains("Vector dimension must be positive"));
+        assertTrue(exception2.getMessage().contains("Vector dimension must be a positive integer"));
 
         // 测试零向量维度
         AnnoyParam param3 = AnnoyParam.builder()
                 .vectorDimension(0)
                 .build();
-        
-        IllegalArgumentException exception3 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception3 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param3::validate
         );
-        assertTrue(exception3.getMessage().contains("Vector dimension must be positive"));
+        assertTrue(exception3.getMessage().contains("Vector dimension must be a positive integer"));
     }
 
     @Test
@@ -139,8 +139,8 @@ class AnnoyParamTest {
                 .distanceMetric(null)
                 .build();
         
-        IllegalArgumentException exception1 = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception1 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param1::validate
         );
         assertTrue(exception1.getMessage().contains("Distance metric cannot be null or empty"));
@@ -149,9 +149,9 @@ class AnnoyParamTest {
         AnnoyParam param2 = AnnoyParam.builder()
                 .distanceMetric("")
                 .build();
-        
-        IllegalArgumentException exception2 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception2 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param2::validate
         );
         assertTrue(exception2.getMessage().contains("Distance metric cannot be null or empty"));
@@ -160,9 +160,9 @@ class AnnoyParamTest {
         AnnoyParam param3 = AnnoyParam.builder()
                 .distanceMetric("invalid_metric")
                 .build();
-        
-        IllegalArgumentException exception3 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception3 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param3::validate
         );
         assertTrue(exception3.getMessage().contains("Invalid distance metric"));
@@ -203,33 +203,33 @@ class AnnoyParamTest {
                 .nTrees(null)
                 .build();
         
-        IllegalArgumentException exception1 = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception1 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param1::validate
         );
-        assertTrue(exception1.getMessage().contains("Number of trees must be positive"));
+        assertTrue(exception1.getMessage().contains("Number of trees must be a positive integer"));
 
         // 测试负树数量
         AnnoyParam param2 = AnnoyParam.builder()
                 .nTrees(-1)
                 .build();
-        
-        IllegalArgumentException exception2 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception2 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param2::validate
         );
-        assertTrue(exception2.getMessage().contains("Number of trees must be positive"));
+        assertTrue(exception2.getMessage().contains("Number of trees must be a positive integer"));
 
         // 测试零树数量
         AnnoyParam param3 = AnnoyParam.builder()
                 .nTrees(0)
                 .build();
-        
-        IllegalArgumentException exception3 = assertThrows(
-                IllegalArgumentException.class, 
+
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception3 = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param3::validate
         );
-        assertTrue(exception3.getMessage().contains("Number of trees must be positive"));
+        assertTrue(exception3.getMessage().contains("Number of trees must be a positive integer"));
     }
 
     @Test
@@ -239,11 +239,11 @@ class AnnoyParamTest {
                 .batchSize(0)
                 .build();
         
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param::validate
         );
-        assertTrue(exception.getMessage().contains("Batch size must be positive"));
+        assertTrue(exception.getMessage().contains("Batch size must be a positive integer"));
     }
 
     @Test
@@ -253,11 +253,11 @@ class AnnoyParamTest {
                 .buildTimeout(0L)
                 .build();
         
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param::validate
         );
-        assertTrue(exception.getMessage().contains("Build timeout must be positive"));
+        assertTrue(exception.getMessage().contains("Build timeout must be a positive long"));
     }
 
     @Test
@@ -267,11 +267,11 @@ class AnnoyParamTest {
                 .buildThreads(0)
                 .build();
         
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class, 
+        com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException exception = assertThrows(
+                com.alibaba.langengine.annoy.exception.AnnoyException.ParameterValidationException.class,
                 param::validate
         );
-        assertTrue(exception.getMessage().contains("Build threads must be positive"));
+        assertTrue(exception.getMessage().contains("Build threads must be a positive integer"));
     }
 
     @Test

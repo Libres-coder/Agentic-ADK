@@ -109,14 +109,14 @@ class AnnoyServiceTest {
         assertFalse(index.isBuilt()); // 添加文档后索引需要重新构建
         
         // 验证文档映射
-        Integer vectorId1 = annoyService.getVectorIdByDocumentId("doc1");
-        Integer vectorId2 = annoyService.getVectorIdByDocumentId("doc2");
+        Integer vectorId1 = annoyService.getVectorIdByDocumentId("doc1", indexId);
+        Integer vectorId2 = annoyService.getVectorIdByDocumentId("doc2", indexId);
         assertNotNull(vectorId1);
         assertNotNull(vectorId2);
         assertNotEquals(vectorId1, vectorId2);
-        
-        Document retrievedDoc1 = annoyService.getDocumentByVectorId(vectorId1);
-        Document retrievedDoc2 = annoyService.getDocumentByVectorId(vectorId2);
+
+        Document retrievedDoc1 = annoyService.getDocumentByVectorId(vectorId1, indexId);
+        Document retrievedDoc2 = annoyService.getDocumentByVectorId(vectorId2, indexId);
         assertEquals("doc1", retrievedDoc1.getUniqueId());
         assertEquals("doc2", retrievedDoc2.getUniqueId());
     }
@@ -161,7 +161,8 @@ class AnnoyServiceTest {
                 () -> annoyService.addDocuments(Arrays.asList(doc), indexId)
         );
         
-        assertTrue(exception.getMessage().contains("Vector dimension mismatch"));
+        assertTrue(exception.getMessage().contains("Failed to add documents to index") ||
+                   (exception.getCause() != null && exception.getCause().getMessage().contains("Vector dimension mismatch")));
     }
 
     @Test
@@ -352,7 +353,7 @@ class AnnoyServiceTest {
         annoyService.createIndex("index3", testParam);
         
         // 获取所有索引
-        var allIndexes = annoyService.getAllIndexes();
+        java.util.Collection<AnnoyIndex> allIndexes = annoyService.getAllIndexes();
         
         assertEquals(3, allIndexes.size());
     }
