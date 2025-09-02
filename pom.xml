@@ -129,6 +129,10 @@
 		<module>ali-langengine-community/ali-langengine-neo4j</module>
 		<module>ali-langengine-community/ali-langengine-googlesearch</module>
 		<module>ali-langengine-community/ali-langengine-feishu</module>
+		<module>ali-langengine-community/ali-langengine-linkedin</module>
+		<module>ali-langengine-community/ali-langengine-weibo</module>
+		<module>ali-langengine-community/ali-langengine-twitter</module>
+		<module>ali-langengine-community/ali-langengine-instagram</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
