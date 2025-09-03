@@ -72,9 +72,41 @@ public class SlackSocketModeHandler {
      * 初始化事件处理器
      */
     private void initializeHandlers() {
-        // Socket Mode客户端使用不同的事件处理方式
-        // 这里简化处理，实际应用中可以根据需要配置更多事件处理器
-        log.info("Socket Mode handler initialized with app token");
+        // 注册事件API监听器 - 使用简化的方式处理消息事件
+        socketModeClient.addEventsApiEnvelopeListener(envelope -> {
+            try {
+                // 立即响应ACK
+                socketModeClient.sendSocketModeResponse(new AckResponse(envelope.getEnvelopeId()));
+                
+                // 简化处理：直接处理 MessageEvent（如果有的话）
+                log.debug("Received Events API envelope: {}", envelope.getEnvelopeId());
+                // 注意：这里简化处理，实际应用中可以根据需要解析具体的事件类型
+                // 由于 API 复杂性，这里暂时记录事件但不进行具体处理
+                // 在生产环境中，可以根据具体需求实现详细的事件解析
+                
+            } catch (Exception e) {
+                log.error("Error processing Events API envelope: {}", e.getMessage(), e);
+            }
+        });
+
+        // 注册斜杠命令监听器
+        socketModeClient.addSlashCommandsEnvelopeListener(envelope -> {
+            try {
+                // 立即响应ACK
+                socketModeClient.sendSocketModeResponse(new AckResponse(envelope.getEnvelopeId()));
+                
+                // 简化处理：记录收到斜杠命令
+                log.debug("Received Slash Command envelope: {}", envelope.getEnvelopeId());
+                // 注意：这里简化处理，实际应用中可以根据需要解析具体的命令
+                // 由于 API 复杂性，这里暂时记录命令但不进行具体处理
+                // 在生产环境中，可以根据具体需求实现详细的命令解析
+                
+            } catch (Exception e) {
+                log.error("Error processing Slash Command envelope: {}", e.getMessage(), e);
+            }
+        });
+
+        log.info("Socket Mode handler initialized with app token and event listeners registered");
     }
 
     /**

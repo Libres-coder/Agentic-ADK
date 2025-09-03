@@ -21,6 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SlackConfiguration {
 
+    // Private constructor to prevent instantiation
+    private SlackConfiguration() {
+    }
+
     /**
      * Slack Bot Token环境变量名
      */
@@ -97,20 +101,33 @@ public class SlackConfiguration {
     public static final String SLACK_API_BASE_URL = "https://slack.com/api/";
 
     /**
+     * 通用配置获取方法
+     * 
+     * @param propertyKey 属性文件中的键名
+     * @param envName 环境变量名
+     * @param configName 配置项名称（用于日志）
+     * @param warnIfMissing 是否在缺失时输出警告
+     * @return 配置值
+     */
+    private static String getConfigValue(String propertyKey, String envName, String configName, boolean warnIfMissing) {
+        String value = WorkPropertiesUtils.get(propertyKey);
+        if (value == null || value.trim().isEmpty()) {
+            value = System.getenv(envName);
+        }
+        if (warnIfMissing && (value == null || value.trim().isEmpty())) {
+            log.warn("{} not configured. Please set {} in properties or {} environment variable", 
+                    configName, propertyKey, envName);
+        }
+        return value;
+    }
+
+    /**
      * 获取Slack Bot Token
      *
      * @return Bot Token
      */
     public static String getSlackBotToken() {
-        String token = WorkPropertiesUtils.get(SLACK_BOT_TOKEN_KEY);
-        if (token == null || token.trim().isEmpty()) {
-            token = System.getenv(SLACK_BOT_TOKEN_ENV);
-        }
-        if (token == null || token.trim().isEmpty()) {
-            log.warn("Slack Bot Token not configured. Please set {} in properties or {} environment variable", 
-                    SLACK_BOT_TOKEN_KEY, SLACK_BOT_TOKEN_ENV);
-        }
-        return token;
+        return getConfigValue(SLACK_BOT_TOKEN_KEY, SLACK_BOT_TOKEN_ENV, "Slack Bot Token", true);
     }
 
     /**
@@ -119,15 +136,7 @@ public class SlackConfiguration {
      * @return App Token
      */
     public static String getSlackAppToken() {
-        String token = WorkPropertiesUtils.get(SLACK_APP_TOKEN_KEY);
-        if (token == null || token.trim().isEmpty()) {
-            token = System.getenv(SLACK_APP_TOKEN_ENV);
-        }
-        if (token == null || token.trim().isEmpty()) {
-            log.warn("Slack App Token not configured. Please set {} in properties or {} environment variable", 
-                    SLACK_APP_TOKEN_KEY, SLACK_APP_TOKEN_ENV);
-        }
-        return token;
+        return getConfigValue(SLACK_APP_TOKEN_KEY, SLACK_APP_TOKEN_ENV, "Slack App Token", true);
     }
 
     /**
@@ -136,15 +145,7 @@ public class SlackConfiguration {
      * @return Signing Secret
      */
     public static String getSlackSigningSecret() {
-        String secret = WorkPropertiesUtils.get(SLACK_SIGNING_SECRET_KEY);
-        if (secret == null || secret.trim().isEmpty()) {
-            secret = System.getenv(SLACK_SIGNING_SECRET_ENV);
-        }
-        if (secret == null || secret.trim().isEmpty()) {
-            log.warn("Slack Signing Secret not configured. Please set {} in properties or {} environment variable", 
-                    SLACK_SIGNING_SECRET_KEY, SLACK_SIGNING_SECRET_ENV);
-        }
-        return secret;
+        return getConfigValue(SLACK_SIGNING_SECRET_KEY, SLACK_SIGNING_SECRET_ENV, "Slack Signing Secret", true);
     }
 
     /**
@@ -153,11 +154,7 @@ public class SlackConfiguration {
      * @return Client ID
      */
     public static String getSlackClientId() {
-        String clientId = WorkPropertiesUtils.get(SLACK_CLIENT_ID_KEY);
-        if (clientId == null || clientId.trim().isEmpty()) {
-            clientId = System.getenv(SLACK_CLIENT_ID_ENV);
-        }
-        return clientId;
+        return getConfigValue(SLACK_CLIENT_ID_KEY, SLACK_CLIENT_ID_ENV, "Slack Client ID", false);
     }
 
     /**
@@ -166,11 +163,7 @@ public class SlackConfiguration {
      * @return Client Secret
      */
     public static String getSlackClientSecret() {
-        String clientSecret = WorkPropertiesUtils.get(SLACK_CLIENT_SECRET_KEY);
-        if (clientSecret == null || clientSecret.trim().isEmpty()) {
-            clientSecret = System.getenv(SLACK_CLIENT_SECRET_ENV);
-        }
-        return clientSecret;
+        return getConfigValue(SLACK_CLIENT_SECRET_KEY, SLACK_CLIENT_SECRET_ENV, "Slack Client Secret", false);
     }
 
     /**

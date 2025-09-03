@@ -27,13 +27,33 @@ import java.util.List;
 @Slf4j
 public class SlackToolLoaders {
 
+    // 可以考虑在此处维护一个单例或懒加载的 SlackClient 实例
+    private static SlackClient defaultSlackClient;
+
+    private SlackToolLoaders() {
+        // Private constructor to prevent instantiation
+    }
+
+    /**
+     * 获取默认的SlackClient实例（单例模式）
+     * 
+     * @return SlackClient实例
+     */
+    private static synchronized SlackClient getDefaultSlackClient() {
+        if (defaultSlackClient == null) {
+            log.info("Initializing default SlackClient for SlackToolLoaders.");
+            defaultSlackClient = new SlackClient();
+        }
+        return defaultSlackClient;
+    }
+
     /**
      * 加载所有Slack工具
      *
      * @return Slack工具列表
      */
     public static List<BaseTool> loadAllTools() {
-        return loadAllTools(new SlackClient());
+        return loadAllTools(getDefaultSlackClient());
     }
 
     /**
@@ -78,7 +98,7 @@ public class SlackToolLoaders {
      * @return 基本Slack工具列表
      */
     public static List<BaseTool> loadBasicTools() {
-        return loadBasicTools(new SlackClient());
+        return loadBasicTools(getDefaultSlackClient());
     }
 
     /**
@@ -103,7 +123,7 @@ public class SlackToolLoaders {
      * @return 消息相关工具列表
      */
     public static List<BaseTool> loadMessageTools() {
-        return loadMessageTools(new SlackClient());
+        return loadMessageTools(getDefaultSlackClient());
     }
 
     /**
@@ -127,7 +147,7 @@ public class SlackToolLoaders {
      * @return 信息查询工具列表
      */
     public static List<BaseTool> loadQueryTools() {
-        return loadQueryTools(new SlackClient());
+        return loadQueryTools(getDefaultSlackClient());
     }
 
     /**
@@ -153,7 +173,7 @@ public class SlackToolLoaders {
      * @return 工具实例，如果未找到返回null
      */
     public static BaseTool loadToolByName(String toolName) {
-        return loadToolByName(toolName, new SlackClient());
+        return loadToolByName(toolName, getDefaultSlackClient());
     }
 
     /**
