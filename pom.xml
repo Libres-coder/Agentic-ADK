@@ -135,6 +135,7 @@
 		<module>ali-langengine-community/ali-langengine-weibo</module>
 		<module>ali-langengine-community/ali-langengine-twitter</module>
 		<module>ali-langengine-community/ali-langengine-instagram</module>
+		<module>ali-langengine-community/ali-langengine-notion</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
