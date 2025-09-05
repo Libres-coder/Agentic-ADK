@@ -136,6 +136,7 @@
 		<module>ali-langengine-community/ali-langengine-twitter</module>
 		<module>ali-langengine-community/ali-langengine-instagram</module>
 		<module>ali-langengine-community/ali-langengine-notion</module>
+        <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
