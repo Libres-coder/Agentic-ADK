@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * WenxinEmbeddingModel 测试类
- */
+
 public class WenxinEmbeddingModelTest {
 
     private WenxinEmbeddingModel embeddingModel;

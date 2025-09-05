@@ -16,6 +16,7 @@
 package com.alibaba.langengine.wenxin;
 
 import org.apache.commons.lang3.StringUtils;
+import java.util.Optional;
 
 
 public class WenxinConfiguration {
@@ -23,29 +24,38 @@ public class WenxinConfiguration {
     /**
      * 文心一言 API Base URL
      */
-    public static final String WENXIN_SERVER_URL = !StringUtils.isEmpty(System.getProperty("wenxin_server_url")) ? 
-        System.getProperty("wenxin_server_url") : 
-        (!StringUtils.isEmpty(System.getenv("WENXIN_SERVER_URL")) ? 
-        System.getenv("WENXIN_SERVER_URL") : 
-        "https://aip.baidubce.com/");
+    public static final String WENXIN_SERVER_URL = getConfigValue("wenxin_server_url", "WENXIN_SERVER_URL", "https://aip.baidubce.com/");
 
     /**
-     * 文心一言 API Key
+     * 安全地获取配置值，避免在静态常量中暴露敏感信息
+     * @param systemProperty 系统属性名
+     * @param envVar 环境变量名
+     * @param defaultValue 默认值
+     * @return 配置值
      */
-    public static final String WENXIN_API_KEY = !StringUtils.isEmpty(System.getProperty("wenxin_api_key")) ? 
-        System.getProperty("wenxin_api_key") : 
-        (!StringUtils.isEmpty(System.getenv("WENXIN_API_KEY")) ? 
-        System.getenv("WENXIN_API_KEY") : 
-        null);
+    private static String getConfigValue(String systemProperty, String envVar, String defaultValue) {
+        return Optional.ofNullable(System.getProperty(systemProperty))
+                .filter(StringUtils::isNotEmpty)
+                .or(() -> Optional.ofNullable(System.getenv(envVar))
+                        .filter(StringUtils::isNotEmpty))
+                .orElse(defaultValue);
+    }
 
     /**
-     * 文心一言 Secret Key  
+     * 安全地获取API密钥，不在静态常量中暴露
+     * @return API密钥，如果未配置则返回null
      */
-    public static final String WENXIN_SECRET_KEY = !StringUtils.isEmpty(System.getProperty("wenxin_secret_key")) ? 
-        System.getProperty("wenxin_secret_key") : 
-        (!StringUtils.isEmpty(System.getenv("WENXIN_SECRET_KEY")) ? 
-        System.getenv("WENXIN_SECRET_KEY") : 
-        null);
+    public static String getApiKey() {
+        return getConfigValue("wenxin_api_key", "WENXIN_API_KEY", null);
+    }
+
+    /**
+     * 安全地获取Secret密钥，不在静态常量中暴露
+     * @return Secret密钥，如果未配置则返回null
+     */
+    public static String getSecretKey() {
+        return getConfigValue("wenxin_secret_key", "WENXIN_SECRET_KEY", null);
+    }
 
     /**
      * 文心一言 API 超时时间

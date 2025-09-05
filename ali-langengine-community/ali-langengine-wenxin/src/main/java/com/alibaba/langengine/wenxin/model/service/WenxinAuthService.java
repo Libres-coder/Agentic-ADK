@@ -15,8 +15,8 @@
  */
 package com.alibaba.langengine.wenxin.model.service;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -44,6 +44,7 @@ public class WenxinAuthService {
     
     private final OkHttpClient httpClient;
     private final String baseUrl;
+    private final ObjectMapper objectMapper;
 
     public WenxinAuthService() {
         this(WENXIN_SERVER_URL, Duration.ofSeconds(Long.parseLong(WENXIN_API_TIMEOUT)));
@@ -51,6 +52,7 @@ public class WenxinAuthService {
 
     public WenxinAuthService(String baseUrl, Duration timeout) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+        this.objectMapper = new ObjectMapper();
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .readTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -103,7 +105,7 @@ public class WenxinAuthService {
             String responseText = responseBody.string();
             log.debug("Token响应: {}", responseText);
 
-            TokenResponse tokenResponse = JSON.parseObject(responseText, TokenResponse.class);
+            TokenResponse tokenResponse = objectMapper.readValue(responseText, TokenResponse.class);
             if (tokenResponse.getError() != null) {
                 throw new IOException("获取Access Token失败: " + tokenResponse.getError() + " - " + tokenResponse.getErrorDescription());
             }
@@ -145,16 +147,16 @@ public class WenxinAuthService {
      */
     @Data
     private static class TokenResponse {
-        @JSONField(name = "access_token")
+        @JsonProperty("access_token")
         private String accessToken;
         
-        @JSONField(name = "expires_in")
+        @JsonProperty("expires_in")
         private Long expiresIn;
         
-        @JSONField(name = "error")
+        @JsonProperty("error")
         private String error;
         
-        @JSONField(name = "error_description")
+        @JsonProperty("error_description")
         private String errorDescription;
     }
 

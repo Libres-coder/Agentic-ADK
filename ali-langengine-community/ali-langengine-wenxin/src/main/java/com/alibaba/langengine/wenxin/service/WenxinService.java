@@ -15,12 +15,13 @@
  */
 package com.alibaba.langengine.wenxin.service;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.alibaba.langengine.wenxin.model.completion.WenxinCompletionRequest;
 import com.alibaba.langengine.wenxin.model.completion.WenxinCompletionResult;
 import com.alibaba.langengine.wenxin.model.embedding.WenxinEmbeddingRequest;
 import com.alibaba.langengine.wenxin.model.embedding.WenxinEmbeddingResult;
 import com.alibaba.langengine.wenxin.model.service.WenxinAuthService;
+import com.alibaba.langengine.wenxin.exception.WenxinApiException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -40,6 +41,7 @@ public class WenxinService {
     private Duration timeout;
     private WenxinAuthService authService;
     private OkHttpClient httpClient;
+    private ObjectMapper objectMapper;
 
     public WenxinService(String serverUrl, Duration timeout, String apiKey, String secretKey) {
         this.serverUrl = serverUrl;
@@ -47,6 +49,7 @@ public class WenxinService {
         this.apiKey = apiKey;
         this.secretKey = secretKey;
         this.authService = new WenxinAuthService(serverUrl, timeout);
+        this.objectMapper = new ObjectMapper();
 
         this.httpClient = new OkHttpClient.Builder()
                 .readTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -59,7 +62,7 @@ public class WenxinService {
             String accessToken = authService.getAccessToken(apiKey, secretKey);
             String url = serverUrl + "rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-4.0-8k?access_token=" + accessToken;
             
-            String jsonBody = JSON.toJSONString(request);
+            String jsonBody = objectMapper.writeValueAsString(request);
             RequestBody body = RequestBody.create(
                 MediaType.parse("application/json"), 
                 jsonBody
@@ -74,14 +77,33 @@ public class WenxinService {
             Response response = httpClient.newCall(httpRequest).execute();
             if (response.isSuccessful()) {
                 String responseBody = response.body().string();
-                return JSON.parseObject(responseBody, WenxinCompletionResult.class);
+                return objectMapper.readValue(responseBody, WenxinCompletionResult.class);
             } else {
-                log.error("文心一言API调用失败: {} {}", response.code(), response.message());
-                throw new RuntimeException("文心一言API调用失败: " + response.code());
+                String errorMessage = String.format("文心一言嵌入API调用失败 - HTTP %d: %s", 
+                    response.code(), response.message());
+                WenxinApiException.WenxinErrorType errorType = 
+                    WenxinApiException.getErrorTypeByHttpStatus(response.code());
+                
+                log.error("文心一言嵌入API调用失败: {}", errorMessage);
+                throw new WenxinApiException(errorMessage, 
+                    String.valueOf(response.code()), 
+                    response.code(), 
+                    errorType);
             }
         } catch (IOException e) {
-            log.error("文心一言API调用异常", e);
-            throw new RuntimeException("文心一言API调用异常", e);
+            log.error("文心一言嵌入API网络调用异常", e);
+            throw new WenxinApiException("文心一言嵌入API网络调用异常: " + e.getMessage(), 
+                e.getClass().getSimpleName(), 
+                0, 
+                WenxinApiException.WenxinErrorType.NETWORK_ERROR, 
+                e);
+        } catch (Exception e) {
+            log.error("文心一言嵌入API调用发生未知异常", e);
+            throw new WenxinApiException("文心一言嵌入API调用发生未知异常: " + e.getMessage(), 
+                e.getClass().getSimpleName(), 
+                0, 
+                WenxinApiException.WenxinErrorType.UNKNOWN_ERROR, 
+                e);
         }
     }
 
@@ -90,7 +112,7 @@ public class WenxinService {
             String accessToken = authService.getAccessToken(apiKey, secretKey);
             String url = serverUrl + "rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/embedding-v1?access_token=" + accessToken;
             
-            String jsonBody = JSON.toJSONString(request);
+            String jsonBody = objectMapper.writeValueAsString(request);
             RequestBody body = RequestBody.create(
                 MediaType.parse("application/json"), 
                 jsonBody
@@ -105,14 +127,33 @@ public class WenxinService {
             Response response = httpClient.newCall(httpRequest).execute();
             if (response.isSuccessful()) {
                 String responseBody = response.body().string();
-                return JSON.parseObject(responseBody, WenxinEmbeddingResult.class);
+                return objectMapper.readValue(responseBody, WenxinEmbeddingResult.class);
             } else {
-                log.error("文心Embedding API调用失败: {} {}", response.code(), response.message());
-                throw new RuntimeException("文心Embedding API调用失败: " + response.code());
+                String errorMessage = String.format("文心Embedding API调用失败 - HTTP %d: %s", 
+                    response.code(), response.message());
+                WenxinApiException.WenxinErrorType errorType = 
+                    WenxinApiException.getErrorTypeByHttpStatus(response.code());
+                
+                log.error("文心Embedding API调用失败: {}", errorMessage);
+                throw new WenxinApiException(errorMessage, 
+                    String.valueOf(response.code()), 
+                    response.code(), 
+                    errorType);
             }
         } catch (IOException e) {
-            log.error("文心Embedding API调用异常", e);
-            throw new RuntimeException("文心Embedding API调用异常", e);
+            log.error("文心Embedding API网络调用异常", e);
+            throw new WenxinApiException("文心Embedding API网络调用异常: " + e.getMessage(), 
+                e.getClass().getSimpleName(), 
+                0, 
+                WenxinApiException.WenxinErrorType.NETWORK_ERROR, 
+                e);
+        } catch (Exception e) {
+            log.error("文心Embedding API调用发生未知异常", e);
+            throw new WenxinApiException("文心Embedding API调用发生未知异常: " + e.getMessage(), 
+                e.getClass().getSimpleName(), 
+                0, 
+                WenxinApiException.WenxinErrorType.UNKNOWN_ERROR, 
+                e);
         }
     }
 }
