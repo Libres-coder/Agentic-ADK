@@ -13,57 +13,66 @@ import java.util.stream.Collectors;
  * Also includes utility methods to format query results into common formats like CSV or JSON.
  */
 public final class SqlExecuteResult {
+
     /**
      * The name and version of the JDBC driver used.
      */
-    public String driver;
+    private String driver;
+
     /**
      * The guessed SQL dialect based on the JDBC URL (e.g., "mysql", "postgres").
      */
-    public String dialect;
+    private String dialect;
+
     /**
      * The SHA-256 hash of the executed SQL statement, used for identification.
      */
-    public String sqlHash;
+    private String sqlHash;
+
     /**
      * The total time taken for the execution, in milliseconds.
      */
-    public long   elapsedMs;
+    private long elapsedMs;
 
     /**
      * The type of the executed SQL statement.
      */
-    public StatementType type;
+    private StatementType type;
 
     // Fields for QUERY results
     /**
      * Metadata for the columns in the result set. Only populated for QUERY statements.
      */
-    public List<ColumnMeta> columns;
+    private List<ColumnMeta> columns;
+
     /**
      * The data rows returned by a QUERY. Each inner list represents a single row.
      */
-    public List<List<Object>> rows;
+    private List<List<Object>> rows;
+
     /**
      * A flag indicating whether the result set was truncated because it exceeded `maxRows`.
      */
-    public boolean truncated;
+    private boolean truncated;
 
     // Fields for UPDATE / DDL results
     /**
      * The number of rows affected by an UPDATE, INSERT, or DELETE statement.
      */
-    public Integer updateCount;
+    private Integer updateCount;
+
     /**
      * A list of auto-generated keys returned by an INSERT statement, if any.
      * Each map represents the keys for a single inserted row.
      */
-    public List<Map<String,Object>> generatedKeys;
+    private List<Map<String, Object>> generatedKeys;
 
     /**
      * Enumerates the possible types of SQL statements.
      */
-    public enum StatementType { QUERY, UPDATE, DDL }
+    public enum StatementType {
+        QUERY, UPDATE, DDL
+    }
 
     /**
      * A simple data class to hold metadata for a single column in a result set.
@@ -72,14 +81,119 @@ public final class SqlExecuteResult {
         /**
          * The label or alias of the column.
          */
-        public String label;
+        private String label;
         /**
          * The database-specific type name of the column.
          */
-        public String typeName;
+        private String typeName;
+
         public ColumnMeta() {}
-        public ColumnMeta(String label, String typeName) { this.label = label; this.typeName = typeName; }
+
+        public ColumnMeta(String label, String typeName) {
+            this.label = label;
+            this.typeName = typeName;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+
+        public String getTypeName() {
+            return typeName;
+        }
+
+        public void setTypeName(String typeName) {
+            this.typeName = typeName;
+        }
     }
+
+    // --- Getters and Setters ---
+
+    public String getDriver() {
+        return driver;
+    }
+
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
+
+    public String getDialect() {
+        return dialect;
+    }
+
+    public void setDialect(String dialect) {
+        this.dialect = dialect;
+    }
+
+    public String getSqlHash() {
+        return sqlHash;
+    }
+
+    public void setSqlHash(String sqlHash) {
+        this.sqlHash = sqlHash;
+    }
+
+    public long getElapsedMs() {
+        return elapsedMs;
+    }
+
+    public void setElapsedMs(long elapsedMs) {
+        this.elapsedMs = elapsedMs;
+    }
+
+    public StatementType getType() {
+        return type;
+    }
+
+    public void setType(StatementType type) {
+        this.type = type;
+    }
+
+    public List<ColumnMeta> getColumns() {
+        return columns;
+    }
+
+    public void setColumns(List<ColumnMeta> columns) {
+        this.columns = columns;
+    }
+
+    public List<List<Object>> getRows() {
+        return rows;
+    }
+
+    public void setRows(List<List<Object>> rows) {
+        this.rows = rows;
+    }
+
+    public boolean isTruncated() {
+        return truncated;
+    }
+
+    public void setTruncated(boolean truncated) {
+        this.truncated = truncated;
+    }
+
+    public Integer getUpdateCount() {
+        return updateCount;
+    }
+
+    public void setUpdateCount(Integer updateCount) {
+        this.updateCount = updateCount;
+    }
+
+    public List<Map<String, Object>> getGeneratedKeys() {
+        return generatedKeys;
+    }
+
+    public void setGeneratedKeys(List<Map<String, Object>> generatedKeys) {
+        this.generatedKeys = generatedKeys;
+    }
+
+    // --- Utility Methods ---
 
     /**
      * Formats the query result as a CSV (Comma-Separated Values) string.
@@ -94,7 +208,7 @@ public final class SqlExecuteResult {
         StringBuilder csv = new StringBuilder();
 
         String header = this.columns.stream()
-                .map(col -> escapeCsvField(col.label))
+                .map(col -> escapeCsvField(col.getLabel()))
                 .collect(Collectors.joining(","));
         csv.append(header).append("\n");
 
@@ -122,7 +236,7 @@ public final class SqlExecuteResult {
         // Header
         table.append("| ");
         for (ColumnMeta col : this.columns) {
-            table.append(col.label).append(" | ");
+            table.append(col.getLabel()).append(" | ");
         }
         table.append("\n");
 
@@ -154,7 +268,7 @@ public final class SqlExecuteResult {
             return "[]";
         }
 
-        List<String> labels = this.columns.stream().map(c -> c.label).collect(Collectors.toList());
+        List<String> labels = this.columns.stream().map(ColumnMeta::getLabel).collect(Collectors.toList());
         StringBuilder json = new StringBuilder("[\n");
 
         for (int i = 0; i < this.rows.size(); i++) {
@@ -191,7 +305,7 @@ public final class SqlExecuteResult {
             return resultList;
         }
 
-        List<String> labels = this.columns.stream().map(c -> c.label).collect(Collectors.toList());
+        List<String> labels = this.columns.stream().map(ColumnMeta::getLabel).collect(Collectors.toList());
 
         for (List<Object> row : this.rows) {
             Map<String, Object> mapRow = new LinkedHashMap<>();
@@ -203,6 +317,8 @@ public final class SqlExecuteResult {
 
         return resultList;
     }
+
+    // --- Private Helper Methods ---
 
     /**
      * Escapes a field value for CSV format, quoting it if it contains commas, quotes, or newlines.

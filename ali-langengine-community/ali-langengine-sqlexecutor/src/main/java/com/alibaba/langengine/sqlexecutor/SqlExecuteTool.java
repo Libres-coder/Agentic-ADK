@@ -34,41 +34,41 @@ public final class SqlExecuteTool {
      */
     public SqlExecuteResult execute(SqlExecuteParams p) throws SQLException {
         Objects.requireNonNull(p, "params");
-        if (isBlank(p.url) || isBlank(p.username))
+        if (isBlank(p.getUrl()) || isBlank(p.getUsername()))
             throw new IllegalArgumentException("url/username required");
-        if (isBlank(p.sql))
+        if (isBlank(p.getSql()))
             throw new IllegalArgumentException("sql required");
-        if (p.positional != null && p.named != null)
+        if (p.getPositional() != null && p.getNamed() != null)
             throw new IllegalArgumentException("positional and named cannot be used together");
 
         // 1. Preprocess and clean the SQL
-        String sql1 = SafeSql.stripComments(p.sql);
+        String sql1 = SafeSql.stripComments(p.getSql());
         String sql2 = SafeSql.stripTrailingSemicolon(sql1);
         SafeSql.ensureSingleStatement(sql2);
 
         // 2. Handle named parameters if present
-        List<Object> bindValues = p.positional;
-        if (p.named != null) {
-            NamedParamCompiler.Compiled c = NamedParamCompiler.compile(sql2, p.named);
+        List<Object> bindValues = p.getPositional();
+        if (p.getNamed() != null) {
+            NamedParamCompiler.Compiled c = NamedParamCompiler.compile(sql2, p.getNamed());
             sql2 = c.sql();
             bindValues = c.ordered();
         }
 
         // 3. Apply execution limits from parameters, with defaults
-        int timeoutSec = Math.max(1, (p.timeoutMs == null ? 5000 : p.timeoutMs) / 1000);
-        int capRows    = (p.maxRows == null ? 1000 : p.maxRows);
-        int capUpd     = (p.maxUpdateRows == null ? 200_000 : p.maxUpdateRows);
-        int capField   = (p.maxFieldSize == null ? 1_000_000 : p.maxFieldSize);
+        int timeoutSec = Math.max(1, (p.getTimeoutMs() == null ? 5000 : p.getTimeoutMs()) / 1000);
+        int capRows    = (p.getMaxRows() == null ? 1000 : p.getMaxRows());
+        int capUpd     = (p.getMaxUpdateRows() == null ? 200_000 : p.getMaxUpdateRows());
+        int capField   = (p.getMaxFieldSize() == null ? 1_000_000 : p.getMaxFieldSize());
 
         SqlExecuteResult.StatementType stype = SafeSql.detectType(sql2.toUpperCase(Locale.ROOT));
 
         long t0 = System.nanoTime();
         SqlExecuteResult out = new SqlExecuteResult();
-        out.dialect = SafeSql.guessDialect(p.url);
+        out.setDialect(SafeSql.guessDialect(p.getUrl()));
 
-        try (Connection conn = DriverManager.getConnection(p.url, p.username, defaultString(p.password))) {
+        try (Connection conn = DriverManager.getConnection(p.getUrl(), p.getUsername(), defaultString(p.getPassword()))) {
             DatabaseMetaData meta = conn.getMetaData();
-            out.driver = meta.getDriverName() + "/" + meta.getDriverVersion();
+            out.setDriver(meta.getDriverName() + "/" + meta.getDriverVersion());
 
             try (PreparedStatement ps = conn.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setQueryTimeout(timeoutSec);
@@ -83,7 +83,7 @@ public final class SqlExecuteTool {
 
                 if (isResultSet) {
                     // --- Handle QUERY result ---
-                    out.type = SqlExecuteResult.StatementType.QUERY;
+                    out.setType(SqlExecuteResult.StatementType.QUERY);
                     try (ResultSet rs = ps.getResultSet()) {
                         ResultSetMetaData md = rs.getMetaData();
                         int n = md.getColumnCount();
@@ -105,19 +105,19 @@ public final class SqlExecuteTool {
                             }
                             rows.add(row); fetched++;
                         }
-                        out.columns = cols;
-                        out.rows = rows;
-                        out.truncated = truncated;
+                        out.setColumns(cols);
+                        out.setRows(rows);
+                        out.setTruncated(truncated);
                     }
                 } else {
                     // --- Handle UPDATE/DDL result ---
-                    out.type = (stype == SqlExecuteResult.StatementType.DDL)
+                    out.setType((stype == SqlExecuteResult.StatementType.DDL)
                             ? SqlExecuteResult.StatementType.DDL
-                            : SqlExecuteResult.StatementType.UPDATE;
+                            : SqlExecuteResult.StatementType.UPDATE);
                     int upd = ps.getUpdateCount();
                     if (upd > capUpd)
                         throw new IllegalStateException("update count exceeds maxUpdateRows: " + upd + " > " + capUpd);
-                    out.updateCount = upd;
+                    out.setUpdateCount(upd);
 
                     // Try to fetch generated keys for INSERT statements
                     if (stype == SqlExecuteResult.StatementType.UPDATE && sql2.trim().toUpperCase().startsWith("INSERT")) {
@@ -132,16 +132,20 @@ public final class SqlExecuteTool {
                                     keys.add(m);
                                 }
                             }
+                        } catch (SQLFeatureNotSupportedException e) {
+                            // This specific driver doesn't support getGeneratedKeys().
+                            // This is a known limitation for some databases (e.g., SQLite),
+                            // so we safely ignore the exception and proceed without the generated keys.
                         }
-                        out.generatedKeys = keys.isEmpty() ? null : keys;
+                        out.setGeneratedKeys(keys.isEmpty() ? null : keys);
                     } else {
-                        out.generatedKeys = null;
+                        out.setGeneratedKeys(null);
                     }
                 }
             }
         } finally {
-            out.elapsedMs = (System.nanoTime() - t0) / 1_000_000;
-            out.sqlHash = sha256Hex(sql2);
+            out.setElapsedMs((System.nanoTime() - t0) / 1_000_000);
+            out.setSqlHash(sha256Hex(sql2));
         }
         return out;
     }
