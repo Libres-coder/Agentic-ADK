@@ -91,11 +91,13 @@ public class TrelloBoard {
     /**
      * 成员列表
      */
+    @Builder.Default
     private List<String> idMembers = new ArrayList<>();
     
     /**
      * 标签列表
      */
+    @Builder.Default
     private List<TrelloLabel> labels = new ArrayList<>();
     
     /**

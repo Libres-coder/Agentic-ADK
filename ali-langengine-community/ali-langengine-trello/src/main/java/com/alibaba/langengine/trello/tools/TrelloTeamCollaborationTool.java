@@ -25,12 +25,16 @@ import com.alibaba.langengine.trello.client.TrelloClient;
 import com.alibaba.langengine.trello.exception.TrelloException;
 import com.alibaba.langengine.trello.model.TrelloMember;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 
 @Slf4j
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class TrelloTeamCollaborationTool extends DefaultTool {
     
     private TrelloClient trelloClient;
@@ -143,38 +147,21 @@ public class TrelloTeamCollaborationTool extends DefaultTool {
             return new ToolExecuteResult("看板ID不能为空", true);
         }
         
-        JSONObject response = trelloClient.get(String.format("/boards/%s/members", boardId));
-        JSONArray membersArray;
-        
-        // 检查响应数据结构
-        if (response.containsKey("data")) {
-            Object dataObj = response.get("data");
-            if (dataObj instanceof JSONArray) {
-                membersArray = (JSONArray) dataObj;
-            } else {
-                membersArray = new JSONArray();
-            }
-        } else {
-            membersArray = new JSONArray();
-        }
+        // 使用TrelloClient的专用方法获取成员列表
+        List<TrelloMember> membersList = trelloClient.getBoardMembers(boardId);
         
         JSONArray members = new JSONArray();
-        for (Object memberObj : membersArray) {
-            if (memberObj instanceof JSONObject) {
-                JSONObject memberJson = (JSONObject) memberObj;
-                TrelloMember member = TrelloMember.fromJson(memberJson);
-                
-                JSONObject memberSummary = new JSONObject();
-                memberSummary.put("id", member.getId());
-                memberSummary.put("username", member.getUsername());
-                memberSummary.put("fullName", member.getFullName());
-                memberSummary.put("displayName", member.getDisplayName());
-                memberSummary.put("avatarUrl", member.getAvatarUrlOrDefault());
-                memberSummary.put("memberType", member.getMemberType());
-                memberSummary.put("confirmed", member.isConfirmed());
-                
-                members.add(memberSummary);
-            }
+        for (TrelloMember member : membersList) {
+            JSONObject memberSummary = new JSONObject();
+            memberSummary.put("id", member.getId());
+            memberSummary.put("username", member.getUsername());
+            memberSummary.put("fullName", member.getFullName());
+            memberSummary.put("displayName", member.getDisplayName());
+            memberSummary.put("avatarUrl", member.getAvatarUrlOrDefault());
+            memberSummary.put("memberType", member.getMemberType());
+            memberSummary.put("confirmed", member.isConfirmed());
+            
+            members.add(memberSummary);
         }
         
         JSONObject result = new JSONObject();
@@ -305,36 +292,19 @@ public class TrelloTeamCollaborationTool extends DefaultTool {
             return new ToolExecuteResult("卡片ID不能为空", true);
         }
         
-        JSONObject response = trelloClient.get(String.format("/cards/%s/members", cardId));
-        JSONArray membersArray;
-        
-        // 检查响应数据结构
-        if (response.containsKey("data")) {
-            Object dataObj = response.get("data");
-            if (dataObj instanceof JSONArray) {
-                membersArray = (JSONArray) dataObj;
-            } else {
-                membersArray = new JSONArray();
-            }
-        } else {
-            membersArray = new JSONArray();
-        }
+        // 使用TrelloClient的专用方法获取成员列表
+        List<TrelloMember> membersList = trelloClient.getCardMembers(cardId);
         
         JSONArray members = new JSONArray();
-        for (Object memberObj : membersArray) {
-            if (memberObj instanceof JSONObject) {
-                JSONObject memberJson = (JSONObject) memberObj;
-                TrelloMember member = TrelloMember.fromJson(memberJson);
-                
-                JSONObject memberSummary = new JSONObject();
-                memberSummary.put("id", member.getId());
-                memberSummary.put("username", member.getUsername());
-                memberSummary.put("fullName", member.getFullName());
-                memberSummary.put("displayName", member.getDisplayName());
-                memberSummary.put("avatarUrl", member.getAvatarUrlOrDefault());
-                
-                members.add(memberSummary);
-            }
+        for (TrelloMember member : membersList) {
+            JSONObject memberSummary = new JSONObject();
+            memberSummary.put("id", member.getId());
+            memberSummary.put("username", member.getUsername());
+            memberSummary.put("fullName", member.getFullName());
+            memberSummary.put("displayName", member.getDisplayName());
+            memberSummary.put("avatarUrl", member.getAvatarUrlOrDefault());
+            
+            members.add(memberSummary);
         }
         
         JSONObject result = new JSONObject();

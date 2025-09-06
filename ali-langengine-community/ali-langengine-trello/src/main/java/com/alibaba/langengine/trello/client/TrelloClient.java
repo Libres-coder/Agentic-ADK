@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 @Data
 public class TrelloClient {
     
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
+    
     private TrelloConfiguration configuration;
     private OkHttpClient httpClient;
     
@@ -188,24 +190,91 @@ public class TrelloClient {
     }
     
     /**
-     * 处理API响应，返回JSONArray
+     * 发送GET请求并返回JSONArray
      * 
-     * @param response API响应
-     * @return JSONArray
+     * @param endpoint API端点
+     * @return JSONArray响应
+     * @throws TrelloException Trello异常
      */
-    private JSONArray getArrayFromResponse(Object response) {
-        if (response instanceof JSONArray) {
-            return (JSONArray) response;
-        } else if (response instanceof JSONObject) {
-            JSONObject jsonObj = (JSONObject) response;
-            if (jsonObj.containsKey("data")) {
-                Object data = jsonObj.get("data");
-                if (data instanceof JSONArray) {
-                    return (JSONArray) data;
+    public JSONArray getArray(String endpoint) throws TrelloException {
+        return executeArrayRequest("GET", endpoint, null);
+    }
+    
+    /**
+     * 执行HTTP请求，返回JSONArray
+     * 
+     * @param method HTTP方法
+     * @param endpoint API端点
+     * @param body 请求体
+     * @return JSONArray响应
+     * @throws TrelloException Trello异常
+     */
+    private JSONArray executeArrayRequest(String method, String endpoint, JSONObject body) throws TrelloException {
+        String url = configuration.getApiUrl(endpoint);
+        
+        try {
+            Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "OAuth " + 
+                          "oauth_consumer_key=\"" + configuration.getApiKey() + "\", " +
+                          "oauth_token=\"" + configuration.getToken() + "\"");
+            
+            switch (method.toUpperCase()) {
+                case "GET":
+                    requestBuilder.get();
+                    break;
+                case "POST":
+                    RequestBody postBody = body != null 
+                        ? RequestBody.create(body.toJSONString(), JSON_MEDIA_TYPE)
+                        : RequestBody.create("", JSON_MEDIA_TYPE);
+                    requestBuilder.post(postBody);
+                    break;
+                case "PUT":
+                    RequestBody putBody = body != null 
+                        ? RequestBody.create(body.toJSONString(), JSON_MEDIA_TYPE)
+                        : RequestBody.create("", JSON_MEDIA_TYPE);
+                    requestBuilder.put(putBody);
+                    break;
+                case "DELETE":
+                    requestBuilder.delete();
+                    break;
+                default:
+                    throw new TrelloException("不支持的HTTP方法: " + method);
+            }
+            
+            Request request = requestBuilder.build();
+            
+            if (configuration.isDebug()) {
+                log.debug("发送Trello API请求: {} {}", method, url);
+                if (body != null) {
+                    log.debug("请求体: {}", body.toJSONString());
                 }
             }
+            
+            try (Response response = httpClient.newCall(request).execute()) {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                
+                if (configuration.isDebug()) {
+                    log.debug("Trello API响应: {} {}", response.code(), responseBody);
+                }
+                
+                if (!response.isSuccessful()) {
+                    throw new TrelloException(
+                        String.format("Trello API请求失败: %d %s - %s", 
+                                     response.code(), response.message(), responseBody)
+                    );
+                }
+                
+                if (StringUtils.isBlank(responseBody)) {
+                    return new JSONArray();
+                }
+                
+                return JSON.parseArray(responseBody);
+            }
+            
+        } catch (IOException e) {
+            throw new TrelloException("Trello API请求失败", e);
         }
-        return new JSONArray();
     }
 
     /**
@@ -216,32 +285,14 @@ public class TrelloClient {
      * @throws TrelloException Trello异常
      */
     public List<TrelloBoard> getBoards(String memberId) throws TrelloException {
-        // 对于Trello API，直接调用接口通常返回数组
-        String url = String.format("/members/%s/boards", memberId);
+        JSONArray boardsArray = getArray(String.format("/members/%s/boards", memberId));
         
-        // 使用OkHttp直接处理响应
-        Request request = new Request.Builder()
-            .url(configuration.getApiUrl("/members/" + memberId + "/boards"))
-            .get()
-            .build();
-            
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new TrelloException("请求失败: " + response.code() + " - " + response.message());
-            }
-            
-            String responseBody = response.body().string();
-            JSONArray boardsArray = JSON.parseArray(responseBody);
-            
-            List<TrelloBoard> boards = new ArrayList<>();
-            for (int i = 0; i < boardsArray.size(); i++) {
-                JSONObject boardJson = boardsArray.getJSONObject(i);
-                boards.add(TrelloBoard.fromJson(boardJson));
-            }
-            return boards;
-        } catch (Exception e) {
-            throw new TrelloException("获取看板列表失败: " + e.getMessage(), e);
+        List<TrelloBoard> boards = new ArrayList<>();
+        for (int i = 0; i < boardsArray.size(); i++) {
+            JSONObject boardJson = boardsArray.getJSONObject(i);
+            boards.add(TrelloBoard.fromJson(boardJson));
         }
+        return boards;
     }
     
     /**
@@ -264,30 +315,14 @@ public class TrelloClient {
      * @throws TrelloException Trello异常
      */
     public List<TrelloList> getLists(String boardId) throws TrelloException {
-        String url = String.format("/boards/%s/lists", boardId);
+        JSONArray listsArray = getArray(String.format("/boards/%s/lists", boardId));
         
-        Request request = new Request.Builder()
-            .url(configuration.getApiUrl(url))
-            .get()
-            .build();
-            
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new TrelloException("请求失败: " + response.code() + " - " + response.message());
-            }
-            
-            String responseBody = response.body().string();
-            JSONArray listsArray = JSON.parseArray(responseBody);
-            
-            List<TrelloList> lists = new ArrayList<>();
-            for (int i = 0; i < listsArray.size(); i++) {
-                JSONObject listJson = listsArray.getJSONObject(i);
-                lists.add(TrelloList.fromJson(listJson));
-            }
-            return lists;
-        } catch (Exception e) {
-            throw new TrelloException("获取列表失败: " + e.getMessage(), e);
+        List<TrelloList> lists = new ArrayList<>();
+        for (int i = 0; i < listsArray.size(); i++) {
+            JSONObject listJson = listsArray.getJSONObject(i);
+            lists.add(TrelloList.fromJson(listJson));
         }
+        return lists;
     }
     
     /**
@@ -298,30 +333,14 @@ public class TrelloClient {
      * @throws TrelloException Trello异常
      */
     public List<TrelloCard> getCards(String listId) throws TrelloException {
-        String url = String.format("/lists/%s/cards", listId);
+        JSONArray cardsArray = getArray(String.format("/lists/%s/cards", listId));
         
-        Request request = new Request.Builder()
-            .url(configuration.getApiUrl(url))
-            .get()
-            .build();
-            
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new TrelloException("请求失败: " + response.code() + " - " + response.message());
-            }
-            
-            String responseBody = response.body().string();
-            JSONArray cardsArray = JSON.parseArray(responseBody);
-            
-            List<TrelloCard> cards = new ArrayList<>();
-            for (int i = 0; i < cardsArray.size(); i++) {
-                JSONObject cardJson = cardsArray.getJSONObject(i);
-                cards.add(TrelloCard.fromJson(cardJson));
-            }
-            return cards;
-        } catch (Exception e) {
-            throw new TrelloException("获取卡片列表失败: " + e.getMessage(), e);
+        List<TrelloCard> cards = new ArrayList<>();
+        for (int i = 0; i < cardsArray.size(); i++) {
+            JSONObject cardJson = cardsArray.getJSONObject(i);
+            cards.add(TrelloCard.fromJson(cardJson));
         }
+        return cards;
     }
     
     /**
@@ -385,5 +404,41 @@ public class TrelloClient {
     public TrelloMember getCurrentMember() throws TrelloException {
         JSONObject response = get("/members/me");
         return TrelloMember.fromJson(response);
+    }
+    
+    /**
+     * 获取看板成员列表
+     * 
+     * @param boardId 看板ID
+     * @return 成员列表
+     * @throws TrelloException Trello异常
+     */
+    public List<TrelloMember> getBoardMembers(String boardId) throws TrelloException {
+        JSONArray membersArray = getArray(String.format("/boards/%s/members", boardId));
+        
+        List<TrelloMember> members = new ArrayList<>();
+        for (int i = 0; i < membersArray.size(); i++) {
+            JSONObject memberJson = membersArray.getJSONObject(i);
+            members.add(TrelloMember.fromJson(memberJson));
+        }
+        return members;
+    }
+    
+    /**
+     * 获取卡片成员列表
+     * 
+     * @param cardId 卡片ID
+     * @return 成员列表
+     * @throws TrelloException Trello异常
+     */
+    public List<TrelloMember> getCardMembers(String cardId) throws TrelloException {
+        JSONArray membersArray = getArray(String.format("/cards/%s/members", cardId));
+        
+        List<TrelloMember> members = new ArrayList<>();
+        for (int i = 0; i < membersArray.size(); i++) {
+            JSONObject memberJson = membersArray.getJSONObject(i);
+            members.add(TrelloMember.fromJson(memberJson));
+        }
+        return members;
     }
 }

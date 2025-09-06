@@ -97,16 +97,19 @@ public class TrelloCard {
     /**
      * 成员ID列表
      */
+    @Builder.Default
     private List<String> idMembers = new ArrayList<>();
     
     /**
      * 标签ID列表
      */
+    @Builder.Default
     private List<String> idLabels = new ArrayList<>();
     
     /**
      * 清单ID列表
      */
+    @Builder.Default
     private List<String> idChecklists = new ArrayList<>();
     
     /**

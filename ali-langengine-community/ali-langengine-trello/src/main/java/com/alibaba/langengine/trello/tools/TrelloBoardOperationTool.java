@@ -27,6 +27,7 @@ import com.alibaba.langengine.trello.model.TrelloBoard;
 import com.alibaba.langengine.trello.model.TrelloList;
 import com.alibaba.langengine.trello.model.TrelloCard;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,6 +36,7 @@ import java.util.List;
 
 @Slf4j
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class TrelloBoardOperationTool extends DefaultTool {
     
     private TrelloClient trelloClient;
