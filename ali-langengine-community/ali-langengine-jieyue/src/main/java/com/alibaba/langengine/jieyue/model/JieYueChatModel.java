@@ -1,19 +1,4 @@
-/**
- * Copyright (C) 2024 AIDC-AI
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.alibaba.langengine.openai.model;
+package com.alibaba.langengine.jieyue.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.langengine.core.chatmodel.BaseChatModel;
@@ -23,7 +8,6 @@ import com.alibaba.langengine.core.messages.MessageConverter;
 import com.alibaba.langengine.core.model.ResponseCollector;
 import com.alibaba.langengine.core.model.fastchat.completion.chat.*;
 import com.alibaba.langengine.core.model.fastchat.service.FastChatService;
-import com.alibaba.langengine.core.util.LLMUtils;
 import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -38,88 +22,34 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.alibaba.langengine.openai.OpenAIConfiguration.*;
+import static com.alibaba.langengine.jieyue.JieYueConfiguration.*;
 
-/**
- * OpenAI ChatModel大模型（支持gpt3.5以上），用到chatMessage方式
- *
- * @author xiaoxuan.lp
- */
 @Slf4j
 @Data
-public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
+public class JieYueChatModel extends BaseChatModel<ChatCompletionRequest> {
 
     private FastChatService service;
 
-    private static final String DEFAULT_BASE_URL = "https://api.openai.com/";
+    private static final String DEFAULT_BASE_URL = "https://api.stepfun.com/";
 
-    public ChatModelOpenAI() {
-        this(OPENAI_API_KEY);
+    public JieYueChatModel() {
+        this(null);
     }
 
-    public ChatModelOpenAI(String apiKey) {
-        this(apiKey, Long.parseLong(OPENAI_AI_TIMEOUT));
+    public JieYueChatModel(String baseUrl) {
+        this(baseUrl, JIEYUE_API_KEY);
     }
 
-    public ChatModelOpenAI(String apiKey, Long timeout) {
-        setModel(OpenAIModelConstants.GPT_35_TURBO);
-        setTemperature(0.7d);
-        setMaxTokens(256);
-        setTemperature(1.0d);
-        setFrequencyPenalty(0.0d);
-        setPresencePenalty(0.0d);
-        String serverUrl = !StringUtils.isEmpty(OPENAI_SERVER_URL) ? OPENAI_SERVER_URL : DEFAULT_BASE_URL;
-        service = new FastChatService(serverUrl, Duration.ofSeconds(timeout), true, apiKey);
+    public JieYueChatModel(String baseUrl, String apiKey) {
+        setModel(com.alibaba.langengine.jieyue.JieYueModelConstant.STEP_1_8K);
+        String serverUrl;
+        if(!StringUtils.isEmpty(baseUrl)) {
+            serverUrl = baseUrl;
+        } else {
+            serverUrl = !StringUtils.isEmpty(JIEYUE_SERVER_URL) ? JIEYUE_SERVER_URL : DEFAULT_BASE_URL;
+        }
+        service = new FastChatService(serverUrl, Duration.ofSeconds(Long.parseLong(JIEYUE_API_TIMEOUT)), true, apiKey);
     }
-
-    /**
-     * Support custom base URL
-     */
-    public ChatModelOpenAI(String apiKey, String baseUrl) {
-        this(apiKey, baseUrl, Long.parseLong(OPENAI_AI_TIMEOUT));
-    }
-
-    /**
-     * Support custom base URL with timeout
-     */
-    public ChatModelOpenAI(String apiKey, String baseUrl, Long timeout) {
-        setModel(OpenAIModelConstants.GPT_35_TURBO);
-        setTemperature(0.7d);
-        setMaxTokens(256);
-        setTemperature(1.0d);
-        setFrequencyPenalty(0.0d);
-        setPresencePenalty(0.0d);
-        
-        String serverUrl = !StringUtils.isEmpty(baseUrl) ? baseUrl : 
-                          (!StringUtils.isEmpty(OPENAI_SERVER_URL) ? OPENAI_SERVER_URL : DEFAULT_BASE_URL);
-        service = new FastChatService(serverUrl, Duration.ofSeconds(timeout), true, apiKey);
-    }
-
-    /**
-     * Complete parameter constructor
-     */
-    public ChatModelOpenAI(String apiKey, String baseUrl, Long timeout, String model) {
-        setModel(!StringUtils.isEmpty(model) ? model : OpenAIModelConstants.GPT_35_TURBO);
-        setTemperature(0.7d);
-        setMaxTokens(256);
-        setTemperature(1.0d);
-        setFrequencyPenalty(0.0d);
-        setPresencePenalty(0.0d);
-        
-        String serverUrl = !StringUtils.isEmpty(baseUrl) ? baseUrl : 
-                          (!StringUtils.isEmpty(OPENAI_SERVER_URL) ? OPENAI_SERVER_URL : DEFAULT_BASE_URL);
-        service = new FastChatService(serverUrl, Duration.ofSeconds(timeout), true, apiKey);
-    }
-
-    /**
-     * 为每个提示生成多少完成
-     */
-    private int n = 1;
-
-    /**
-     * 在服务器端生成 best_of 完成并返回“最佳”
-     */
-    private int bestOf = 1;
 
     /**
      * user
@@ -132,12 +62,12 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
     private Map<String, Integer> logitBias;
 
     /**
-     * 模型是否返回json格式结果
+     * whether model returns json format result
      */
     private boolean jsonMode = false;
 
     /**
-     * 是否流式增量
+     * whether stream incremental
      */
     private boolean sseInc = true;
 
@@ -145,20 +75,6 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
     public ChatCompletionRequest buildRequest(List<ChatMessage> chatMessages, List<FunctionDefinition> functions, List<String> stops, Consumer<BaseMessage> consumer, Map<String, Object> extraAttributes) {
         ChatCompletionRequest.ChatCompletionRequestBuilder builder = ChatCompletionRequest.builder();
         builder.messages(chatMessages);
-        if(!CollectionUtils.isEmpty(functions)) {
-            List<ToolDefinition> toolDefinitions = functions.stream().map(e -> {
-                ToolDefinition toolDefinition = new ToolDefinition();
-                toolDefinition.setFunction(new ToolFunction());
-                toolDefinition.getFunction().setName(e.getName());
-                toolDefinition.getFunction().setDescription(e.getDescription());
-                toolDefinition.getFunction().setParameters(e.getParameters());
-                return toolDefinition;
-            }).collect(Collectors.toList());
-            builder.tools(toolDefinitions);
-            builder.toolChoice(getToolChoice());
-        }
-//        builder.functions(functions);
-        builder.n(n);
         if(user != null) {
             builder.user(user);
         }
@@ -170,49 +86,44 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
                 put("type", "json_object");
             }});
         }
+        if(!CollectionUtils.isEmpty(functions)) {
+            List<ToolDefinition> toolDefinitions = functions.stream().map(e -> {
+                ToolDefinition toolDefinition = new ToolDefinition();
+                ToolFunction toolFunction = new ToolFunction();
+                toolFunction.setName(e.getName());
+                toolFunction.setDescription(e.getDescription());
+
+                FunctionParameter toolParameter = new FunctionParameter();
+                if(e.getParameters() != null) {
+                    toolParameter.setProperties(e.getParameters().getProperties());
+                    toolParameter.setType(e.getParameters().getType());
+                    toolParameter.setRequired(e.getParameters().getRequired());
+                }
+                toolFunction.setParameters(toolParameter);
+                toolDefinition.setFunction(toolFunction);
+                return toolDefinition;
+            }).collect(Collectors.toList());
+            builder.tools(toolDefinitions);
+        }
         return builder.build();
     }
 
     @Override
     public BaseMessage runRequest(ChatCompletionRequest request, List<String> stops, Consumer<BaseMessage> consumer, Map<String, Object> extraAttributes) {
         AtomicReference<BaseMessage> baseMessage = new AtomicReference<>();
-
         service.createChatCompletion(request).getChoices().forEach(e -> {
             ChatMessage chatMessage = e.getMessage();
             if(chatMessage != null) {
                 BaseMessage message = MessageConverter.convertChatMessageToMessage(chatMessage);
-                message.setOrignalContent(JSON.toJSONString(e));
-                String role = chatMessage.getRole();
-                String answer = null;
-                if(chatMessage.getFunctionCall() != null && chatMessage.getFunctionCall().size() > 0) {
-                    if(message instanceof AIMessage) {
-                        AIMessage aiMessage = (AIMessage) message;
-                        aiMessage.setToolUse(true);
-                        Map<String, Object> functionCallMap = new HashMap<>();
-                        functionCallMap.put("function_call", chatMessage.getFunctionCall());
-                        aiMessage.setAdditionalKwargs(functionCallMap);
-                        answer = JSON.toJSONString(functionCallMap);
-                    }
-                } else if(chatMessage.getToolCalls() != null && chatMessage.getToolCalls().size() > 0) {
-                    if(message instanceof AIMessage) {
-                        AIMessage aiMessage = (AIMessage) message;
-                        aiMessage.setToolUse(true);
-                        Map<String, Object> functionCallMap = new HashMap<>();
-                        functionCallMap.put("tool_calls", chatMessage.getToolCalls());
-                        aiMessage.setAdditionalKwargs(functionCallMap);
-                        answer = JSON.toJSONString(functionCallMap);
-                    }
-                } else {
-                    answer = chatMessage.getContent().toString();
-                }
-                log.warn(getModel() + " chat answer is {}", answer);
                 if (message != null) {
+                    message.setOrignalContent(JSON.toJSONString(e));
                     baseMessage.set(message);
                 }
             }
         });
-
-        return baseMessage.get();
+        BaseMessage finalMessage = baseMessage.get();
+        log.info("finalMessage response is {}", JSON.toJSONString(finalMessage));
+        return finalMessage;
     }
 
     @Override
@@ -233,7 +144,8 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
                     }
 
                     ChatCompletionChoice choice = e.getChoices().get(0);
-                    if("stop".equals(choice.getFinishReason()) || "function_call".equals(choice.getFinishReason())) {
+                    if("stop".equals(choice.getFinishReason())
+                            || "function_call".equals(choice.getFinishReason())) {
                         return;
                     }
                     ChatMessage chatMessage = choice.getMessage();
@@ -276,7 +188,6 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
                                             log.warn(getModel() + " functionCall stream answer is {}", functionCallContentString);
                                             AIMessage aiMessage = new AIMessage();
                                             aiMessage.setAdditionalKwargs((Map<String, Object>) functionCallContent.get());
-//                                        aiMessage.setContent(JSON.toJSONString(aiMessage.getAdditionalKwargs()));
                                             consumer.accept(aiMessage);
                                     }
                                 }
