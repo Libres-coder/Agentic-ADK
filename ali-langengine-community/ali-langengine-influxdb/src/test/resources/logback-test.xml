@@ -25,15 +25,6 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <!-- Testcontainers日志 -->
-    <logger name="org.testcontainers" level="INFO" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
-    <!-- 减少Docker相关的噪音日志 -->
-    <logger name="com.github.dockerjava" level="WARN"/>
-    <logger name="org.testcontainers.dockerclient" level="WARN"/>
-
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
