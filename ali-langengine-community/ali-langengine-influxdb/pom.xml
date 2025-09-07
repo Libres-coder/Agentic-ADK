@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.alibaba</groupId>
+        <artifactId>ali-langengine</artifactId>
+        <version>1.2.6-202508111516</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ali-langengine-influxdb</artifactId>
+    <description>InfluxDB向量存储集成，支持时序数据和向量检索</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <influxdb-client.version>7.0.0</influxdb-client.version>
+    </properties>
+
+    <dependencies>
+        <!-- 核心依赖 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>ali-langengine-core</artifactId>
+            <version>1.2.6-202508111516</version>
+        </dependency>
+
+        <!-- InfluxDB Java Client -->
+        <dependency>
+            <groupId>com.influxdb</groupId>
+            <artifactId>influxdb-client-java</artifactId>
+            <version>${influxdb-client.version}</version>
+        </dependency>
+
+        <!-- HTTP Client -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
+
+        <!-- JSON processing -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+
+        <!-- Apache Commons -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- 测试依赖 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>influxdb</artifactId>
+            <version>1.19.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.19.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
