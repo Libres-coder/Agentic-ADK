@@ -73,6 +73,45 @@ public class ChatModelOpenAI extends BaseChatModel<ChatCompletionRequest> {
     }
 
     /**
+     * Support custom base URL
+     */
+    public ChatModelOpenAI(String apiKey, String baseUrl) {
+        this(apiKey, baseUrl, Long.parseLong(OPENAI_AI_TIMEOUT));
+    }
+
+    /**
+     * Support custom base URL with timeout
+     */
+    public ChatModelOpenAI(String apiKey, String baseUrl, Long timeout) {
+        setModel(OpenAIModelConstants.GPT_35_TURBO);
+        setTemperature(0.7d);
+        setMaxTokens(256);
+        setTemperature(1.0d);
+        setFrequencyPenalty(0.0d);
+        setPresencePenalty(0.0d);
+        
+        String serverUrl = !StringUtils.isEmpty(baseUrl) ? baseUrl : 
+                          (!StringUtils.isEmpty(OPENAI_SERVER_URL) ? OPENAI_SERVER_URL : DEFAULT_BASE_URL);
+        service = new FastChatService(serverUrl, Duration.ofSeconds(timeout), true, apiKey);
+    }
+
+    /**
+     * Complete parameter constructor
+     */
+    public ChatModelOpenAI(String apiKey, String baseUrl, Long timeout, String model) {
+        setModel(!StringUtils.isEmpty(model) ? model : OpenAIModelConstants.GPT_35_TURBO);
+        setTemperature(0.7d);
+        setMaxTokens(256);
+        setTemperature(1.0d);
+        setFrequencyPenalty(0.0d);
+        setPresencePenalty(0.0d);
+        
+        String serverUrl = !StringUtils.isEmpty(baseUrl) ? baseUrl : 
+                          (!StringUtils.isEmpty(OPENAI_SERVER_URL) ? OPENAI_SERVER_URL : DEFAULT_BASE_URL);
+        service = new FastChatService(serverUrl, Duration.ofSeconds(timeout), true, apiKey);
+    }
+
+    /**
      * 为每个提示生成多少完成
      */
     private int n = 1;
