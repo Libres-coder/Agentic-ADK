@@ -93,7 +93,13 @@ public class InfluxDBVectorClient implements AutoCloseable {
             this.organization = org;
             this.writeApi = client.getWriteApiBlocking();
             this.queryApi = client.getQueryApi();
-            this.vectorCache = new ConcurrentHashMap<>();
+            // 使用LRU缓存策略
+            this.vectorCache = Collections.synchronizedMap(new LinkedHashMap<String, List<Double>>() {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, List<Double>> eldest) {
+                    return size() > maxCacheSize;
+                }
+            });
             this.maxCacheSize = maxCacheSize;
 
             log.info("InfluxDB vector client initialized: url={}, org={}, bucket={}", url, org, bucket);
@@ -136,8 +142,15 @@ public class InfluxDBVectorClient implements AutoCloseable {
                     updateCache(vector.getId(), vector.getVector());
                 }
             }
+        } catch (com.influxdb.exceptions.InfluxException e) {
+            log.error("InfluxDB write error: {}", e.getMessage(), e);
+            throw InfluxDBVectorStoreException.writeError("Failed to write vectors to InfluxDB: " + e.getMessage(), e);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid vector data: {}", e.getMessage(), e);
+            throw InfluxDBVectorStoreException.dataFormatError("Invalid vector data format: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw InfluxDBVectorStoreException.writeError("Failed to insert vectors", e);
+            log.error("Unexpected error during vector insertion: {}", e.getMessage(), e);
+            throw InfluxDBVectorStoreException.writeError("Unexpected error during vector insertion", e);
         }
     }
 
@@ -347,7 +360,7 @@ public class InfluxDBVectorClient implements AutoCloseable {
         }
         
         // 限制结果数量
-        query.append(String.format(" |> limit(n: %d)", request.getLimit() * 2)); // 获取更多结果以便计算相似度
+        query.append(String.format(" |> limit(n: %d)", request.getLimit() * InfluxDBConstants.QUERY_LIMIT_MULTIPLIER)); // 获取更多结果以便计算相似度
         
         return query.toString();
     }
@@ -533,12 +546,9 @@ public class InfluxDBVectorClient implements AutoCloseable {
 
     /**
      * 更新向量缓存
+     * 使用LRU策略自动淘汰旧的条目
      */
     private void updateCache(String docId, List<Double> vector) {
-        if (vectorCache.size() >= maxCacheSize) {
-            // 简单的缓存清理策略
-            vectorCache.clear();
-        }
         vectorCache.put(docId, vector);
     }
 }

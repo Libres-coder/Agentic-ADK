@@ -30,7 +30,7 @@ class InfluxDBConfigurationTest {
     void testDefaultConfiguration() {
         InfluxDBConfiguration config = new InfluxDBConfiguration();
 
-        assertEquals("localhost:8086", config.getUrl());
+        assertEquals("http://localhost:8086", config.getUrl());
         assertEquals("default-org", config.getOrg());
         assertEquals("default-bucket", config.getBucket());
         assertEquals(1536, config.getDefaultVectorDimension());
@@ -150,10 +150,10 @@ class InfluxDBConfigurationTest {
     void testEnvironmentVariableSupport() {
         // 注意：这个测试需要模拟环境变量
         // 在实际使用中，可以通过System.setProperty来模拟
-        System.setProperty("INFLUXDB_URL", "http://env-influxdb:8086");
-        System.setProperty("INFLUXDB_TOKEN", "env-token");
-        System.setProperty("INFLUXDB_ORG", "env-org");
-        System.setProperty("INFLUXDB_BUCKET", "env-bucket");
+        System.setProperty("influxdb.url", "http://env-influxdb:8086");
+        System.setProperty("influxdb.token", "env-token");
+        System.setProperty("influxdb.org", "env-org");
+        System.setProperty("influxdb.bucket", "env-bucket");
 
         InfluxDBConfiguration config = InfluxDBConfiguration.fromEnvironment();
 
@@ -163,10 +163,10 @@ class InfluxDBConfigurationTest {
         assertEquals("env-bucket", config.getBucket());
 
         // 清理环境变量
-        System.clearProperty("INFLUXDB_URL");
-        System.clearProperty("INFLUXDB_TOKEN");
-        System.clearProperty("INFLUXDB_ORG");
-        System.clearProperty("INFLUXDB_BUCKET");
+        System.clearProperty("influxdb.url");
+        System.clearProperty("influxdb.token");
+        System.clearProperty("influxdb.org");
+        System.clearProperty("influxdb.bucket");
     }
 
     @Test

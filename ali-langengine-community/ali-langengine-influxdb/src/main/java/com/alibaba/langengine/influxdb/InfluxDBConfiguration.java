@@ -15,6 +15,8 @@
  */
 package com.alibaba.langengine.influxdb;
 
+import com.alibaba.langengine.influxdb.config.InfluxDBConfigurationLoader;
+
 
 public class InfluxDBConfiguration {
 
@@ -36,32 +38,42 @@ public class InfluxDBConfiguration {
 
     /**
      * 默认构造函数
+     * 创建一个空的配置对象，需要手动设置参数
      */
     public InfluxDBConfiguration() {
-        this.url = System.getProperty("influxdb.url", 
-            System.getenv("INFLUXDB_URL") != null ? System.getenv("INFLUXDB_URL") : "localhost:8086");
-        this.token = System.getProperty("influxdb.token", System.getenv("INFLUXDB_TOKEN"));
-        this.org = System.getProperty("influxdb.org", 
-            System.getenv("INFLUXDB_ORG") != null ? System.getenv("INFLUXDB_ORG") : "default-org");
-        this.bucket = System.getProperty("influxdb.bucket", 
-            System.getenv("INFLUXDB_BUCKET") != null ? System.getenv("INFLUXDB_BUCKET") : "default-bucket");
-        this.defaultVectorDimension = Integer.parseInt(System.getProperty("influxdb.vector.dimension", "1536"));
-        this.defaultTopK = Integer.parseInt(System.getProperty("influxdb.default.topk", "10"));
-        this.defaultSimilarityThreshold = Double.parseDouble(System.getProperty("influxdb.similarity.threshold", "0.7"));
-        this.defaultBatchSize = Integer.parseInt(System.getProperty("influxdb.batch.size", "100"));
-        this.connectionTimeoutMs = Integer.parseInt(System.getProperty("influxdb.connection.timeout", "60000"));
-        this.readTimeoutMs = Integer.parseInt(System.getProperty("influxdb.read.timeout", "60000"));
-        this.writeTimeoutMs = Integer.parseInt(System.getProperty("influxdb.write.timeout", "60000"));
-        this.cacheSize = Integer.parseInt(System.getProperty("influxdb.cache.size", "1000"));
-        this.cacheTtlMs = Integer.parseInt(System.getProperty("influxdb.cache.ttl", "300000"));
-        this.cacheEnabled = Boolean.parseBoolean(System.getProperty("influxdb.cache.enabled", "true"));
-        this.debugEnabled = Boolean.parseBoolean(System.getProperty("influxdb.debug.enabled", "false"));
+        // 设置默认值
+        this.url = "http://localhost:8086";
+        this.org = "default-org";
+        this.bucket = "default-bucket";
+        this.defaultVectorDimension = 1536;
+        this.defaultTopK = 10;
+        this.defaultSimilarityThreshold = 0.7;
+        this.defaultBatchSize = 100;
+        this.connectionTimeoutMs = 60000;
+        this.readTimeoutMs = 60000;
+        this.writeTimeoutMs = 60000;
+        this.cacheSize = 1000;
+        this.cacheTtlMs = 300000;
+        this.cacheEnabled = true;
+        this.debugEnabled = false;
+    }
+
+    /**
+     * 从环境变量和系统属性创建配置
+     * 优先级：系统属性 > 环境变量 > 默认值
+     * 
+     * @return 配置实例
+     */
+    public static InfluxDBConfiguration fromEnvironment() {
+        return InfluxDBConfigurationLoader.fromEnvironment();
     }
 
     /**
      * 验证配置参数
+     * 
+     * @throws IllegalArgumentException 如果配置参数无效
      */
-    private void validate() {
+    public void validate() {
         if (url == null || url.trim().isEmpty()) {
             throw new IllegalArgumentException("InfluxDB URL cannot be null or empty");
         }
@@ -271,36 +283,6 @@ public class InfluxDBConfiguration {
      */
     public static InfluxDBConfigurationBuilder builder() {
         return new InfluxDBConfigurationBuilder();
-    }
-
-    /**
-     * 从环境变量创建配置
-     */
-    public static InfluxDBConfiguration fromEnvironment() {
-        InfluxDBConfiguration config = new InfluxDBConfiguration();
-        
-        // 从系统属性读取配置
-        String url = System.getProperty("INFLUXDB_URL");
-        if (url != null) {
-            config.url = url;
-        }
-        
-        String token = System.getProperty("INFLUXDB_TOKEN");
-        if (token != null) {
-            config.token = token;
-        }
-        
-        String org = System.getProperty("INFLUXDB_ORG");
-        if (org != null) {
-            config.org = org;
-        }
-        
-        String bucket = System.getProperty("INFLUXDB_BUCKET");
-        if (bucket != null) {
-            config.bucket = bucket;
-        }
-        
-        return config;
     }
 
     /**

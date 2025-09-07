@@ -102,10 +102,7 @@ public class InfluxDBVectorStore extends VectorStore implements AutoCloseable {
      * 默认构造函数
      */
     public InfluxDBVectorStore() {
-        this(InfluxDBConstants.INFLUXDB_URL,
-             InfluxDBConstants.INFLUXDB_TOKEN,
-             InfluxDBConstants.INFLUXDB_ORG,
-             InfluxDBConstants.INFLUXDB_BUCKET);
+        this(InfluxDBConfiguration.fromEnvironment());
     }
 
     /**
@@ -154,8 +151,8 @@ public class InfluxDBVectorStore extends VectorStore implements AutoCloseable {
         this.similarityThreshold = similarityThreshold;
         this.similarityMetric = InfluxDBQueryRequest.SimilarityMetric.COSINE;
         this.maxCacheSize = 1000;
-        this.batchSize = InfluxDBConstants.BATCH_SIZE;
-        this.flushInterval = InfluxDBConstants.FLUSH_INTERVAL;
+        this.batchSize = InfluxDBConstants.DEFAULT_BATCH_SIZE;
+        this.flushInterval = InfluxDBConstants.DEFAULT_FLUSH_INTERVAL_MS;
         this.documentCache = new ConcurrentHashMap<>();
         this.embeddingCache = new ConcurrentHashMap<>();
 
@@ -737,13 +734,27 @@ public class InfluxDBVectorStore extends VectorStore implements AutoCloseable {
     public void close() {
         try {
             if (client != null) {
-                client.close();
+                try {
+                    client.close();
+                    log.debug("InfluxDB client closed successfully");
+                } catch (Exception e) {
+                    log.warn("Error closing InfluxDB client", e);
+                }
             }
-            documentCache.clear();
-            embeddingCache.clear();
+            
+            // 清理缓存
+            try {
+                documentCache.clear();
+                embeddingCache.clear();
+                log.debug("Caches cleared successfully");
+            } catch (Exception e) {
+                log.warn("Error clearing caches", e);
+            }
+            
             log.info("InfluxDB vector store closed successfully");
         } catch (Exception e) {
-            log.error("Error closing InfluxDB vector store", e);
+            log.error("Unexpected error during InfluxDB vector store close", e);
+            throw new RuntimeException("Failed to close InfluxDB vector store", e);
         }
     }
 }
