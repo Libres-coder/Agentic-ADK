@@ -58,14 +58,14 @@
 		<module>ali-agentic-adk-core</module>
 		<module>ali-agentic-adk-extension/ali-agentic-adk-computer-use</module>
 		<module>ali-agentic-adk-extension/ali-agentic-adk-computer-use-example</module>
-		<!-- <module>ali-agentic-adk-extension/ali-agentic-example</module> -->
+<!-- <module>ali-agentic-adk-extension/ali-agentic-example</module> -->
 
 		<module>ali-langengine-infrastructure/ali-langengine-docloader</module>
 		<module>ali-langengine-infrastructure/ali-langengine-tool</module>
 
-		<!--		<module>ali-langengine-infrastructure/ali-langengine-mcp</module>-->
-		<!--		<module>ali-langengine-community/ali-langengine-opensearch</module>-->
-		<!--		<module>ali-langengine-community/ali-langengine-tair</module>-->
+<!--		<module>ali-langengine-infrastructure/ali-langengine-mcp</module>-->
+<!--		<module>ali-langengine-community/ali-langengine-opensearch</module>-->
+<!--		<module>ali-langengine-community/ali-langengine-tair</module>-->
 
 		<module>ali-langengine-infrastructure/ali-langengine-deepsearch</module>
 		<module>ali-langengine-infrastructure/ali-langengine-gpt</module>
@@ -89,7 +89,7 @@
 		<module>ali-langengine-community/ali-langengine-chroma</module>
 		<module>ali-langengine-community/ali-langengine-scann</module>
 		<module>ali-langengine-community/ali-langengine-clickhouse</module>
-        <module>ali-langengine-community/ali-langengine-firecrawl</module>
+    <module>ali-langengine-community/ali-langengine-firecrawl</module>
 		<module>ali-langengine-community/ali-langengine-djl</module>
 		<module>ali-langengine-community/ali-langengine-huggingface</module>
 		<module>ali-langengine-community/ali-langengine-sqlite</module>
@@ -137,6 +137,11 @@
 		<module>ali-langengine-community/ali-langengine-instagram</module>
 		<module>ali-langengine-community/ali-langengine-notion</module>
 		<module>ali-langengine-community/ali-langengine-wenxin</module>
+		<module>ali-langengine-community/ali-langengine-kagi</module>
+    <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
+		<module>ali-langengine-community/ali-langengine-perplexity</module>
+		<module>ali-langengine-community/ali-langengine-jieyue</module>
+		<module>ali-langengine-community/ali-langengine-trello</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
