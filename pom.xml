@@ -137,14 +137,19 @@
 		<module>ali-langengine-community/ali-langengine-instagram</module>
 		<module>ali-langengine-community/ali-langengine-notion</module>
 		<module>ali-langengine-community/ali-langengine-wenxin</module>
+		<module>ali-langengine-community/ali-langengine-douyin</module>
+		<module>ali-langengine-community/ali-langengine-zhihu</module>
 		<module>ali-langengine-community/ali-langengine-kagi</module>
     <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
 		<module>ali-langengine-community/ali-langengine-perplexity</module>
 		<module>ali-langengine-community/ali-langengine-jieyue</module>
 		<module>ali-langengine-community/ali-langengine-trello</module>
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
-        <module>ali-langengine-community/ali-langengine-siliconflow</module>
-    </modules>
+
+    <module>ali-langengine-community/ali-langengine-siliconflow</module>
+    <module>ali-langengine-community/ali-langengine-timescaledb</module>
+	</modules>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
