@@ -142,6 +142,7 @@
 		<module>ali-langengine-community/ali-langengine-perplexity</module>
 		<module>ali-langengine-community/ali-langengine-jieyue</module>
 		<module>ali-langengine-community/ali-langengine-trello</module>
+        <module>ali-langengine-community/ali-langengine-pyexecutor</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
