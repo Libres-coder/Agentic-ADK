@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -120,6 +121,9 @@ public class TimescaleDBVectorStore extends VectorStore implements AutoCloseable
             throw new IllegalArgumentException("Vector dimension must be positive");
         }
 
+        // 验证配置
+        TimescaleDBConfiguration.validateConfiguration();
+
         this.embedding = embedding;
         this.tableName = tableName;
         this.vectorDimension = vectorDimension;
@@ -127,9 +131,20 @@ public class TimescaleDBVectorStore extends VectorStore implements AutoCloseable
         this.similarityThreshold = similarityThreshold;
         this.maxCacheSize = maxCacheSize > 0 ? maxCacheSize : TimescaleDBConfiguration.DEFAULT_CACHE_SIZE;
 
-        // 初始化缓存
-        this.documentCache = new ConcurrentHashMap<>();
-        this.embeddingCache = new ConcurrentHashMap<>();
+        // 初始化缓存 - 使用LRU策略
+        this.documentCache = Collections.synchronizedMap(new LinkedHashMap<String, Document>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Document> eldest) {
+                return size() > maxCacheSize;
+            }
+        });
+        
+        this.embeddingCache = Collections.synchronizedMap(new LinkedHashMap<String, List<Double>>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, List<Double>> eldest) {
+                return size() > maxCacheSize;
+            }
+        });
 
         // 初始化数据源
         DataSource dataSource = createDataSource();
@@ -149,10 +164,10 @@ public class TimescaleDBVectorStore extends VectorStore implements AutoCloseable
     private DataSource createDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
 
-        String url = buildConnectionUrl();
+        String url = TimescaleDBConfiguration.getJdbcUrl();
         dataSource.setUrl(url);
-        dataSource.setUsername(TimescaleDBConfiguration.TIMESCALEDB_USERNAME);
-        dataSource.setPassword(TimescaleDBConfiguration.TIMESCALEDB_PASSWORD);
+        dataSource.setUsername(TimescaleDBConfiguration.getUsername());
+        dataSource.setPassword(TimescaleDBConfiguration.getPassword());
 
         // 连接池配置
         dataSource.setInitialSize(TimescaleDBConfiguration.DEFAULT_INITIAL_CONNECTIONS);
@@ -165,32 +180,13 @@ public class TimescaleDBVectorStore extends VectorStore implements AutoCloseable
         dataSource.setTestOnBorrow(false);
         dataSource.setTestOnReturn(false);
 
+        try {
+            dataSource.init();
+        } catch (SQLException e) {
+            throw new TimescaleDBException("Failed to initialize data source", e);
+        }
+
         return dataSource;
-    }
-
-    /**
-     * 构建连接URL
-     */
-    private String buildConnectionUrl() {
-        StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append("jdbc:postgresql://");
-
-        if (StringUtils.isNotBlank(TimescaleDBConfiguration.TIMESCALEDB_URL)) {
-            urlBuilder.append(TimescaleDBConfiguration.TIMESCALEDB_URL);
-        } else {
-            urlBuilder.append("localhost:5432");
-        }
-
-        if (StringUtils.isNotBlank(TimescaleDBConfiguration.TIMESCALEDB_DATABASE)) {
-            urlBuilder.append("/").append(TimescaleDBConfiguration.TIMESCALEDB_DATABASE);
-        } else {
-            urlBuilder.append("/postgres");
-        }
-
-        // 添加连接参数
-        urlBuilder.append("?preferQueryMode=simple&tcpKeepAlive=true&reWriteBatchedInserts=true");
-
-        return urlBuilder.toString();
     }
 
     /**
@@ -505,18 +501,10 @@ public class TimescaleDBVectorStore extends VectorStore implements AutoCloseable
      * 更新文档缓存
      */
     private void updateDocumentCache(String docId, Document document, List<Double> embedding) {
-        if (documentCache.size() >= maxCacheSize) {
-            // 简单的LRU策略：移除最旧的条目
-            String oldestKey = documentCache.keySet().iterator().next();
-            documentCache.remove(oldestKey);
-        }
+        // LRU策略由LinkedHashMap自动处理
         documentCache.put(docId, document);
 
         if (embedding != null) {
-            if (embeddingCache.size() >= maxCacheSize) {
-                String oldestKey = embeddingCache.keySet().iterator().next();
-                embeddingCache.remove(oldestKey);
-            }
             embeddingCache.put(docId, embedding);
         }
     }

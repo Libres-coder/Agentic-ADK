@@ -16,29 +16,47 @@
 package com.alibaba.langengine.timescaledb;
 
 import com.alibaba.langengine.core.util.WorkPropertiesUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 
+@Slf4j
 public class TimescaleDBConfiguration {
     
-    /**
-     * TimescaleDB连接URL
-     */
-    public static String TIMESCALEDB_URL = WorkPropertiesUtils.get("timescaledb_url");
     
     /**
-     * TimescaleDB用户名
+     * 获取TimescaleDB连接URL
      */
-    public static String TIMESCALEDB_USERNAME = WorkPropertiesUtils.get("timescaledb_username");
+    public static String getUrl() {
+        String url = WorkPropertiesUtils.get("timescaledb_url");
+        return StringUtils.isNotBlank(url) ? url : "localhost:5432";
+    }
     
     /**
-     * TimescaleDB密码
+     * 获取TimescaleDB用户名
      */
-    public static String TIMESCALEDB_PASSWORD = WorkPropertiesUtils.get("timescaledb_password");
+    public static String getUsername() {
+        String username = WorkPropertiesUtils.get("timescaledb_username");
+        return StringUtils.isNotBlank(username) ? username : "postgres";
+    }
     
     /**
-     * TimescaleDB数据库名
+     * 获取TimescaleDB密码
      */
-    public static String TIMESCALEDB_DATABASE = WorkPropertiesUtils.get("timescaledb_database");
+    public static String getPassword() {
+        String password = WorkPropertiesUtils.get("timescaledb_password");
+        return StringUtils.isNotBlank(password) ? password : "";
+    }
+    
+    /**
+     * 获取TimescaleDB数据库名
+     */
+    public static String getDatabase() {
+        String database = WorkPropertiesUtils.get("timescaledb_database");
+        return StringUtils.isNotBlank(database) ? database : "postgres";
+    }
+    
+    // ========== 默认常量配置 ==========
     
     /**
      * 默认表名
@@ -94,4 +112,39 @@ public class TimescaleDBConfiguration {
      * 超表分区间隔（天）
      */
     public static final int DEFAULT_CHUNK_TIME_INTERVAL = 7;
+    /**
+     * 验证配置的有效性
+     */
+    public static void validateConfiguration() {
+        String url = getUrl();
+        String username = getUsername();
+        String database = getDatabase();
+        
+        if (StringUtils.isBlank(url)) {
+            throw new IllegalArgumentException("TimescaleDB URL cannot be blank");
+        }
+        
+        if (StringUtils.isBlank(username)) {
+            log.warn("TimescaleDB username is blank, using default 'postgres'");
+        }
+        
+        if (StringUtils.isBlank(database)) {
+            log.warn("TimescaleDB database is blank, using default 'postgres'");
+        }
+        
+        log.info("TimescaleDB configuration validated: url={}, database={}, username={}", 
+                url, database, username);
+    }
+    
+    /**
+     * 获取完整的JDBC URL
+     */
+    public static String getJdbcUrl() {
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append("jdbc:postgresql://");
+        urlBuilder.append(getUrl());
+        urlBuilder.append("/").append(getDatabase());
+        urlBuilder.append("?preferQueryMode=simple&tcpKeepAlive=true&reWriteBatchedInserts=true");
+        return urlBuilder.toString();
+    }
 }

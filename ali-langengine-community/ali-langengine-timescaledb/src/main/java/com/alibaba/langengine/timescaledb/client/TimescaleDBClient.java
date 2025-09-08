@@ -68,6 +68,9 @@ public class TimescaleDBClient implements AutoCloseable {
             throw new IllegalArgumentException("Vector dimension must be positive");
         }
         
+        // 验证表名安全性（防止SQL注入）
+        validateTableName(tableName);
+        
         this.dataSource = dataSource;
         this.tableName = tableName;
         this.vectorDimension = vectorDimension;
@@ -268,18 +271,21 @@ public class TimescaleDBClient implements AutoCloseable {
             StringBuilder sqlBuilder = new StringBuilder();
             List<Object> parameters = new ArrayList<>();
             
+            // 验证并获取安全的相似度操作符
+            String safeOperator = validateAndGetSimilarityOperator(request.getSimilarityOperator());
+            
             // 构建基础查询
             sqlBuilder.append("SELECT id, content, vector, vector_dimension, metadata, timestamp, created_at, updated_at, ");
             sqlBuilder.append("doc_index, partition_key, version, status, tags, ");
-            sqlBuilder.append(String.format("vector %s ? AS distance ", request.getSimilarityOperator()));
+            sqlBuilder.append("vector ").append(safeOperator).append(" ? AS distance ");
             
             if (request.getSimilarityMetric() == TimescaleDBQueryRequest.SimilarityMetric.COSINE) {
-                sqlBuilder.append(String.format(", 1 - (vector <=> ?) AS score "));
+                sqlBuilder.append(", 1 - (vector <=> ?) AS score ");
             } else {
-                sqlBuilder.append(String.format(", vector %s ? AS score ", request.getSimilarityOperator()));
+                sqlBuilder.append(", vector ").append(safeOperator).append(" ? AS score ");
             }
             
-            sqlBuilder.append(String.format("FROM %s WHERE 1=1 ", tableName));
+            sqlBuilder.append("FROM ").append(tableName).append(" WHERE 1=1 ");
             
             // 添加查询向量参数
             parameters.add(new PGvector(request.getQueryVector()));
@@ -583,6 +589,62 @@ public class TimescaleDBClient implements AutoCloseable {
         vector.setScore(rs.getDouble("score"));
         
         return vector;
+    }
+    
+    /**
+     * 验证表名安全性，防止SQL注入
+     */
+    private void validateTableName(String tableName) {
+        if (tableName == null || tableName.trim().isEmpty()) {
+            throw new TimescaleDBException("Table name cannot be null or empty");
+        }
+        
+        // 表名只能包含字母、数字、下划线，且必须以字母或下划线开头
+        String cleanTableName = tableName.trim();
+        if (!cleanTableName.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
+            throw new TimescaleDBException("Invalid table name format: " + tableName + 
+                ". Table name can only contain letters, numbers, and underscores, and must start with a letter or underscore.");
+        }
+        
+        // 检查表名长度
+        if (cleanTableName.length() > 63) {
+            throw new TimescaleDBException("Table name too long (max 63 characters): " + tableName);
+        }
+        
+        // 检查是否为PostgreSQL保留字
+        String upperTableName = cleanTableName.toUpperCase();
+        String[] reservedWords = {
+            "SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER", "TRUNCATE",
+            "FROM", "WHERE", "JOIN", "ORDER", "GROUP", "HAVING", "UNION", "INDEX",
+            "TABLE", "DATABASE", "SCHEMA", "USER", "ROLE", "GRANT", "REVOKE"
+        };
+        
+        for (String reserved : reservedWords) {
+            if (upperTableName.equals(reserved)) {
+                throw new TimescaleDBException("Table name cannot be a reserved word: " + tableName);
+            }
+        }
+    }
+    
+    /**
+     * 验证并获取安全的相似度操作符
+     */
+    private String validateAndGetSimilarityOperator(String operator) {
+        if (operator == null || operator.trim().isEmpty()) {
+            return "<->";  // 默认使用余弦距离
+        }
+        
+        // 只允许预定义的PGVector操作符
+        String cleanOperator = operator.trim();
+        switch (cleanOperator) {
+            case "<->":    // L2距离（欧几里得距离）
+            case "<#>":    // 内积距离
+            case "<=>":    // 余弦距离
+                return cleanOperator;
+            default:
+                throw new TimescaleDBException("Invalid similarity operator: " + operator + 
+                    ". Only <->, <#>, and <=> are supported.");
+        }
     }
     
     @Override

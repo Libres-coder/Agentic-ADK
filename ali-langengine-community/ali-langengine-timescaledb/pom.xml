@@ -16,27 +16,31 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 版本属性管理 -->
+        <postgresql.version>42.7.3</postgresql.version>
+        <pgvector.version>0.1.4</pgvector.version>
+        <druid.version>1.1.23</druid.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>ali-langengine-core</artifactId>
-            <version>1.2.6-202508111516</version>
+            <version>${project.parent.version}</version>
         </dependency>
         
         <!-- PostgreSQL JDBC Driver for TimescaleDB -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.3</version>
+            <version>${postgresql.version}</version>
         </dependency>
         
         <!-- PGVector support for TimescaleDB -->
         <dependency>
             <groupId>com.pgvector</groupId>
             <artifactId>pgvector</artifactId>
-            <version>0.1.4</version>
+            <version>${pgvector.version}</version>
         </dependency>
         
         <!-- Apache Commons Lang for utilities -->
@@ -49,7 +53,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
-            <version>1.1.23</version>
+            <version>${druid.version}</version>
         </dependency>
         
         <!-- JSON processing -->
