@@ -148,6 +148,7 @@
 
     <module>ali-langengine-community/ali-langengine-siliconflow</module>
     <module>ali-langengine-community/ali-langengine-timescaledb</module>
+        <module>ali-langengine-community/ali-langengine-pyexecutor</module>
 	</modules>
 
 	<dependencyManagement>
