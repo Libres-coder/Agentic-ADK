@@ -145,8 +145,11 @@
 		<module>ali-langengine-community/ali-langengine-jieyue</module>
 		<module>ali-langengine-community/ali-langengine-trello</module>
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
-		<module>ali-langengine-community/ali-langengine-timescaledb</module>
+
+    <module>ali-langengine-community/ali-langengine-siliconflow</module>
+    <module>ali-langengine-community/ali-langengine-timescaledb</module>
 	</modules>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
