@@ -150,7 +150,8 @@
     	<module>ali-langengine-community/ali-langengine-timescaledb</module>
         <module>ali-langengine-community/ali-langengine-pyexecutor</module>
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
-	</modules>
+        <module>ali-langengine-community/ali-langengine-tianyancha</module>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>
