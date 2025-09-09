@@ -1,8 +1,0 @@
-.DS_Store
-.turbo
-.idea
-.env*
-node_modules
-
-# 数据库数据
-.data
