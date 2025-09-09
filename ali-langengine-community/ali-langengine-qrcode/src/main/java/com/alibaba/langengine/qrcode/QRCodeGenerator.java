@@ -25,7 +25,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -43,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 public class QRCodeGenerator {
@@ -70,16 +71,60 @@ public class QRCodeGenerator {
      * Generate QR code with basic parameters
      */
     public Path generate(String data, String filename) throws QRCodeException {
+        validateInput(data, filename);
         return generate(data, filename, QRCodeConfiguration.DEFAULT_SIZE, QRCodeConfiguration.DEFAULT_SIZE);
+    }
+    
+    /**
+     * Validate input parameters for security and correctness
+     */
+    private void validateInput(String data, String filename) throws QRCodeException {
+        if (data == null || data.trim().isEmpty()) {
+            throw new QRCodeException("Data cannot be null or empty");
+        }
+        
+        if (data.length() > 4296) { // QR Code Version 40 limit
+            throw new QRCodeException("Data exceeds maximum QR code capacity (4296 characters)");
+        }
+        
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new QRCodeException("Filename cannot be null or empty");
+        }
+        
+        // Prevent path traversal attacks
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            throw new QRCodeException("Filename contains invalid characters");
+        }
+        
+        // Check for valid filename characters
+        if (!filename.matches("^[a-zA-Z0-9._-]+$")) {
+            throw new QRCodeException("Filename contains invalid characters. Use only alphanumeric, dots, hyphens, and underscores");
+        }
     }
 
     /**
      * Generate QR code with specified size
      */
     public Path generate(String data, String filename, int width, int height) throws QRCodeException {
+        validateInput(data, filename, width, height);
         QRCodeGenerationParams params = new QRCodeGenerationParams(data, filename, width, height);
         params.setOutputDirectory(outputDirectory);
         return generate(params);
+    }
+    
+    /**
+     * Validate input parameters including dimensions
+     */
+    private void validateInput(String data, String filename, int width, int height) throws QRCodeException {
+        validateInput(data, filename);
+        
+        if (width < 50 || width > 2000) {
+            throw new QRCodeException("Width must be between 50 and 2000 pixels");
+        }
+        
+        if (height < 50 || height > 2000) {
+            throw new QRCodeException("Height must be between 50 and 2000 pixels");
+        }
     }
 
     /**
@@ -290,23 +335,5 @@ public class QRCodeGenerator {
         }
     }
 
-    /**
-     * Validate input parameters
-     */
-    private void validateInput(String data, String filename, int width, int height) {
-        if (StringUtils.isBlank(data)) {
-            throw new QRCodeException("QR code data cannot be null or empty");
-        }
-        if (StringUtils.isBlank(filename)) {
-            throw new QRCodeException("Filename cannot be null or empty");
-        }
-        if (width < QRCodeConfiguration.MIN_SIZE || width > QRCodeConfiguration.MAX_SIZE) {
-            throw new QRCodeException(String.format("Width must be between %d and %d pixels", 
-                QRCodeConfiguration.MIN_SIZE, QRCodeConfiguration.MAX_SIZE));
-        }
-        if (height < QRCodeConfiguration.MIN_SIZE || height > QRCodeConfiguration.MAX_SIZE) {
-            throw new QRCodeException(String.format("Height must be between %d and %d pixels", 
-                QRCodeConfiguration.MIN_SIZE, QRCodeConfiguration.MAX_SIZE));
-        }
-    }
+
 }

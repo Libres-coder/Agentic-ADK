@@ -21,7 +21,6 @@ import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -29,37 +28,42 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.*;
 
-
+/**
+ * QR Code recognizer with enhanced security and validation features
+ * 
+ * @author langengine-team
+ */
 @Slf4j
 public class QRCodeRecognizer {
-
-    private final ExecutorService executorService;
-    private final Reader reader;
-    private final Map<DecodeHintType, Object> hints;
-
-    /**
-     * Constructor
-     */
+    
+    /** Maximum file size for security (10MB) */
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    
+    /** Allowed image file extensions */
+    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(".png", ".jpg", ".jpeg", ".bmp", ".gif");
+    
+    /** Default timeout for batch operations */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+    
+    private final MultiFormatReader reader;
+    
     public QRCodeRecognizer() {
-        this.executorService = Executors.newFixedThreadPool(QRCodeConfiguration.getThreadPoolSize());
         this.reader = new MultiFormatReader();
-        this.hints = createDecodeHints();
-        log.info("QRCodeRecognizer initialized with thread pool size: {}", QRCodeConfiguration.getThreadPoolSize());
+        // Configure to read QR codes and other formats
+        this.reader.setHints(java.util.Collections.singletonMap(DecodeHintType.POSSIBLE_FORMATS, 
+                             java.util.Collections.singletonList(BarcodeFormat.QR_CODE)));
     }
 
     /**
-     * Recognize QR code from file path
+     * Recognize QR code from file with security validation
      */
     public RecognitionResult recognize(String filePath) throws QRCodeException {
-        if (StringUtils.isBlank(filePath)) {
+        if (filePath == null || filePath.trim().isEmpty()) {
             throw new QRCodeException("File path cannot be null or empty");
         }
         
@@ -68,271 +72,196 @@ public class QRCodeRecognizer {
     }
 
     /**
-     * Recognize QR code from file
+     * Recognize QR code from file with comprehensive validation
      */
     public RecognitionResult recognize(File file) throws QRCodeException {
-        if (file == null || !file.exists()) {
-            throw new QRCodeException("File does not exist: " + (file != null ? file.getPath() : "null"));
-        }
-
-        if (!file.isFile()) {
-            throw new QRCodeException("Path is not a file: " + file.getPath());
-        }
-
-        log.debug("Recognizing QR code from file: {}", file.getPath());
-
+        // Security validations
+        validateFile(file);
+        
         try {
-            // Load image
-            BufferedImage bufferedImage = ImageIO.read(file);
-            if (bufferedImage == null) {
-                String errorMsg = "Unable to read image file or unsupported format: " + file.getName();
-                log.warn(errorMsg);
-                return new RecognitionResult(file, errorMsg);
-            }
-
-            // Create recognition result
-            RecognitionResult result = recognizeFromImage(bufferedImage, file);
+            log.debug("Starting QR code recognition for file: {}", file.getAbsolutePath());
             
-            log.debug("Recognition completed for {}: success={}", file.getName(), result.isSuccess());
-            return result;
-
-        } catch (IOException e) {
-            String errorMsg = "IO error reading file: " + e.getMessage();
-            log.error(errorMsg, e);
-            return new RecognitionResult(file, errorMsg);
-        } catch (Exception e) {
-            String errorMsg = "Unexpected error during recognition: " + e.getMessage();
-            log.error(errorMsg, e);
-            return new RecognitionResult(file, errorMsg);
-        }
-    }
-
-    /**
-     * Recognize QR code from BufferedImage
-     */
-    public RecognitionResult recognizeFromImage(BufferedImage image, File sourceFile) {
-        try {
-            // Store image dimensions
-            int width = image.getWidth();
-            int height = image.getHeight();
+            BufferedImage image = ImageIO.read(file);
+            if (image == null) {
+                log.warn("Failed to load image from file: {}", file.getAbsolutePath());
+                return new RecognitionResult(file, "Failed to load image file");
+            }
 
             // Convert to luminance source
             LuminanceSource source = new BufferedImageLuminanceSource(image);
             BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
-            // Decode QR code
-            Result decodeResult = reader.decode(bitmap, hints);
-
-            // Create successful result
-            RecognitionResult result = new RecognitionResult(decodeResult.getText(), sourceFile);
-            result.setBarcodeFormat(decodeResult.getBarcodeFormat());
-            result.setResultPoints(decodeResult.getResultPoints());
-            result.setImageWidth(width);
-            result.setImageHeight(height);
-
-            log.debug("Successfully decoded QR code: {}", decodeResult.getText());
-            return result;
-
-        } catch (NotFoundException e) {
-            String errorMsg = "No QR code found in image";
-            log.debug(errorMsg + ": {}", sourceFile.getName());
-            return new RecognitionResult(sourceFile, errorMsg);
-        } catch (ChecksumException e) {
-            String errorMsg = "QR code checksum error (corrupted data)";
-            log.debug(errorMsg + ": {}", sourceFile.getName());
-            return new RecognitionResult(sourceFile, errorMsg);
-        } catch (FormatException e) {
-            String errorMsg = "QR code format error";
-            log.debug(errorMsg + ": {}", sourceFile.getName());
-            return new RecognitionResult(sourceFile, errorMsg);
-        } catch (Exception e) {
-            String errorMsg = "Recognition error: " + e.getMessage();
-            log.error(errorMsg, e);
-            return new RecognitionResult(sourceFile, errorMsg);
-        }
-    }
-
-    /**
-     * Batch recognition from directory
-     */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(String directoryPath) {
-        return recognizeBatch(directoryPath, true);
-    }
-
-    /**
-     * Batch recognition from directory with recursive option
-     */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(String directoryPath, boolean recursive) {
-        if (StringUtils.isBlank(directoryPath)) {
-            throw new QRCodeException("Directory path cannot be null or empty");
-        }
-
-        Path dir = Paths.get(directoryPath);
-        if (!Files.exists(dir) || !Files.isDirectory(dir)) {
-            throw new QRCodeException("Directory does not exist or is not a directory: " + directoryPath);
-        }
-
-        log.info("Starting batch recognition from directory: {} (recursive={})", directoryPath, recursive);
-
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                // Find image files
-                List<File> imageFiles = findImageFiles(dir, recursive);
-                log.info("Found {} image files for recognition", imageFiles.size());
-
-                if (imageFiles.isEmpty()) {
-                    log.warn("No image files found in directory: {}", directoryPath);
-                    return new ArrayList<>();
-                }
-
-                // Process files concurrently
-                List<CompletableFuture<RecognitionResult>> futures = imageFiles.stream()
-                    .map(file -> CompletableFuture.supplyAsync(() -> recognize(file), executorService))
-                    .collect(Collectors.toList());
-
-                // Wait for all results
-                List<RecognitionResult> results = futures.stream()
-                    .map(CompletableFuture::join)
-                    .collect(Collectors.toList());
-
-                // Log summary
-                long successCount = results.stream().filter(RecognitionResult::isSuccess).count();
-                log.info("Batch recognition completed: {}/{} successful", successCount, results.size());
-
-                return results;
-
-            } catch (IOException e) {
-                String errorMsg = "Error reading directory: " + e.getMessage();
-                log.error(errorMsg, e);
-                throw new QRCodeException(errorMsg, e);
+            // Attempt to decode
+            Result result = reader.decode(bitmap);
+            
+            if (result != null) {
+                log.debug("Successfully recognized QR code from file: {}", file.getAbsolutePath());
+                RecognitionResult recognitionResult = new RecognitionResult(result.getText(), file);
+                
+                // Set additional metadata
+                recognitionResult.setBarcodeFormat(result.getBarcodeFormat());
+                recognitionResult.setResultPoints(result.getResultPoints());
+                recognitionResult.setImageWidth(image.getWidth());
+                recognitionResult.setImageHeight(image.getHeight());
+                
+                return recognitionResult;
+            } else {
+                log.warn("No QR code found in file: {}", file.getAbsolutePath());
+                return new RecognitionResult(file, "No QR code found in image");
             }
-        }, executorService);
+            
+        } catch (NotFoundException e) {
+            log.debug("No barcode found in file: {}", file.getAbsolutePath());
+            return new RecognitionResult(file, "No QR code found in image");
+        } catch (IOException e) {
+            log.error("IO error while reading file: {}", file.getAbsolutePath(), e);
+            throw new QRCodeException("Failed to read image file: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Error during QR code recognition for file: {}", file.getAbsolutePath(), e);
+            throw new QRCodeException("Failed to recognize QR code: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Batch recognition from file list
+     * Batch recognize QR codes from multiple files with timeout support
      */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(List<String> filePaths) {
+    public List<RecognitionResult> recognizeBatch(List<String> filePaths) throws QRCodeException {
+        return recognizeBatch(filePaths, DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    /**
+     * Batch recognize QR codes with custom timeout
+     */
+    public List<RecognitionResult> recognizeBatch(List<String> filePaths, int timeoutSeconds) throws QRCodeException {
         if (filePaths == null || filePaths.isEmpty()) {
-            throw new QRCodeException("File paths list cannot be null or empty");
+            throw new IllegalArgumentException("File paths list cannot be null or empty");
         }
 
-        log.info("Starting batch recognition for {} files", filePaths.size());
-
-        return CompletableFuture.supplyAsync(() -> {
-            List<CompletableFuture<RecognitionResult>> futures = filePaths.stream()
-                .map(path -> CompletableFuture.supplyAsync(() -> recognize(path), executorService))
-                .collect(Collectors.toList());
-
-            List<RecognitionResult> results = futures.stream()
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
-
-            long successCount = results.stream().filter(RecognitionResult::isSuccess).count();
-            log.info("Batch recognition completed: {}/{} successful", successCount, results.size());
-
+        log.info("Starting batch QR code recognition for {} files with {}s timeout", filePaths.size(), timeoutSeconds);
+        
+        List<RecognitionResult> results = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(filePaths.size(), 4));
+        
+        try {
+            List<Future<RecognitionResult>> futures = new ArrayList<>();
+            
+            // Submit all tasks
+            for (String filePath : filePaths) {
+                futures.add(executor.submit(() -> {
+                    try {
+                        return recognize(filePath);
+                    } catch (QRCodeException e) {
+                        log.warn("Failed to recognize QR code from file: {}", filePath, e);
+                        return new RecognitionResult(new File(filePath), e.getMessage());
+                    }
+                }));
+            }
+            
+            // Collect results with timeout
+            for (Future<RecognitionResult> future : futures) {
+                try {
+                    RecognitionResult result = future.get(timeoutSeconds, TimeUnit.SECONDS);
+                    results.add(result);
+                } catch (TimeoutException e) {
+                    log.warn("Timeout occurred during batch recognition");
+                    future.cancel(true);
+                    results.add(new RecognitionResult(new File("unknown"), "Operation timed out"));
+                } catch (Exception e) {
+                    log.error("Error during batch recognition", e);
+                    results.add(new RecognitionResult(new File("unknown"), "Recognition failed: " + e.getMessage()));
+                }
+            }
+            
+            log.info("Batch QR code recognition completed. Processed {} files", results.size());
             return results;
-        }, executorService);
-    }
-
-    /**
-     * Get recognition statistics
-     */
-    public Map<String, Object> getRecognitionStatistics(List<RecognitionResult> results) {
-        if (results == null || results.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        Map<String, Object> stats = new HashMap<>();
-        
-        int total = results.size();
-        long successful = results.stream().filter(RecognitionResult::isSuccess).count();
-        long failed = total - successful;
-        
-        stats.put("total", total);
-        stats.put("successful", successful);
-        stats.put("failed", failed);
-        stats.put("successRate", total > 0 ? (double) successful / total : 0.0);
-        
-        // Group by error types
-        Map<String, Long> errorTypes = results.stream()
-            .filter(r -> !r.isSuccess())
-            .collect(Collectors.groupingBy(
-                r -> r.getErrorMessage() != null ? r.getErrorMessage() : "Unknown error",
-                Collectors.counting()
-            ));
-        stats.put("errorTypes", errorTypes);
-
-        // Group by barcode formats
-        Map<BarcodeFormat, Long> formats = results.stream()
-            .filter(RecognitionResult::isSuccess)
-            .filter(r -> r.getBarcodeFormat() != null)
-            .collect(Collectors.groupingBy(
-                RecognitionResult::getBarcodeFormat,
-                Collectors.counting()
-            ));
-        stats.put("barcodeFormats", formats);
-
-        return stats;
-    }
-
-    /**
-     * Find image files in directory
-     */
-    private List<File> findImageFiles(Path directory, boolean recursive) throws IOException {
-        Set<String> supportedExtensions = Set.of("png", "jpg", "jpeg", "bmp", "gif", "tiff", "webp");
-        
-        try (Stream<Path> paths = recursive ? Files.walk(directory) : Files.list(directory)) {
-            return paths
-                .filter(Files::isRegularFile)
-                .filter(path -> {
-                    String filename = path.getFileName().toString().toLowerCase();
-                    return supportedExtensions.stream().anyMatch(ext -> filename.endsWith("." + ext));
-                })
-                .map(Path::toFile)
-                .collect(Collectors.toList());
+            
+        } finally {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
     /**
-     * Create decode hints for better recognition
+     * Comprehensive file security validation
      */
-    private Map<DecodeHintType, Object> createDecodeHints() {
-        Map<DecodeHintType, Object> hints = new HashMap<>();
-        
-        // Try harder to find codes
-        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        
-        // Support multiple formats
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, 
-            Arrays.asList(BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC));
-        
-        // Character set
-        hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
-        
-        return hints;
-    }
+    private void validateFile(File file) throws QRCodeException {
+        if (file == null) {
+            throw new QRCodeException("File cannot be null");
+        }
 
-    /**
-     * Shutdown executor service
-     */
-    public void shutdown() {
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
-            log.info("QRCodeRecognizer executor service shutdown");
+        if (!file.exists()) {
+            throw new QRCodeException("File does not exist: " + file.getAbsolutePath());
+        }
+
+        if (!file.isFile()) {
+            throw new QRCodeException("Path is not a file: " + file.getAbsolutePath());
+        }
+
+        if (!file.canRead()) {
+            throw new QRCodeException("File is not readable: " + file.getAbsolutePath());
+        }
+
+        // Check file size
+        long fileSize = file.length();
+        if (fileSize > MAX_FILE_SIZE) {
+            throw new QRCodeException("File size exceeds maximum allowed size (" + MAX_FILE_SIZE + " bytes): " + fileSize);
+        }
+
+        if (fileSize == 0) {
+            throw new QRCodeException("File is empty: " + file.getAbsolutePath());
+        }
+
+        // Validate file extension
+        String fileName = file.getName().toLowerCase();
+        boolean hasValidExtension = ALLOWED_EXTENSIONS.stream()
+                .anyMatch(fileName::endsWith);
+                
+        if (!hasValidExtension) {
+            throw new QRCodeException("File extension not allowed. Allowed extensions: " + ALLOWED_EXTENSIONS);
+        }
+
+        // Check for path traversal attacks
+        try {
+            Path normalizedPath = file.toPath().normalize();
+            if (!normalizedPath.equals(file.toPath())) {
+                throw new QRCodeException("Invalid file path detected (possible path traversal): " + file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            throw new QRCodeException("Invalid file path: " + file.getAbsolutePath(), e);
         }
     }
 
     /**
-     * Check if file is supported image format
+     * Check if file can be processed (convenience method for validation)
      */
-    public static boolean isSupportedImageFile(String filename) {
-        if (StringUtils.isBlank(filename)) {
+    public boolean canProcess(File file) {
+        try {
+            validateFile(file);
+            return true;
+        } catch (QRCodeException e) {
+            log.debug("File cannot be processed: {}", e.getMessage());
             return false;
         }
-        
-        String lowercaseFilename = filename.toLowerCase();
-        return Arrays.stream(QRCodeConfiguration.SUPPORTED_FORMATS)
-            .anyMatch(format -> lowercaseFilename.endsWith("." + format.toLowerCase()));
+    }
+
+    /**
+     * Get supported file extensions
+     */
+    public List<String> getSupportedExtensions() {
+        return new ArrayList<>(ALLOWED_EXTENSIONS);
+    }
+
+    /**
+     * Get maximum allowed file size
+     */
+    public long getMaxFileSize() {
+        return MAX_FILE_SIZE;
     }
 }

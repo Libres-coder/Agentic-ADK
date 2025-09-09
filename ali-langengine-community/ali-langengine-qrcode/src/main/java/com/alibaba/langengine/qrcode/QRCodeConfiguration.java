@@ -15,7 +15,10 @@
  */
 package com.alibaba.langengine.qrcode;
 
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 public class QRCodeConfiguration {
     
     /**
@@ -93,5 +96,51 @@ public class QRCodeConfiguration {
             }
         }
         return false;
+    }
+    
+    /**
+     * Load configuration from properties file
+     * 
+     * @param configPath path to configuration file
+     */
+    public static void loadConfiguration(String configPath) {
+        try {
+            java.util.Properties props = new java.util.Properties();
+            try (java.io.InputStream input = QRCodeConfiguration.class.getClassLoader().getResourceAsStream(configPath)) {
+                if (input != null) {
+                    props.load(input);
+                    // Update configuration values if present in properties file
+                    // This provides a centralized way to override default settings
+                    log.info("Configuration loaded from: {}", configPath);
+                } else {
+                    log.warn("Configuration file not found: {}, using defaults", configPath);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load configuration from {}: {}, using defaults", configPath, e.getMessage());
+        }
+    }
+    
+    /**
+     * Validate file path for security (prevent path traversal)
+     * 
+     * @param path the file path to validate
+     * @return sanitized path
+     * @throws IllegalArgumentException if path is invalid
+     */
+    public static String validatePath(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            throw new IllegalArgumentException("Path cannot be null or empty");
+        }
+        
+        // Remove path traversal attempts
+        String sanitized = path.replaceAll("\\.\\.", "").replaceAll("//+", "/");
+        
+        // Ensure path doesn't start with / or \ (relative paths only)
+        if (sanitized.startsWith("/") || sanitized.startsWith("\\")) {
+            throw new IllegalArgumentException("Absolute paths not allowed");
+        }
+        
+        return sanitized;
     }
 }

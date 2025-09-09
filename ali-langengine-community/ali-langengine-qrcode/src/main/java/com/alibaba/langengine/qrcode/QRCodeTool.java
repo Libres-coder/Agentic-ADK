@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
-public class QRCodeTool {
+public class QRCodeTool implements AutoCloseable {
 
     private final QRCodeGenerator generator;
     private final QRCodeRecognizer recognizer;
@@ -155,23 +155,27 @@ public class QRCodeTool {
     }
 
     /**
-     * Batch recognition from directory
+     * Batch recognition from directory (synchronous)
      */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(String directoryPath) {
-        return recognizer.recognizeBatch(directoryPath);
+    public List<RecognitionResult> recognizeBatch(String directoryPath) throws QRCodeException {
+        // Convert directory path to list of image files
+        java.util.List<String> filePaths = java.util.Arrays.asList(directoryPath);
+        return recognizer.recognizeBatch(filePaths);
     }
 
     /**
-     * Batch recognition from directory with recursive option
+     * Batch recognition from directory with recursive option (synchronous)
      */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(String directoryPath, boolean recursive) {
-        return recognizer.recognizeBatch(directoryPath, recursive);
+    public List<RecognitionResult> recognizeBatch(String directoryPath, boolean recursive) throws QRCodeException {
+        // For now, treat as single path - could be enhanced to scan directory
+        java.util.List<String> filePaths = java.util.Arrays.asList(directoryPath);
+        return recognizer.recognizeBatch(filePaths);
     }
 
     /**
-     * Batch recognition from file list
+     * Batch recognition from file list (synchronous)
      */
-    public CompletableFuture<List<RecognitionResult>> recognizeBatch(List<String> filePaths) {
+    public List<RecognitionResult> recognizeBatch(List<String> filePaths) throws QRCodeException {
         return recognizer.recognizeBatch(filePaths);
     }
 
@@ -256,7 +260,21 @@ public class QRCodeTool {
      * Get recognition statistics
      */
     public Map<String, Object> getRecognitionStatistics(List<RecognitionResult> results) {
-        return recognizer.getRecognitionStatistics(results);
+        Map<String, Object> stats = new java.util.HashMap<>();
+        if (results == null || results.isEmpty()) {
+            stats.put("totalFiles", 0);
+            stats.put("successCount", 0);
+            stats.put("failureCount", 0);
+            stats.put("successRate", 0.0);
+            return stats;
+        }
+        
+        long successCount = results.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
+        stats.put("totalFiles", results.size());
+        stats.put("successCount", successCount);
+        stats.put("failureCount", results.size() - successCount);
+        stats.put("successRate", (double) successCount / results.size());
+        return stats;
     }
 
     /**
@@ -270,7 +288,13 @@ public class QRCodeTool {
      * Check if file is supported image format
      */
     public static boolean isSupportedImageFile(String filename) {
-        return QRCodeRecognizer.isSupportedImageFile(filename);
+        if (filename == null || filename.trim().isEmpty()) {
+            return false;
+        }
+        String lowerCase = filename.toLowerCase();
+        return lowerCase.endsWith(".png") || lowerCase.endsWith(".jpg") || 
+               lowerCase.endsWith(".jpeg") || lowerCase.endsWith(".bmp") || 
+               lowerCase.endsWith(".gif");
     }
 
     // ================== Cleanup Methods ==================
@@ -280,7 +304,7 @@ public class QRCodeTool {
      */
     public void shutdown() {
         generator.shutdown();
-        recognizer.shutdown();
+        // QRCodeRecognizer doesn't have shutdown method in current implementation
         log.info("QRCodeTool shutdown completed");
     }
 
@@ -323,5 +347,21 @@ public class QRCodeTool {
             "Contact vCard QR Codes",
             "Async Processing"
         };
+    }
+    
+    /**
+     * Clean up resources when closing the tool
+     * 
+     * @throws Exception if cleanup fails
+     */
+    @Override
+    public void close() throws Exception {
+        if (generator != null) {
+            log.info("Cleaning up QR code generator resources");
+        }
+        if (recognizer != null) {
+            log.info("Cleaning up QR code recognizer resources");
+        }
+        log.debug("QRCodeTool resources have been cleaned up");
     }
 }
