@@ -140,16 +140,17 @@
 		<module>ali-langengine-community/ali-langengine-douyin</module>
 		<module>ali-langengine-community/ali-langengine-zhihu</module>
 		<module>ali-langengine-community/ali-langengine-kagi</module>
-    <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
+    	<module>ali-langengine-community/ali-langengine-sqlexecutor</module>
 		<module>ali-langengine-community/ali-langengine-perplexity</module>
 		<module>ali-langengine-community/ali-langengine-jieyue</module>
 		<module>ali-langengine-community/ali-langengine-trello</module>
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
-
-    <module>ali-langengine-community/ali-langengine-siliconflow</module>
-    <module>ali-langengine-community/ali-langengine-timescaledb</module>
+		<module>ali-langengine-community/ali-langengine-qrcode</module>
+    	<module>ali-langengine-community/ali-langengine-siliconflow</module>
+    	<module>ali-langengine-community/ali-langengine-timescaledb</module>
         <module>ali-langengine-community/ali-langengine-pyexecutor</module>
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
+        <module>ali-langengine-community/ali-langengine-tianyancha</module>
         <module>ali-langengine-community/ali-langengine-minio</module>
 	</modules>
 
