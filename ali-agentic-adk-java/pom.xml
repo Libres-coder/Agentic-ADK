@@ -3,44 +3,65 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>com.taobao</groupId>
+		<artifactId>parent</artifactId>
+		<version>2.0.0</version>
+		<relativePath/>
+	</parent>
+
 	<groupId>com.alibaba</groupId>
 	<artifactId>ali-agentic-adk</artifactId>
 	<version>1.2.6-202508111516</version>
 	<packaging>pom</packaging>
 	<name>ali-agentic-adk</name>
 	<description>Alibaba Agent Development Kit is an AI application development framework written in Java.</description>
-	<url>https://github.com/AIDC-AI/Agentic-ADK</url>
+<!--	<url>https://github.com/AIDC-AI/Agentic-ADK</url>-->
 
-	<scm>
-		<url>https://github.com/AIDC-AI/Agentic-ADK</url>
-		<connection>scm:git:https://git@github.com/AIDC-AI/Agentic-ADK.git</connection>
-	</scm>
+<!--	<scm>-->
+<!--		<url>https://github.com/AIDC-AI/Agentic-ADK</url>-->
+<!--		<connection>scm:git:https://git@github.com/AIDC-AI/Agentic-ADK.git</connection>-->
+<!--	</scm>-->
 
-	<licenses>
-		<license>
-			<name>Apache 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+<!--	<licenses>-->
+<!--		<license>-->
+<!--			<name>Apache 2.0</name>-->
+<!--			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
+<!--			<distribution>repo</distribution>-->
+<!--		</license>-->
+<!--	</licenses>-->
 
-	<developers>
-		<developer>
-			<id>sunleepy</id>
-			<name>sunleepy</name>
-			<email>sunleepy@gmail.com</email>
-			<organizationUrl>https://alibaba.com</organizationUrl>
-		</developer>
-	</developers>
+<!--	<developers>-->
+<!--		<developer>-->
+<!--			<id>sunleepy</id>-->
+<!--			<name>sunleepy</name>-->
+<!--			<email>sunleepy@gmail.com</email>-->
+<!--			<organizationUrl>https://alibaba.com</organizationUrl>-->
+<!--		</developer>-->
+<!--	</developers>-->
+
+<!--	<distributionManagement>-->
+<!--		<snapshotRepository>-->
+<!--			<id>ossrh</id>-->
+<!--			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>-->
+<!--		</snapshotRepository>-->
+<!--		<repository>-->
+<!--			<id>ossrh</id>-->
+<!--			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+<!--		</repository>-->
+<!--	</distributionManagement>-->
 
 	<properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<jacoco-plugin.version>0.8.8</jacoco-plugin.version>
 		<maven-antrun.version>1.8</maven-antrun.version>
-		<maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+		<maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
 		<spring-boot.version>2.5.12</spring-boot.version>
 		<springframework.version>5.3.31</springframework.version>
 		<junit5.version>5.11.0</junit5.version>
@@ -49,17 +70,15 @@
 		<root.basedir>${project.basedir}</root.basedir>
 		<maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
 		<flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
-		<ali-agentic-adk.version>1.2.6-202508111516</ali-agentic-adk.version>
+		<ali-agentic-adk.version>0.1.0</ali-agentic-adk.version>
 	</properties>
 
 	<modules>
 		<module>ali-agentic-adk-core</module>
-		<module>ali-agentic-adk-extension/ali-agentic-adk-computer-use</module>
-		<module>ali-agentic-adk-extension/ali-agentic-adk-computer-use-example</module>
-<!-- <module>ali-agentic-adk-extension/ali-agentic-example</module> -->
+        <module>ali-agentic-adk-extension/ali-agentic-example</module>
+        <module>ali-agentic-adk-extension/ali-agentic-adk-computer-use</module>
 
 	</modules>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -97,7 +116,7 @@
 			<dependency>
 				<groupId>org.spockframework</groupId>
 				<artifactId>spock-core</artifactId>
-				<version>2.3-groovy-4.0</version>
+				<version>2.4-M4-groovy-4.0</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -208,22 +227,22 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-annotations</artifactId>
-				<version>2.17.1</version>
+				<version>2.10.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-core</artifactId>
-				<version>2.17.1</version>
+				<version>2.10.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>2.17.1</version>
+				<version>2.12.7.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.module</groupId>
 				<artifactId>jackson-module-jsonSchema</artifactId>
-				<version>2.17.1</version>
+				<version>2.10.1</version>
 			</dependency>
 			<!-- chatopenai stream防止冲突问题解决 end -->
 
@@ -279,12 +298,6 @@
 				<version>1.11.3</version>
 				<scope>test</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.junit.platform</groupId>
-				<artifactId>junit-platform-engine</artifactId>
-				<version>1.11.3</version>
-				<scope>test</scope>
-			</dependency>
 
 		</dependencies>
 	</dependencyManagement>
@@ -299,12 +312,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<version>3.3.4</version>
 			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-simple</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -324,199 +331,179 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
+<!--	<build>-->
+<!--		<plugins>-->
+<!--&lt;!&ndash;			<plugin>&ndash;&gt;-->
+<!--&lt;!&ndash;				<groupId>org.sonatype.plugins</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<artifactId>nexus-staging-maven-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<version>1.6.7</version>&ndash;&gt;-->
+<!--&lt;!&ndash;				<extensions>true</extensions>&ndash;&gt;-->
+<!--&lt;!&ndash;				<configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;					<serverId>ossrh</serverId>&ndash;&gt;-->
+<!--&lt;!&ndash;					<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>&ndash;&gt;-->
+<!--&lt;!&ndash;					<autoReleaseAfterClose>true</autoReleaseAfterClose>&ndash;&gt;-->
+<!--&lt;!&ndash;				</configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;			</plugin>&ndash;&gt;-->
+
 <!--			<plugin>-->
 <!--				<groupId>org.apache.maven.plugins</groupId>-->
-<!--				<artifactId>maven-compiler-plugin</artifactId>-->
-<!--				<version>3.8.1</version>-->
-<!--				<configuration>-->
-<!--					<source>17</source>-->
-<!--					<target>17</target>-->
-<!--				</configuration>-->
-<!--			</plugin>-->
-
-			<plugin>
-				<groupId>org.sonatype.central</groupId>
-				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>0.8.0</version>
-				<extensions>true</extensions>
-				<configuration>
-					<publishingServerId>central</publishingServerId>
-				</configuration>
-			</plugin>
-
-<!--			<plugin>-->
-<!--				<groupId>org.sonatype.plugins</groupId>-->
-<!--				<artifactId>nexus-staging-maven-plugin</artifactId>-->
-<!--				<version>1.6.7</version>-->
-<!--				<extensions>true</extensions>-->
-<!--				<configuration>-->
-<!--					<serverId>ossrh</serverId>-->
-<!--					<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>-->
-<!--					<autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-<!--				</configuration>-->
-<!--			</plugin>-->
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9.1</version>
+<!--				<artifactId>maven-source-plugin</artifactId>-->
+<!--				<version>2.2.1</version>-->
 <!--				<executions>-->
 <!--					<execution>-->
-<!--						<id>attach-javadocs</id>-->
+<!--						<id>attach-sources</id>-->
 <!--						<goals>-->
-<!--							<goal>jar</goal>-->
+<!--							<goal>jar-no-fork</goal>-->
 <!--						</goals>-->
 <!--					</execution>-->
 <!--				</executions>-->
-			</plugin>
+<!--			</plugin>-->
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-javadoc-plugin</artifactId>-->
+<!--				<version>2.9.1</version>-->
+<!--&lt;!&ndash;				<executions>&ndash;&gt;-->
+<!--&lt;!&ndash;					<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<id>attach-javadocs</id>&ndash;&gt;-->
+<!--&lt;!&ndash;						<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goal>jar</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;						</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;					</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;				</executions>&ndash;&gt;-->
+<!--			</plugin>-->
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.5</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+<!--&lt;!&ndash;			<plugin>&ndash;&gt;-->
+<!--&lt;!&ndash;				<groupId>org.apache.maven.plugins</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<artifactId>maven-gpg-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<version>1.5</version>&ndash;&gt;-->
+<!--&lt;!&ndash;				<executions>&ndash;&gt;-->
+<!--&lt;!&ndash;					<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<id>sign-artifacts</id>&ndash;&gt;-->
+<!--&lt;!&ndash;						<phase>verify</phase>&ndash;&gt;-->
+<!--&lt;!&ndash;						<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goal>sign</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;						</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;					</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;				</executions>&ndash;&gt;-->
+<!--&lt;!&ndash;			</plugin>&ndash;&gt;-->
 
 
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>flatten-maven-plugin</artifactId>
-				<version>${flatten-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>flatten</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>flatten</goal>
-						</goals>
-						<configuration>
-							<updatePomFile>true</updatePomFile>
-							<flattenMode>ossrh</flattenMode>
-							<pomElements>
-								<distributionManagement>remove</distributionManagement>
-								<dependencyManagement>remove</dependencyManagement>
-								<repositories>remove</repositories>
-								<scm>keep</scm>
-								<url>keep</url>
-								<organization>resolve</organization>
-							</pomElements>
-						</configuration>
-					</execution>
-					<execution>
-						<id>clean</id>
-						<phase>clean</phase>
-						<goals>
-							<goal>clean</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-antrun-plugin</artifactId>
-					<version>${maven-antrun.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>${maven-surefire-plugin.version}</version>
-				</plugin>
-
+<!--&lt;!&ndash;			<plugin>&ndash;&gt;-->
+<!--&lt;!&ndash;				<groupId>org.codehaus.mojo</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<artifactId>flatten-maven-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<version>${flatten-maven-plugin.version}</version>&ndash;&gt;-->
+<!--&lt;!&ndash;				<executions>&ndash;&gt;-->
+<!--&lt;!&ndash;					<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<id>flatten</id>&ndash;&gt;-->
+<!--&lt;!&ndash;						<phase>process-resources</phase>&ndash;&gt;-->
+<!--&lt;!&ndash;						<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goal>flatten</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;						</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;						<configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;							<updatePomFile>true</updatePomFile>&ndash;&gt;-->
+<!--&lt;!&ndash;							<flattenMode>ossrh</flattenMode>&ndash;&gt;-->
+<!--&lt;!&ndash;							<pomElements>&ndash;&gt;-->
+<!--&lt;!&ndash;								<distributionManagement>remove</distributionManagement>&ndash;&gt;-->
+<!--&lt;!&ndash;								<dependencyManagement>remove</dependencyManagement>&ndash;&gt;-->
+<!--&lt;!&ndash;								<repositories>remove</repositories>&ndash;&gt;-->
+<!--&lt;!&ndash;								<scm>keep</scm>&ndash;&gt;-->
+<!--&lt;!&ndash;								<url>keep</url>&ndash;&gt;-->
+<!--&lt;!&ndash;								<organization>resolve</organization>&ndash;&gt;-->
+<!--&lt;!&ndash;							</pomElements>&ndash;&gt;-->
+<!--&lt;!&ndash;						</configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;					</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;					<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<id>clean</id>&ndash;&gt;-->
+<!--&lt;!&ndash;						<phase>clean</phase>&ndash;&gt;-->
+<!--&lt;!&ndash;						<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goal>clean</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;						</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;					</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;				</executions>&ndash;&gt;-->
+<!--&lt;!&ndash;			</plugin>&ndash;&gt;-->
+<!--		</plugins>-->
+<!--		<pluginManagement>-->
+<!--			<plugins>-->
 <!--				<plugin>-->
-<!--					<groupId>com.mycila</groupId>-->
-<!--					<artifactId>license-maven-plugin</artifactId>-->
-<!--					<version>3.0</version>-->
-<!--					<configuration>-->
-<!--						<header>${project.basedir}/license-header.txt</header>-->
-<!--						<includes>-->
-<!--							<include>**/*.java</include>-->
-<!--						</includes>-->
-<!--					</configuration>-->
-<!--					<executions>-->
-<!--						<execution>-->
-<!--							<id>format-license</id>-->
-<!--							<goals>-->
-<!--								<goal>format</goal>-->
-<!--							</goals>-->
-<!--						</execution>-->
-<!--						<execution>-->
-<!--							<id>check-license</id>-->
-<!--							<goals>-->
-<!--								<goal>check</goal>-->
-<!--							</goals>-->
-<!--						</execution>-->
-<!--					</executions>-->
+<!--					<groupId>org.apache.maven.plugins</groupId>-->
+<!--					<artifactId>maven-antrun-plugin</artifactId>-->
+<!--					<version>${maven-antrun.version}</version>-->
 <!--				</plugin>-->
-			</plugins>
-		</pluginManagement>
-	</build>
+<!--				<plugin>-->
+<!--					<groupId>org.apache.maven.plugins</groupId>-->
+<!--					<artifactId>maven-surefire-plugin</artifactId>-->
+<!--					<version>${maven-surefire-plugin.version}</version>-->
+<!--				</plugin>-->
 
-	<profiles>
-		<profile>
-			<id>javadoc</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>${maven-javadoc-plugin.version}</version>
-						<configuration>
+<!--&lt;!&ndash;				<plugin>&ndash;&gt;-->
+<!--&lt;!&ndash;					<groupId>com.mycila</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;					<artifactId>license-maven-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;					<version>3.0</version>&ndash;&gt;-->
+<!--&lt;!&ndash;					<configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;						<header>${project.basedir}/license-header.txt</header>&ndash;&gt;-->
+<!--&lt;!&ndash;						<includes>&ndash;&gt;-->
+<!--&lt;!&ndash;							<include>**/*.java</include>&ndash;&gt;-->
+<!--&lt;!&ndash;						</includes>&ndash;&gt;-->
+<!--&lt;!&ndash;					</configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;					<executions>&ndash;&gt;-->
+<!--&lt;!&ndash;						<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;							<id>format-license</id>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;								<goal>format</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;							</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;						</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;							<id>check-license</id>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;								<goal>check</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;							</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;						</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;					</executions>&ndash;&gt;-->
+<!--&lt;!&ndash;				</plugin>&ndash;&gt;-->
+<!--			</plugins>-->
+<!--		</pluginManagement>-->
+<!--	</build>-->
+
+<!--	<profiles>-->
+<!--		<profile>-->
+<!--			<id>javadoc</id>-->
+<!--			<activation>-->
+<!--				<activeByDefault>false</activeByDefault>-->
+<!--			</activation>-->
+<!--			<build>-->
+<!--				<plugins>-->
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-javadoc-plugin</artifactId>-->
+<!--						<version>${maven-javadoc-plugin.version}</version>-->
+<!--						<configuration>-->
 <!--							<excludePackageNames>-->
 <!--								com.alibaba.langengine.*-->
 <!--							</excludePackageNames>-->
-							<detectJavaApiLink>false</detectJavaApiLink>
-							<doclint>none</doclint>
-							<quiet>true</quiet>
-						</configuration>
-						<executions>
-							<execution>
-								<id>generate-javadocs</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>generate-aggregate-javadocs</id>
-								<phase>package</phase>
-								<goals>
-									<goal>aggregate</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+<!--							<detectJavaApiLink>false</detectJavaApiLink>-->
+<!--							<doclint>none</doclint>-->
+<!--							<quiet>true</quiet>-->
+<!--						</configuration>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<id>generate-javadocs</id>-->
+<!--								<phase>package</phase>-->
+<!--								<goals>-->
+<!--									<goal>jar</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--							<execution>-->
+<!--								<id>generate-aggregate-javadocs</id>-->
+<!--								<phase>package</phase>-->
+<!--								<goals>-->
+<!--									<goal>aggregate</goal>-->
+<!--								</goals>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
+<!--				</plugins>-->
+<!--			</build>-->
+<!--		</profile>-->
+<!--	</profiles>-->
 
 </project>

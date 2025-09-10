@@ -62,6 +62,7 @@ public class DashScopeLlm implements BasicLlm {
             case "user" -> Role.USER;
             case "assistant" -> Role.ASSISTANT;
             case "system" -> Role.SYSTEM;
+            case "tool" -> Role.TOOL;
             default -> Role.USER;
         };
     }
@@ -127,9 +128,11 @@ public class DashScopeLlm implements BasicLlm {
                 .model(llmRequest.getModelName())
                 .apiKey(getApiKey())
                 .messages(messages)
-                .parameters((Map<? extends String, ?>) llmRequest.getExtraParams())
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)
                 .build();
+        if (llmRequest.getExtraParams() != null) {
+            param.setParameters((Map<String, Object>) llmRequest.getExtraParams());
+        }
 
         return Flowable.fromCallable(() -> {
             try {

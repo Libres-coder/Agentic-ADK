@@ -31,11 +31,13 @@ import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @Data
@@ -49,18 +51,30 @@ public class DashScopeTools implements FunctionTool {
 
     @Override
     public Flowable<Map<String, Object>> run(Map<String, Object> args, SystemContext systemContext) {
-        ApplicationParam applicationParam = new JSONObject(args).toJavaObject(ApplicationParam.class);
-        if (StringUtils.isBlank(applicationParam.getApiKey())) {
-            applicationParam.setApiKey(apiKey);
+        ApplicationParam.ApplicationParamBuilder builder = ApplicationParam.builder();
+        if (StringUtils.isNotBlank(getAppId())) {
+            builder.appId(getAppId());
         }
-        if (StringUtils.isBlank(applicationParam.getAppId())) {
-            applicationParam.setAppId(appId);
+        if (StringUtils.isNotBlank(getApiKey())) {
+            builder.apiKey(getApiKey());
         }
+        Optional.ofNullable(args).ifPresent(arg -> {
+            if (arg.containsKey("appId")) {
+                builder.appId((String) arg.get("appId"));
+            }
+            if (arg.containsKey("apiKey")) {
+                builder.apiKey((String) arg.get("apiKey"));
+            }
+            if (arg.containsKey("prompt")) {
+                builder.prompt((String) arg.get("prompt"));
+            }
+        });
+
 
         return Flowable.create(emitter -> {
             try {
                 Application application = new Application();
-                ApplicationResult result = application.call(applicationParam);
+                ApplicationResult result = application.call(builder.build());
                 Map<String, Object> output = new HashMap<>();
                 output.put("text", result.getOutput().getText());
                 output.put("sessionId", result.getOutput().getSessionId());

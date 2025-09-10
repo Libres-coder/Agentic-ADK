@@ -53,9 +53,11 @@ public class ConditionRegistry {
                     "Please configure its field of flowNode.", ErrorEnum.PROPERTY_CONFIG_ERROR);
         }
         String key = constructConditionId(gatewayId, conditionalContainer.getFlowNode().getId());
+        // gatewayid由系统利用uuid生成，如果流程已存在，则无需重复注册
+        // 若键重复，则仅提出警告，不抛出异常。且与DelegationLlm保持一致，不覆盖原先的键值
         if (conditionsMap.containsKey(key)) {
             log.warn("duplicated key of conditionId: {}, please notice", key);
-            throw new BaseException("Two nodes' id are same in conditionalFancyNodeList of one predecessor node. Please check flow configuration", ErrorEnum.FLOW_CONFIG_ERROR);
+            return;
         }
         conditionsMap.put(key, conditionalContainer);
     }

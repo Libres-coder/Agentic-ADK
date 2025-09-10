@@ -1,6 +1,6 @@
 # 阿里智能体开发工具包核心 (Ali-Agent ADK Core)
 
-**[English Version](./README.md)**
+[English Version](README.md)
 
 ## 项目介绍
 
@@ -49,11 +49,11 @@
 - **FlowCanvas**: 流程定义的主要容器，用于构建和部署工作流
 - **FlowNode**: 所有流程节点的基类，定义了节点的基本行为
 - **节点类型**:
-    - `LlmFlowNode`: 用于与大语言模型交互
-    - `ToolFlowNode`: 用于执行外部工具
-    - `ConditionalContainer`: 用于条件分支
-    - `ParallelFlowNode`: 用于并行执行
-    - `ReferenceFlowNode`: 用于引用其他流程
+  - `LlmFlowNode`: 用于与大语言模型交互
+  - `ToolFlowNode`: 用于执行外部工具
+  - `ConditionalContainer`: 用于条件分支
+  - `ParallelFlowNode`: 用于并行执行
+  - `ReferenceFlowNode`: 用于引用其他流程
 
 ### 2. 执行组件
 
@@ -120,9 +120,9 @@ llmNode.setId("llmNode1");
 #### 3. 设置节点的后继节点构成Flow
 - 通过`node.next(successorNode)`设置一个一般串联后继节点
 - 通过`node.nextOnCondition(conditionContainer).nextOnElse(flowNode)`设置一个分支后继节点，其中：
-    - `conditionContainer`通过实现`BaseCondition`接口中的`eval`方法设置条件判断逻辑，并通过`setFlowNode`方法设置条件命中时将要执行的节点；
-    - `nextOnCondition`可以接收一个或多个条件块；
-    - `nextOnElse`中设置当一组条件均不命中时将执行的节点；若不设置else默认节点，则xml生成引擎将连至结束节点。
+  - `conditionContainer`通过实现`BaseCondition`接口中的`eval`方法设置条件判断逻辑，并通过`setFlowNode`方法设置条件命中时将要执行的节点；
+  - `nextOnCondition`可以接收一个或多个条件块；
+  - `nextOnElse`中设置当一组条件均不命中时将执行的节点；若不设置else默认节点，则xml生成引擎将连至结束节点。
 
 #### 4. 设置Flow全局Request并通过Runner运行
 ```java

@@ -1,6 +1,6 @@
 # Ali-Agent ADK Core
 
-**[中文版说明](./README_CN.md)**
+[中文版说明](README_CN.md)
 
 ## Introduction
 

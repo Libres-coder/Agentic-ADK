@@ -20,7 +20,7 @@ package com.alibaba.langengine.core.callback;
  * @time 2023/11/22
  * 功能说明：使用SLS的AccessKey直接写入到SLS中
  */
-public class SlsLogCallbackHandler extends BaseCallbackHandler {
+public class SlsLogCallBackHandler extends BaseCallbackHandler {
 
 
 

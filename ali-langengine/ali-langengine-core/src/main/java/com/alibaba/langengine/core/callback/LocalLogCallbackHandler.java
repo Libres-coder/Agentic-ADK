@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * 4、在代码中回调管理器加上这个类即可
  */
 @Slf4j
-public class LocalLogCallbackHandler extends BaseCallbackHandler {
+public class LocalLogCallBackHandler extends BaseCallbackHandler {
 
     private static final Logger TRACE_LOG = LoggerFactory.getLogger("llm_trace_log");
 
