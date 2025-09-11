@@ -146,6 +146,7 @@
         <module>ali-langengine-community/ali-langengine-pyexecutor</module>
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
         <module>ali-langengine-community/ali-langengine-tianyancha</module>
+        <module>ali-langengine-community/ali-langengine-gitcode</module>
     </modules>
 
 	<dependencyManagement>
