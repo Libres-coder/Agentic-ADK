@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  # 前端
+  ali-agentic-adk-frontend-web:
+    build: ./web
+    ports:
+      - '80:80'
+    depends_on:
+      ali-agentic-adk-frontend-server:
+        condition: service_started
+
+  # 后端
+  ali-agentic-adk-frontend-server:
+    build: ./server
+    depends_on:
+      ali-agentic-adk-frontend-postgres:
+        condition: service_healthy
