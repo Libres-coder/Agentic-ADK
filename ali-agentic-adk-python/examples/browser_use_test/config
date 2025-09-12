@@ -1,0 +1,14 @@
+# computer use global config
+[default]
+ali.adk.browser.use.properties.ak=Alibaba_Cloud_Access_Key_ID
+ali.adk.browser.use.properties.sk=Alibaba_Cloud_Access_Key_Secret
+ali.adk.browser.use.properties.endpoint=ecd.cn-hangzhou.aliyuncs.com
+ali.adk.browser.use.properties.endpoints=ecd.cn-hangzhou.aliyuncs.com
+ali.adk.browser.use.properties.endUserId=End_User_ID
+ali.adk.browser.use.properties.password=End_User_Password
+ali.adk.browser.use.properties.officeSiteId=Office_Site_ID
+
+#computer config
+ali.adk.browser.use.properties.enable=true
+ali.adk.browser.use.properties.enableWuying=true
+ali.adk.browser.use.properties.computerResourceId=Wuying_Computer_Resource_ID
