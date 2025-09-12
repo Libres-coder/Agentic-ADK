@@ -326,7 +326,7 @@ tag identifying you; and
 Copyright 2010-2014 The Apache Software Foundation
 9. jackson-annotations  https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
 10. commons-beanutils  https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
-11. ali-langengine-duckdb 1.2.6-SNAPSHOT
+11. ali-langengine-duckdb 1.2.6-202508111516
 12. pytorch-model-zoo 0.23.0 https://mvnrepository.com/artifact/ai.djl.pytorch/pytorch-model-zoo
 Copyright 2019 Amazon.com; Inc. or its affiliates. All Rights Reserved.
 13. jackson-core 2.12.0 https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
@@ -338,8 +338,8 @@ copyright _assignment_; it simply gives
 17. jackson-databind  https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
 18. converter-jackson  https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-jackson
 19. rxjava 3.1.5 https://mvnrepository.com/artifact/io.reactivex.rxjava3/rxjava
-20. ali-langengine-sqlite 1.2.6-SNAPSHOT
-21. ali-langengine-core 1.2.6-SNAPSHOT
+20. ali-langengine-sqlite 1.2.6-202508111516
+21. ali-langengine-core 1.2.6-202508111516
 22. commons-beanutils 1.9.4 https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
 23. elasticsearch-rest-high-level-client 7.10.0 https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-high-level-client
 Copyright 3: 2018 MongoDB; Inc.
@@ -397,7 +397,7 @@ Copyright 1999-2020 The Apache Software Foundation
 Copyright 1999-2021 The Apache Software Foundation
 Copyright 1999-2021 Apache Software Foundation
 Copyright 1999-1969 The Apache Software Foundation
-37. ali-langengine-tool 1.2.6-SNAPSHOT
+37. ali-langengine-tool 1.2.6-202508111516
 38. xingchen-java-client 1.0.7 https://mvnrepository.com/artifact/com.alibaba.xingchen/xingchen-java-client
 39. spring-test 4.3.25.RELEASE https://mvnrepository.com/artifact/org.springframework/spring-test
 Copyright (C) 1991; 1999 Free Software Foundation; Inc.
@@ -412,7 +412,7 @@ Copyright 2002-2013 the original author or authors.
 Copyright 2003-2022 The Apache Software Foundation
 Copyright 2003-2021 The Apache Software Foundation
 42. dashscope-sdk-java 2.16.8 https://mvnrepository.com/artifact/com.alibaba/dashscope-sdk-java
-43. ali-langengine-dashscope 1.2.6-SNAPSHOT
+43. ali-langengine-dashscope 1.2.6-202508111516
 44. mybatis 3.5.6 https://mvnrepository.com/artifact/org.mybatis/mybatis
 45. commons-io 2.15.0 https://mvnrepository.com/artifact/commons-io/commons-io
 46. log4j 99.0-does-not-exist
@@ -583,12 +583,12 @@ Copyright (c) 2009-present; Alibaba Cloud All rights reserved.
 Copyright 2012-2014 the original author or authors.
 Copyright 2012-2019 the original author or authors.
 tag identifying you; and
-92. ali-langengine-gpt 1.2.6-SNAPSHOT
+92. ali-langengine-gpt 1.2.6-202508111516
 93. jackson-databind 2.15.4 https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
 Copyright 2007-; Tatu Saloranta (tatu.saloranta@iki.fi)
 94. logging-interceptor 4.11.0 https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor
 Copyright 2019 Square; Inc.
-95. ali-langengine-docloader 1.2.6-SNAPSHOT
+95. ali-langengine-docloader 1.2.6-202508111516
 96. spring-boot-starter-jdbc 3.3.4 https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc
 Copyright 2012-2014 the original author or authors.
 Copyright 2012-2019 the original author or authors.
@@ -614,7 +614,7 @@ Copyright 1999-2017 Alibaba Group Holding Ltd.
 Copyright 1999-2021 Alibaba Group Holding Ltd.
 105. pytorch-engine 0.31.1 https://mvnrepository.com/artifact/ai.djl.pytorch/pytorch-engine
 Copyright 2019 Amazon.com; Inc. or its affiliates. All Rights Reserved.
-106. ali-langengine-xinghuo 1.2.6-SNAPSHOT
+106. ali-langengine-xinghuo 1.2.6-202508111516
 107. fastjson  https://mvnrepository.com/artifact/com.alibaba/fastjson
 108. sqlite-jdbc 3.42.0.0 https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
 109. rxjava 2.1.10 https://mvnrepository.com/artifact/io.reactivex.rxjava2/rxjava
@@ -631,12 +631,12 @@ Copyright 1999-2021 The Apache Software Foundation
 115. reactor-core  https://mvnrepository.com/artifact/io.projectreactor/reactor-core
 116. okhttp 4.11.0 https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 Copyright 2019 Square; Inc.
-117. ali-langengine-openai 1.2.6-SNAPSHOT
+117. ali-langengine-openai 1.2.6-202508111516
 118. spring-boot-dependencies 2.5.12
-119. ali-langengine-deepsearch 1.2.6-SNAPSHOT
+119. ali-langengine-deepsearch 1.2.6-202508111516
 120. crawler4j 4.4.0 https://mvnrepository.com/artifact/edu.uci.ics/crawler4j
 121. easyexcel 3.1.1 https://mvnrepository.com/artifact/com.alibaba/easyexcel
-122. ali-langengine-hologres 1.2.6-SNAPSHOT
+122. ali-langengine-hologres 1.2.6-202508111516
 123. selenium-api 4.1.4 https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-api
 Copyright 1999-2009 The Apache Software Foundation..
 Copyright 2011-2023 Software Freedom Conservancy
@@ -1218,6 +1218,3 @@ Simply including a copy of this Agreement, including this Exhibit A is not suffi
 If it is not possible or desirable to put the notice in a particular file, then You may include the notice in a location (such as a LICENSE file in a relevant directory) where a recipient would be likely to look for such a notice.
 
 You may add additional accurate notices of copyright ownership.
-
-
-
