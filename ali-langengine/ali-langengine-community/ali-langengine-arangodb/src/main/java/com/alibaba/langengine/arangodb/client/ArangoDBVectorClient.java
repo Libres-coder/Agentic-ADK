@@ -17,6 +17,7 @@ package com.alibaba.langengine.arangodb.client;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.langengine.arangodb.ArangoDBConfiguration;
+import com.alibaba.langengine.arangodb.cache.LRUCache;
 import com.alibaba.langengine.arangodb.exception.ArangoDBVectorStoreException;
 import com.alibaba.langengine.arangodb.model.ArangoDBQueryRequest;
 import com.alibaba.langengine.arangodb.model.ArangoDBQueryResponse;
@@ -38,15 +39,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 
+
 @Slf4j
 public class ArangoDBVectorClient implements AutoCloseable {
     
     private final ArangoDB arangoDB;
     private final ArangoDatabase database;
     private final ArangoDBConfiguration configuration;
-    private final Map<String, List<Double>> vectorCache;
-    private final Map<String, ArangoCollection> collectionCache;
+    private final LRUCache<String, List<Double>> vectorCache;
+    private final LRUCache<String, ArangoCollection> collectionCache;
+    private final ArangoSearchManager searchManager;
     
+    /**
+     * 构造函数
+     * 
+     * <p>创建一个新的 ArangoDB 向量存储客户端实例。该构造函数会：</p>
+     * <ul>
+     *   <li>验证配置参数的有效性</li>
+     *   <li>建立与 ArangoDB 数据库的连接</li>
+     *   <li>初始化数据库（如果不存在则创建）</li>
+     *   <li>设置 LRU 缓存</li>
+     *   <li>初始化 ArangoSearch 管理器</li>
+     * </ul>
+     * 
+     * @param configuration ArangoDB 连接配置，不能为 null
+     * @throws ArangoDBVectorStoreException 如果配置无效或连接失败
+     * @throws IllegalArgumentException 如果配置为 null
+     * 
+     * @see ArangoDBConfiguration#validate()
+     * @see #initializeDatabase()
+     * @see ArangoSearchManager
+     */
     public ArangoDBVectorClient(ArangoDBConfiguration configuration) {
         this.configuration = configuration;
         this.configuration.validate();
@@ -62,9 +85,12 @@ public class ArangoDBVectorClient implements AutoCloseable {
             // 获取数据库
             this.database = initializeDatabase();
             
-            // 初始化缓存
-            this.vectorCache = new ConcurrentHashMap<>();
-            this.collectionCache = new ConcurrentHashMap<>();
+            // 初始化 LRU 缓存
+            this.vectorCache = new LRUCache<>(configuration.getMaxCacheSize());
+            this.collectionCache = new LRUCache<>(100); // 集合缓存容量较小
+            
+            // 初始化 ArangoSearch 管理器
+            this.searchManager = new ArangoSearchManager(database, configuration);
             
             log.info("ArangoDB vector client initialized successfully: {}:{}/{}", 
                     configuration.getHost(), configuration.getPort(), configuration.getDatabase());
@@ -157,6 +183,16 @@ public class ArangoDBVectorClient implements AutoCloseable {
                 log.warn("Failed to create vector index: {}", e.getMessage());
             }
             
+            // 创建 ArangoSearch 视图用于优化的向量搜索
+            try {
+                String viewName = searchManager.getOrCreateVectorSearchView(collection.name());
+                if (viewName != null) {
+                    log.info("Created ArangoSearch view for collection: {} -> {}", collection.name(), viewName);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to create ArangoSearch view for collection: {}", collection.name(), e);
+            }
+            
             log.info("Created indexes for collection: {}", collection.name());
             
         } catch (Exception e) {
@@ -219,11 +255,29 @@ public class ArangoDBVectorClient implements AutoCloseable {
         try {
             ArangoCollection collection = getOrCreateCollection(collectionName);
             
-            // 构建 AQL 查询
-            String aqlQuery = buildSimilarityQuery(request);
-            Map<String, Object> bindVars = buildBindVariables(request);
+            // 尝试使用 ArangoSearch 优化查询
+            String aqlQuery;
+            Map<String, Object> bindVars = request.buildOptimizedBindVariables();
             
-            log.debug("Executing AQL query: {}", aqlQuery);
+            String viewName = searchManager.getOrCreateVectorSearchView(collectionName);
+            if (viewName != null && searchManager.viewExists(viewName)) {
+                // 使用 ArangoSearch 优化查询
+                Map<String, Object> searchParams = new HashMap<>(bindVars);
+                searchParams.put("docType", request.getDocTypeFilter());
+                searchParams.put("tags", request.getTagFilter());
+                searchParams.put("metadataFilter", request.getMetadataFilter());
+                searchParams.put("includeVector", request.isIncludeVector());
+                
+                aqlQuery = searchManager.buildOptimizedVectorSearchQuery(collectionName, viewName, searchParams);
+                bindVars.put("@view", viewName);
+                
+                log.debug("Using ArangoSearch optimized query: {}", aqlQuery);
+            } else {
+                // 回退到传统查询
+                aqlQuery = buildSimilarityQuery(request);
+                log.debug("Using traditional AQL query: {}", aqlQuery);
+            }
+            
             log.debug("Bind variables: {}", bindVars);
             
             // 执行查询
@@ -237,7 +291,9 @@ public class ArangoDBVectorClient implements AutoCloseable {
             
             long executionTime = System.currentTimeMillis() - startTime;
             
-            log.info("Found {} similar vectors in {}ms", vectors.size(), executionTime);
+            log.info("Found {} similar vectors in {}ms using {}", 
+                    vectors.size(), executionTime, 
+                    viewName != null ? "ArangoSearch" : "traditional query");
             
             return ArangoDBQueryResponse.success(vectors, executionTime);
             
@@ -246,6 +302,111 @@ public class ArangoDBVectorClient implements AutoCloseable {
             log.error("Failed to query similar vectors", e);
             
             return ArangoDBQueryResponse.failure("QUERY_ERROR", e.getMessage(), executionTime);
+        }
+    }
+    
+    /**
+     * 全文搜索
+     */
+    public ArangoDBQueryResponse fullTextSearch(String collectionName, String searchText, 
+                                               Map<String, Object> filters, int topK) {
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            String viewName = searchManager.getOrCreateVectorSearchView(collectionName);
+            if (viewName == null || !searchManager.viewExists(viewName)) {
+                throw new IllegalStateException("ArangoSearch view not available for collection: " + collectionName);
+            }
+            
+            // 构建搜索参数
+            Map<String, Object> searchParams = new HashMap<>();
+            searchParams.put("searchText", searchText);
+            searchParams.put("topK", topK);
+            searchParams.putAll(filters);
+            
+            // 构建查询
+            String aqlQuery = searchManager.buildFullTextSearchQuery(collectionName, viewName, searchParams);
+            Map<String, Object> bindVars = new HashMap<>();
+            bindVars.put("@view", viewName);
+            bindVars.putAll(searchParams);
+            
+            log.debug("Executing full-text search query: {}", aqlQuery);
+            
+            // 执行查询
+            List<BaseDocument> results = database.query(aqlQuery, BaseDocument.class, bindVars).asListRemaining();
+            
+            // 转换结果
+            List<ArangoDBVector> vectors = results.stream()
+                    .map(this::convertFromBaseDocument)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            
+            log.info("Found {} documents in full-text search in {}ms", vectors.size(), executionTime);
+            
+            return ArangoDBQueryResponse.success(vectors, executionTime);
+            
+        } catch (Exception e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            log.error("Failed to perform full-text search", e);
+            
+            return ArangoDBQueryResponse.failure("FULLTEXT_SEARCH_ERROR", e.getMessage(), executionTime);
+        }
+    }
+    
+    /**
+     * 混合搜索（向量 + 全文）
+     */
+    public ArangoDBQueryResponse hybridSearch(String collectionName, List<Double> queryVector, 
+                                             String searchText, Map<String, Object> filters, 
+                                             int topK, double vectorWeight, double textWeight) {
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            String viewName = searchManager.getOrCreateVectorSearchView(collectionName);
+            if (viewName == null || !searchManager.viewExists(viewName)) {
+                throw new IllegalStateException("ArangoSearch view not available for collection: " + collectionName);
+            }
+            
+            // 构建搜索参数
+            Map<String, Object> searchParams = new HashMap<>();
+            searchParams.put("queryVector", queryVector);
+            searchParams.put("searchText", searchText);
+            searchParams.put("topK", topK);
+            searchParams.put("vectorWeight", vectorWeight);
+            searchParams.put("textWeight", textWeight);
+            searchParams.put("similarityThreshold", 0.0); // 混合搜索通常不设置阈值
+            searchParams.putAll(filters);
+            
+            // 构建查询
+            String aqlQuery = searchManager.buildHybridSearchQuery(collectionName, viewName, searchParams);
+            Map<String, Object> bindVars = new HashMap<>();
+            bindVars.put("@view", viewName);
+            bindVars.putAll(searchParams);
+            
+            log.debug("Executing hybrid search query: {}", aqlQuery);
+            
+            // 执行查询
+            List<BaseDocument> results = database.query(aqlQuery, BaseDocument.class, bindVars).asListRemaining();
+            
+            // 转换结果
+            List<ArangoDBVector> vectors = results.stream()
+                    .map(this::convertFromBaseDocument)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            
+            log.info("Found {} documents in hybrid search in {}ms", vectors.size(), executionTime);
+            
+            return ArangoDBQueryResponse.success(vectors, executionTime);
+            
+        } catch (Exception e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            log.error("Failed to perform hybrid search", e);
+            
+            return ArangoDBQueryResponse.failure("HYBRID_SEARCH_ERROR", e.getMessage(), executionTime);
         }
     }
     
@@ -468,7 +629,7 @@ public class ArangoDBVectorClient implements AutoCloseable {
      * 更新向量缓存
      */
     private void updateCache(String docId, List<Double> vector) {
-        if (docId != null && vector != null && vectorCache.size() < configuration.getMaxCacheSize()) {
+        if (docId != null && vector != null) {
             vectorCache.put(docId, new ArrayList<>(vector));
         }
     }
@@ -492,11 +653,12 @@ public class ArangoDBVectorClient implements AutoCloseable {
     public Map<String, Object> getCollectionStats(String collectionName) {
         try {
             ArangoCollection collection = getOrCreateCollection(collectionName);
-            return Map.of(
-                    "name", collection.name(),
-                    "count", collection.count(),
-                    "cacheSize", vectorCache.size()
-            );
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("name", collection.name());
+            stats.put("count", collection.count());
+            stats.put("vectorCacheStats", vectorCache.getStats());
+            stats.put("collectionCacheStats", collectionCache.getStats());
+            return stats;
         } catch (Exception e) {
             log.error("Failed to get collection stats", e);
             return Map.of("error", e.getMessage());
@@ -516,6 +678,11 @@ public class ArangoDBVectorClient implements AutoCloseable {
     public void close() {
         try {
             clearCache();
+            
+            // 清理 ArangoSearch 管理器
+            if (searchManager != null) {
+                searchManager.cleanup();
+            }
             
             if (arangoDB != null) {
                 arangoDB.shutdown();

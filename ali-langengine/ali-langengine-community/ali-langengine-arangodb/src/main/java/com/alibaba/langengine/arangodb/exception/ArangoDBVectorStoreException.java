@@ -26,6 +26,7 @@ public class ArangoDBVectorStoreException extends RuntimeException {
         DATABASE_ERROR("DATABASE_ERROR", "数据库错误"),
         COLLECTION_ERROR("COLLECTION_ERROR", "集合错误"),
         INDEX_ERROR("INDEX_ERROR", "索引错误"),
+        VIEW_ERROR("VIEW_ERROR", "视图错误"),
         QUERY_ERROR("QUERY_ERROR", "查询错误"),
         INSERT_ERROR("INSERT_ERROR", "插入错误"),
         UPDATE_ERROR("UPDATE_ERROR", "更新错误"),
@@ -35,6 +36,14 @@ public class ArangoDBVectorStoreException extends RuntimeException {
         CACHE_ERROR("CACHE_ERROR", "缓存错误"),
         TIMEOUT_ERROR("TIMEOUT_ERROR", "超时错误"),
         VALIDATION_ERROR("VALIDATION_ERROR", "验证错误"),
+        AUTHENTICATION_ERROR("AUTHENTICATION_ERROR", "认证错误"),
+        AUTHORIZATION_ERROR("AUTHORIZATION_ERROR", "授权错误"),
+        NETWORK_ERROR("NETWORK_ERROR", "网络错误"),
+        SERIALIZATION_ERROR("SERIALIZATION_ERROR", "序列化错误"),
+        DESERIALIZATION_ERROR("DESERIALIZATION_ERROR", "反序列化错误"),
+        ARANGOSEARCH_ERROR("ARANGOSEARCH_ERROR", "ArangoSearch 错误"),
+        FULLTEXT_SEARCH_ERROR("FULLTEXT_SEARCH_ERROR", "全文搜索错误"),
+        HYBRID_SEARCH_ERROR("HYBRID_SEARCH_ERROR", "混合搜索错误"),
         UNKNOWN_ERROR("UNKNOWN_ERROR", "未知错误");
         
         private final String code;
@@ -125,13 +134,67 @@ public class ArangoDBVectorStoreException extends RuntimeException {
         return new ArangoDBVectorStoreException(ErrorCode.VALIDATION_ERROR, message);
     }
     
+    public static ArangoDBVectorStoreException viewError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.VIEW_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException authenticationError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.AUTHENTICATION_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException authorizationError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.AUTHORIZATION_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException networkError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.NETWORK_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException serializationError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.SERIALIZATION_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException deserializationError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.DESERIALIZATION_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException arangoSearchError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.ARANGOSEARCH_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException fullTextSearchError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.FULLTEXT_SEARCH_ERROR, message, cause);
+    }
+    
+    public static ArangoDBVectorStoreException hybridSearchError(String message, Throwable cause) {
+        return new ArangoDBVectorStoreException(ErrorCode.HYBRID_SEARCH_ERROR, message, cause);
+    }
+    
     public static ArangoDBVectorStoreException unknownError(String message, Throwable cause) {
         return new ArangoDBVectorStoreException(ErrorCode.UNKNOWN_ERROR, message, cause);
     }
     
+    /**
+     * 创建带上下文的异常
+     */
+    public static ArangoDBVectorStoreException withContext(ErrorCode errorCode, String operation, 
+                                                          String context, Throwable cause) {
+        String message = String.format("操作失败: %s, 上下文: %s", operation, context);
+        return new ArangoDBVectorStoreException(errorCode, message, cause);
+    }
+    
+    /**
+     * 创建带性能信息的异常
+     */
+    public static ArangoDBVectorStoreException withPerformance(ErrorCode errorCode, String operation, 
+                                                              long executionTime, Throwable cause) {
+        String message = String.format("操作失败: %s, 执行时间: %dms", operation, executionTime);
+        return new ArangoDBVectorStoreException(errorCode, message, cause);
+    }
+    
     @Override
     public String toString() {
-        return String.format("ArangoDBVectorStoreException{errorCode=%s, message=%s}", 
-                           errorCode.getCode(), getMessage());
+        return String.format("ArangoDBVectorStoreException{errorCode=%s, message=%s, cause=%s}", 
+                           errorCode.getCode(), getMessage(), getCause());
     }
 }

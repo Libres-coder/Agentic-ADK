@@ -76,6 +76,7 @@
 		<module>ali-langengine-community/ali-langengine-duckdb</module>
 		<module>ali-langengine-community/ali-langengine-redis</module>
 		<module>ali-langengine-community/ali-langengine-hologres</module>
+		<module>ali-langengine-community/ali-langengine-arangodb</module>
 		<module>ali-langengine-community/ali-langengine-adbpg</module>
 		<module>ali-langengine-community/ali-langengine-polardb</module>
 		<module>ali-langengine-community/ali-langengine-pinecone</module>

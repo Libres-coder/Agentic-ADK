@@ -18,6 +18,7 @@ package com.alibaba.langengine.arangodb.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -188,6 +189,7 @@ public class ArangoDBQueryRequest {
     
     /**
      * 构建AQL查询的WHERE子句
+     * 优化版本，支持更复杂的过滤条件
      */
     public String buildWhereClause() {
         StringBuilder whereClause = new StringBuilder();
@@ -197,15 +199,11 @@ public class ArangoDBQueryRequest {
         }
         
         if (hasMetadataFilter()) {
-            for (String key : metadataFilter.keySet()) {
-                whereClause.append(String.format(" AND doc.metadata.%s == @metadata_%s", key, key));
-            }
+            whereClause.append(buildMetadataWhereClause());
         }
         
         if (hasCustomFieldsFilter()) {
-            for (String key : customFieldsFilter.keySet()) {
-                whereClause.append(String.format(" AND doc.custom_fields.%s == @custom_%s", key, key));
-            }
+            whereClause.append(buildCustomFieldsWhereClause());
         }
         
         if (hasTagFilter()) {
@@ -213,5 +211,212 @@ public class ArangoDBQueryRequest {
         }
         
         return whereClause.toString();
+    }
+    
+    /**
+     * 构建元数据过滤的WHERE子句
+     * 支持多种操作符：==, !=, >, <, >=, <=, IN, NOT IN, LIKE, REGEX
+     */
+    private String buildMetadataWhereClause() {
+        StringBuilder whereClause = new StringBuilder();
+        
+        for (Map.Entry<String, Object> entry : metadataFilter.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            if (value instanceof Map) {
+                // 复杂条件：{"field": {"$op": "value"}}
+                @SuppressWarnings("unchecked")
+                Map<String, Object> condition = (Map<String, Object>) value;
+                whereClause.append(buildComplexCondition("doc.metadata." + key, condition, "metadata_" + key));
+            } else {
+                // 简单条件：{"field": "value"}
+                whereClause.append(String.format(" AND doc.metadata.%s == @metadata_%s", key, key));
+            }
+        }
+        
+        return whereClause.toString();
+    }
+    
+    /**
+     * 构建自定义字段过滤的WHERE子句
+     */
+    private String buildCustomFieldsWhereClause() {
+        StringBuilder whereClause = new StringBuilder();
+        
+        for (Map.Entry<String, Object> entry : customFieldsFilter.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            if (value instanceof Map) {
+                // 复杂条件
+                @SuppressWarnings("unchecked")
+                Map<String, Object> condition = (Map<String, Object>) value;
+                whereClause.append(buildComplexCondition("doc.custom_fields." + key, condition, "custom_" + key));
+            } else {
+                // 简单条件
+                whereClause.append(String.format(" AND doc.custom_fields.%s == @custom_%s", key, key));
+            }
+        }
+        
+        return whereClause.toString();
+    }
+    
+    /**
+     * 构建复杂条件表达式
+     * 支持的操作符：$eq, $ne, $gt, $lt, $gte, $lte, $in, $nin, $like, $regex
+     */
+    private String buildComplexCondition(String fieldPath, Map<String, Object> condition, String paramPrefix) {
+        StringBuilder conditionClause = new StringBuilder();
+        
+        for (Map.Entry<String, Object> opEntry : condition.entrySet()) {
+            String operator = opEntry.getKey();
+            Object value = opEntry.getValue();
+            
+            switch (operator) {
+                case "$eq":
+                    conditionClause.append(String.format(" AND %s == @%s", fieldPath, paramPrefix));
+                    break;
+                case "$ne":
+                    conditionClause.append(String.format(" AND %s != @%s", fieldPath, paramPrefix));
+                    break;
+                case "$gt":
+                    conditionClause.append(String.format(" AND %s > @%s", fieldPath, paramPrefix));
+                    break;
+                case "$lt":
+                    conditionClause.append(String.format(" AND %s < @%s", fieldPath, paramPrefix));
+                    break;
+                case "$gte":
+                    conditionClause.append(String.format(" AND %s >= @%s", fieldPath, paramPrefix));
+                    break;
+                case "$lte":
+                    conditionClause.append(String.format(" AND %s <= @%s", fieldPath, paramPrefix));
+                    break;
+                case "$in":
+                    conditionClause.append(String.format(" AND %s IN @%s", fieldPath, paramPrefix));
+                    break;
+                case "$nin":
+                    conditionClause.append(String.format(" AND %s NOT IN @%s", fieldPath, paramPrefix));
+                    break;
+                case "$like":
+                    conditionClause.append(String.format(" AND LIKE(%s, @%s)", fieldPath, paramPrefix));
+                    break;
+                case "$regex":
+                    conditionClause.append(String.format(" AND REGEX_TEST(%s, @%s)", fieldPath, paramPrefix));
+                    break;
+                case "$exists":
+                    if (Boolean.TRUE.equals(value)) {
+                        conditionClause.append(String.format(" AND %s != null", fieldPath));
+                    } else {
+                        conditionClause.append(String.format(" AND %s == null", fieldPath));
+                    }
+                    break;
+                case "$range":
+                    // 范围查询：{"$range": [min, max]}
+                    if (value instanceof List && ((List<?>) value).size() == 2) {
+                        List<?> range = (List<?>) value;
+                        conditionClause.append(String.format(" AND %s >= @%s_min AND %s <= @%s_max", 
+                                fieldPath, paramPrefix, fieldPath, paramPrefix));
+                    }
+                    break;
+                default:
+                    // 默认使用等于操作
+                    conditionClause.append(String.format(" AND %s == @%s", fieldPath, paramPrefix));
+                    break;
+            }
+        }
+        
+        return conditionClause.toString();
+    }
+    
+    /**
+     * 构建优化的绑定变量映射
+     * 处理复杂条件的参数绑定
+     */
+    public Map<String, Object> buildOptimizedBindVariables() {
+        Map<String, Object> bindVars = new HashMap<>();
+        
+        // 基础参数
+        bindVars.put("queryVector", queryVector);
+        bindVars.put("topK", topK);
+        bindVars.put("similarityThreshold", similarityThreshold);
+        
+        if (maxDistance != null) {
+            bindVars.put("maxDistance", maxDistance);
+        }
+        
+        if (minSimilarity != null) {
+            bindVars.put("minSimilarity", minSimilarity);
+        }
+        
+        if (hasDocTypeFilter()) {
+            bindVars.put("docType", docTypeFilter);
+        }
+        
+        if (hasTagFilter()) {
+            bindVars.put("tags", tagFilter);
+        }
+        
+        // 处理元数据过滤参数
+        if (hasMetadataFilter()) {
+            for (Map.Entry<String, Object> entry : metadataFilter.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                
+                if (value instanceof Map) {
+                    // 复杂条件参数
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> condition = (Map<String, Object>) value;
+                    bindComplexConditionParams(bindVars, "metadata_" + key, condition);
+                } else {
+                    // 简单条件参数
+                    bindVars.put("metadata_" + key, value);
+                }
+            }
+        }
+        
+        // 处理自定义字段过滤参数
+        if (hasCustomFieldsFilter()) {
+            for (Map.Entry<String, Object> entry : customFieldsFilter.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                
+                if (value instanceof Map) {
+                    // 复杂条件参数
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> condition = (Map<String, Object>) value;
+                    bindComplexConditionParams(bindVars, "custom_" + key, condition);
+                } else {
+                    // 简单条件参数
+                    bindVars.put("custom_" + key, value);
+                }
+            }
+        }
+        
+        return bindVars;
+    }
+    
+    /**
+     * 绑定复杂条件的参数
+     */
+    private void bindComplexConditionParams(Map<String, Object> bindVars, String paramPrefix, 
+                                          Map<String, Object> condition) {
+        for (Map.Entry<String, Object> opEntry : condition.entrySet()) {
+            String operator = opEntry.getKey();
+            Object value = opEntry.getValue();
+            
+            switch (operator) {
+                case "$range":
+                    if (value instanceof List && ((List<?>) value).size() == 2) {
+                        List<?> range = (List<?>) value;
+                        bindVars.put(paramPrefix + "_min", range.get(0));
+                        bindVars.put(paramPrefix + "_max", range.get(1));
+                    }
+                    break;
+                default:
+                    bindVars.put(paramPrefix, value);
+                    break;
+            }
+        }
     }
 }
