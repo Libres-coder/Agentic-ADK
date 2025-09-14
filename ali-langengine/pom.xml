@@ -117,6 +117,7 @@
 		<module>ali-langengine-community/ali-langengine-baidusearch</module>
 		<module>ali-langengine-community/ali-langengine-stackoverflow</module>
 		<module>ali-langengine-community/ali-langengine-baidu-translate</module>
+		<module>ali-langengine-community/ali-langengine-googledrive</module>
 		<module>ali-langengine-community/ali-langengine-googletranslate</module>
 		<module>ali-langengine-community/ali-langengine-zilliz</module>
 		<module>ali-langengine-community/ali-langengine-ollama</module>
@@ -131,6 +132,7 @@
 		<module>ali-langengine-community/ali-langengine-twitter</module>
 		<module>ali-langengine-community/ali-langengine-instagram</module>
 		<module>ali-langengine-community/ali-langengine-notion</module>
+		<module>ali-langengine-community/ali-langengine-onedrive</module>
 		<module>ali-langengine-community/ali-langengine-wenxin</module>
 		<module>ali-langengine-community/ali-langengine-douyin</module>
 		<module>ali-langengine-community/ali-langengine-zhihu</module>
