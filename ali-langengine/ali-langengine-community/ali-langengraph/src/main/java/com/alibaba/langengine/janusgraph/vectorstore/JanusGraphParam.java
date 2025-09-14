@@ -99,6 +99,12 @@ public class JanusGraphParam {
         private String hbaseTable = "janusgraph";
         
         /**
+         * 存储目录（用于BerkeleyDB等本地存储）
+         */
+        @Builder.Default
+        private String storageDirectory = System.getProperty("java.io.tmpdir") + "/janusgraph-storage";
+        
+        /**
          * 图的配置属性
          */
         @Builder.Default
@@ -390,6 +396,12 @@ public class JanusGraphParam {
         
         if (graphConfig != null) {
             config.put(STORAGE_BACKEND, graphConfig.getStorageBackend());
+            
+            // 为BerkeleyDB等本地存储配置存储目录
+            if ("berkeleyje".equals(graphConfig.getStorageBackend())) {
+                config.put("storage.directory", graphConfig.getStorageDirectory());
+            }
+            
             if (graphConfig.getStorageHostname() != null) {
                 config.put(STORAGE_HOSTNAME, graphConfig.getStorageHostname());
             }

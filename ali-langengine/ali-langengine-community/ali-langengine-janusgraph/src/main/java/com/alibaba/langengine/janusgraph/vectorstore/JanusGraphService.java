@@ -43,6 +43,9 @@ import org.janusgraph.core.schema.JanusGraphIndex;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.graphdb.database.management.ManagementSystem;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -75,7 +78,7 @@ public class JanusGraphService implements AutoCloseable {
             log.info("JanusGraph Service initialized successfully");
         } catch (Exception e) {
             log.error("Failed to initialize JanusGraph Service", e);
-            throw new RuntimeException("Failed to initialize JanusGraph", e);
+            throw JanusGraphVectorStoreException.connectionFailed("Failed to initialize JanusGraph", e);
         }
     }
 
@@ -391,62 +394,140 @@ public class JanusGraphService implements AutoCloseable {
     }
 
     /**
-     * 执行向量搜索
+     * 执行向量搜索 - 优化版本
+     * 支持批量处理和更高效的相似度计算
      */
     private List<Document> performVectorSearch(List<Double> queryVector, int k, Double maxDistanceValue) {
+        JanusGraphParam.IndexConfig indexConfig = janusGraphParam.getIndexConfig();
+        
+        // 根据索引后端选择最优搜索策略
+        if (indexConfig.getEnableMixedIndex() && "elasticsearch".equals(indexConfig.getIndexBackend())) {
+            return performElasticsearchVectorSearch(queryVector, k, maxDistanceValue);
+        } else if (indexConfig.getEnableMixedIndex() && "lucene".equals(indexConfig.getIndexBackend())) {
+            return performLuceneVectorSearch(queryVector, k, maxDistanceValue);
+        } else {
+            // 回退到优化的内存搜索
+            return performOptimizedMemoryVectorSearch(queryVector, k, maxDistanceValue);
+        }
+    }
+
+    /**
+     * Elasticsearch 向量搜索实现
+     * 利用 Elasticsearch 的 script_score 查询进行高效向量搜索
+     */
+    private List<Document> performElasticsearchVectorSearch(List<Double> queryVector, int k, Double maxDistanceValue) {
+        // TODO: 实现 Elasticsearch 向量搜索
+        // 这里需要使用 JanusGraph 的 Elasticsearch 集成
+        // 当前作为示例，回退到优化内存搜索
+        log.warn("Elasticsearch vector search not yet implemented, falling back to optimized memory search");
+        return performOptimizedMemoryVectorSearch(queryVector, k, maxDistanceValue);
+    }
+
+    /**
+     * Lucene 向量搜索实现
+     * 利用 Lucene 的自定义查询进行向量搜索
+     */
+    private List<Document> performLuceneVectorSearch(List<Double> queryVector, int k, Double maxDistanceValue) {
+        // TODO: 实现 Lucene 向量搜索
+        // 这里需要使用 JanusGraph 的 Lucene 集成
+        log.warn("Lucene vector search not yet implemented, falling back to optimized memory search");
+        return performOptimizedMemoryVectorSearch(queryVector, k, maxDistanceValue);
+    }
+
+    /**
+     * 优化的内存向量搜索
+     * 使用流式处理和优先队列减少内存占用
+     */
+    private List<Document> performOptimizedMemoryVectorSearch(List<Double> queryVector, int k, Double maxDistanceValue) {
         List<Document> results = new ArrayList<>();
         JanusGraphTransaction tx = graph.newTransaction();
         
         try {
             JanusGraphParam.VectorConfig vectorConfig = janusGraphParam.getVectorConfig();
+            JanusGraphParam.BatchConfig batchConfig = janusGraphParam.getBatchConfig();
             
-            // 获取所有文档顶点
-            List<Vertex> vertices = tx.traversal().V()
-                .hasLabel(vectorConfig.getVertexLabel())
-                .toList();
+            // 使用优先队列维护 top-k 结果，减少内存使用
+            PriorityQueue<DocumentSimilarity> topKQueue = new PriorityQueue<>(
+                k + 1, Comparator.comparing(DocumentSimilarity::getSimilarity)
+            );
             
-            // 计算相似度并排序
-            List<DocumentSimilarity> similarities = new ArrayList<>();
+            // 分批处理以避免内存溢出
+            int batchSize = batchConfig.getBatchSize();
+            boolean hasMore = true;
+            int offset = 0;
             
-            for (Vertex vertex : vertices) {
-                String vectorStr = vertex.value(vectorConfig.getVectorPropertyName());
-                List<Double> docVector = JSON.parseArray(vectorStr, Double.class);
+            while (hasMore) {
+                List<Vertex> vertices = tx.traversal().V()
+                    .hasLabel(vectorConfig.getVertexLabel())
+                    .range(offset, offset + batchSize)
+                    .toList();
                 
-                double similarity = JanusGraphSimilarityFunction.COSINE.calculateSimilarity(queryVector, docVector);
-                double distance = JanusGraphSimilarityFunction.COSINE.calculateDistance(queryVector, docVector);
-                
-                // 应用距离阈值过滤
-                if (maxDistanceValue != null && distance > maxDistanceValue) {
-                    continue;
+                if (vertices.isEmpty()) {
+                    hasMore = false;
+                    break;
                 }
                 
-                String docId = vertex.value(vectorConfig.getIdPropertyName());
-                String content = vertex.value(vectorConfig.getContentPropertyName());
-                String metadataStr = vertex.property(vectorConfig.getMetadataPropertyName()).isPresent() ? 
-                    vertex.value(vectorConfig.getMetadataPropertyName()) : null;
+                // 并行处理当前批次的向量相似度计算
+                vertices.parallelStream().forEach(vertex -> {
+                    try {
+                        String vectorStr = vertex.value(vectorConfig.getVectorPropertyName());
+                        List<Double> docVector = JSON.parseArray(vectorStr, Double.class);
+                        
+                        double similarity = JanusGraphSimilarityFunction.COSINE.calculateSimilarity(queryVector, docVector);
+                        double distance = JanusGraphSimilarityFunction.COSINE.calculateDistance(queryVector, docVector);
+                        
+                        // 应用距离阈值过滤
+                        if (maxDistanceValue != null && distance > maxDistanceValue) {
+                            return;
+                        }
+                        
+                        String docId = vertex.value(vectorConfig.getIdPropertyName());
+                        String content = vertex.value(vectorConfig.getContentPropertyName());
+                        String metadataStr = vertex.property(vectorConfig.getMetadataPropertyName()).isPresent() ? 
+                            vertex.value(vectorConfig.getMetadataPropertyName()) : null;
+                        
+                        Map<String, Object> metadata = new HashMap<>();
+                        if (StringUtils.isNotEmpty(metadataStr)) {
+                            metadata = JSON.parseObject(metadataStr, Map.class);
+                        }
+                        metadata.put("score", similarity);
+                        metadata.put("distance", distance);
+                        metadata.put("document_id", docId);
+                        
+                        Document document = new Document();
+                        document.setPageContent(content);
+                        document.setMetadata(metadata);
+                        
+                        // 线程安全的优先队列操作
+                        synchronized (topKQueue) {
+                            topKQueue.offer(new DocumentSimilarity(document, similarity));
+                            if (topKQueue.size() > k) {
+                                topKQueue.poll(); // 移除相似度最低的
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to process vertex for similarity search: {}", e.getMessage());
+                    }
+                });
                 
-                Map<String, Object> metadata = new HashMap<>();
-                if (StringUtils.isNotEmpty(metadataStr)) {
-                    metadata = JSON.parseObject(metadataStr, Map.class);
+                offset += batchSize;
+                
+                // 如果返回的顶点数量小于批次大小，说明已经到了最后
+                if (vertices.size() < batchSize) {
+                    hasMore = false;
                 }
-                metadata.put("score", similarity);
-                metadata.put("distance", distance);
-                
-                Document document = new Document();
-                document.setPageContent(content);
-                document.setMetadata(metadata);
-                
-                similarities.add(new DocumentSimilarity(document, similarity));
             }
             
-            // 按相似度排序并取前k个
-            results = similarities.stream()
+            // 将优先队列中的结果转换为按相似度降序排列的列表
+            results = new ArrayList<>(topKQueue).stream()
                 .sorted((a, b) -> Double.compare(b.getSimilarity(), a.getSimilarity()))
-                .limit(k)
                 .map(DocumentSimilarity::getDocument)
                 .collect(Collectors.toList());
             
             tx.commit();
+            
+            log.info("Vector search completed: found {} results for query vector of dimension {}", 
+                results.size(), queryVector.size());
             
         } catch (Exception e) {
             tx.rollback();
@@ -492,15 +573,42 @@ public class JanusGraphService implements AutoCloseable {
 
     /**
      * 生成文档ID
+     * 优先级：元数据ID → 内容哈希 → UUID
      */
     private String generateDocumentId(Document document) {
-        // 优先使用文档元数据中的ID
+        // 1. 优先使用文档元数据中的ID
         if (document.getMetadata() != null && document.getMetadata().containsKey("id")) {
-            return document.getMetadata().get("id").toString();
+            Object idObj = document.getMetadata().get("id");
+            if (idObj != null) {
+                String id = idObj.toString().trim();
+                if (!id.isEmpty()) {
+                    return id;
+                }
+            }
         }
         
-        // 生成UUID作为文档ID
-        return UUID.randomUUID().toString();
+        // 2. 根据文档内容生成稳定的哈希ID（防止重复插入）
+        String content = document.getPageContent();
+        if (content != null && !content.trim().isEmpty()) {
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                byte[] hash = md.digest(content.getBytes(StandardCharsets.UTF_8));
+                StringBuilder hexString = new StringBuilder();
+                for (byte b : hash) {
+                    String hex = Integer.toHexString(0xff & b);
+                    if (hex.length() == 1) {
+                        hexString.append('0');
+                    }
+                    hexString.append(hex);
+                }
+                return "doc_" + hexString.toString().substring(0, 32);
+            } catch (NoSuchAlgorithmException e) {
+                log.warn("SHA-256 算法不可用，将使用UUID: {}", e.getMessage());
+            }
+        }
+        
+        // 3. 最后使用UUID作为备选方案
+        return "doc_" + UUID.randomUUID().toString().replace("-", "");
     }
 
     /**

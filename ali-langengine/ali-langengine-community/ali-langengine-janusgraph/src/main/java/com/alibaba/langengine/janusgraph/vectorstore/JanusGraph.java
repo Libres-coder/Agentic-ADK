@@ -94,9 +94,11 @@ public class JanusGraph extends VectorStore {
             this.janusGraphService = new JanusGraphService(this.janusGraphParam);
             initializeVectorStore();
             log.info("JanusGraph VectorStore initialized successfully");
+        } catch (JanusGraphVectorStoreException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to initialize JanusGraph VectorStore", e);
-            throw new RuntimeException("Failed to initialize JanusGraph VectorStore", e);
+            throw JanusGraphVectorStoreException.configurationError("Failed to initialize JanusGraph VectorStore: " + e.getMessage());
         }
     }
 
@@ -175,9 +177,12 @@ public class JanusGraph extends VectorStore {
             validateConfiguration();
             
             log.info("Vector store initialization completed");
+        } catch (JanusGraphVectorStoreException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to initialize vector store", e);
-            throw new RuntimeException("Failed to initialize vector store", e);
+            throw new JanusGraphVectorStoreException(JanusGraphVectorStoreException.ErrorType.CONFIGURATION_ERROR, 
+                "Vector store initialization failed: " + e.getMessage(), e);
         }
     }
 
@@ -226,9 +231,12 @@ public class JanusGraph extends VectorStore {
                 documentIds.size(), documentIds.size() <= 10 ? documentIds : 
                 documentIds.subList(0, 10) + "...");
                 
+        } catch (JanusGraphVectorStoreException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to add documents to JanusGraph", e);
-            throw new RuntimeException("Failed to add documents to JanusGraph", e);
+            throw new JanusGraphVectorStoreException(JanusGraphVectorStoreException.ErrorType.DOCUMENT_ADD_FAILED, 
+                "Failed to add documents to JanusGraph: " + e.getMessage(), e);
         }
     }
 
@@ -255,7 +263,7 @@ public class JanusGraph extends VectorStore {
     }
 
     /**
-     * 相似性搜索
+     * 相似度搜索
      * 
      * @param query 查询文本
      * @param k 返回结果数量
@@ -284,9 +292,12 @@ public class JanusGraph extends VectorStore {
             log.info("Similarity search returned {} results", results.size());
             return results;
             
+        } catch (JanusGraphVectorStoreException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to perform similarity search for query: '{}'", query, e);
-            throw new RuntimeException("Failed to perform similarity search", e);
+            throw new JanusGraphVectorStoreException(JanusGraphVectorStoreException.ErrorType.VECTOR_SEARCH_FAILED, 
+                "Similarity search failed for query: '" + query + "': " + e.getMessage(), e);
         }
     }
 
@@ -310,9 +321,12 @@ public class JanusGraph extends VectorStore {
                 log.warn("Document not found with ID: {}", documentId);
             }
             return deleted;
+        } catch (JanusGraphVectorStoreException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to delete document with ID: {}", documentId, e);
-            throw new RuntimeException("Failed to delete document", e);
+            throw new JanusGraphVectorStoreException(JanusGraphVectorStoreException.ErrorType.DOCUMENT_DELETE_FAILED, 
+                "Failed to delete document with ID: " + documentId + ": " + e.getMessage(), e);
         }
     }
 
