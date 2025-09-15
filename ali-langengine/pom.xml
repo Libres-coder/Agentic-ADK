@@ -147,6 +147,7 @@
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
         <module>ali-langengine-community/ali-langengine-tianyancha</module>
         <module>ali-langengine-community/ali-langengine-gitcode</module>
+        <module>ali-langengine-community/ali-langengine-gitee</module>
     </modules>
 
 	<dependencyManagement>
