@@ -89,6 +89,22 @@ public class HugeGraphClient implements AutoCloseable {
     }
 
     /**
+     * 执行带参数绑定的Gremlin查询（安全方式，避免注入攻击）
+     */
+    public ResultSet executeGremlinWithBindings(String gremlin, Map<String, Object> bindings) {
+        try {
+            GremlinRequest request = new GremlinRequest(gremlin);
+            if (bindings != null && !bindings.isEmpty()) {
+                request.bindings(bindings);
+            }
+            return getGremlinManager().execute(request);
+        } catch (Exception e) {
+            log.error("Failed to execute Gremlin query with bindings: {}", gremlin, e);
+            throw HugeGraphVectorStoreException.graphOperationFailed("Gremlin query execution failed", e);
+        }
+    }
+
+    /**
      * 创建属性键（如果不存在）
      */
     public void createPropertyKeyIfNotExists(String name, Class<?> dataType) {
@@ -133,21 +149,30 @@ public class HugeGraphClient implements AutoCloseable {
     public void createIndexIfNotExists(String name, String baseType, String baseValue, String... fields) {
         SchemaManager schema = getSchemaManager();
         if (!schema.getIndexLabels().stream().anyMatch(i -> i.name().equals(name))) {
-            log.info("Creating index: {}", name);
-            // 根据新版本API，on方法需要HugeType枚举
-            if ("VERTEX_LABEL".equals(baseType)) {
-                schema.indexLabel(name)
-                      .onV(baseValue)
-                      .by(fields)
-                      .ifNotExist()
-                      .create();
-            } else if ("EDGE_LABEL".equals(baseType)) {
-                schema.indexLabel(name)
-                      .onE(baseValue)
-                      .by(fields)
-                      .ifNotExist()
-                      .create();
+            log.info("Creating index: {} on {}={} for fields: {}", name, baseType, baseValue, String.join(",", fields));
+            try {
+                // 使用正确的API调用方式
+                if ("vertex".equals(baseType) || "VERTEX_LABEL".equals(baseType)) {
+                    schema.indexLabel(name)
+                          .onV(baseValue)  // baseValue应该是顶点标签名称
+                          .by(fields)
+                          .ifNotExist()
+                          .create();
+                } else if ("edge".equals(baseType) || "EDGE_LABEL".equals(baseType)) {
+                    schema.indexLabel(name)
+                          .onE(baseValue)  // baseValue应该是边标签名称
+                          .by(fields)
+                          .ifNotExist()
+                          .create();
+                } else {
+                    log.warn("Unsupported index base type: {}. Supported types are 'vertex' and 'edge'", baseType);
+                }
+            } catch (Exception e) {
+                log.error("Failed to create index '{}': {}", name, e.getMessage());
+                throw HugeGraphVectorStoreException.graphOperationFailed("Failed to create index: " + name, e);
             }
+        } else {
+            log.debug("Index '{}' already exists", name);
         }
     }
 

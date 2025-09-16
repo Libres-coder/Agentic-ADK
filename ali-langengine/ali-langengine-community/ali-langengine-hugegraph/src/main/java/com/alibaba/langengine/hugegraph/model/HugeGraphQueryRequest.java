@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -225,53 +226,164 @@ public class HugeGraphQueryRequest {
     }
     
     /**
-     * 构建Gremlin查询条件字符串
+     * 构建Gremlin查询条件字符串（使用参数绑定避免注入攻击）
      */
     public String buildGremlinFilter() {
         StringBuilder filter = new StringBuilder();
         
         if (vertexLabel != null) {
-            filter.append(".hasLabel('").append(vertexLabel).append("')");
+            filter.append(".hasLabel(vertexLabelParam)");
         }
         
         if (hasContentFilter()) {
-            filter.append(".has('content', containing('").append(contentFilter).append("'))");
+            filter.append(".has('content', containing(contentFilterParam))");
         }
         
         if (docTypeFilter != null) {
-            filter.append(".has('docType', '").append(docTypeFilter).append("')");
+            filter.append(".has('docType', docTypeFilterParam)");
         }
         
         if (languageFilter != null) {
-            filter.append(".has('language', '").append(languageFilter).append("')");
+            filter.append(".has('language', languageFilterParam)");
         }
         
         if (categoryFilter != null) {
-            filter.append(".has('category', '").append(categoryFilter).append("')");
+            filter.append(".has('category', categoryFilterParam)");
         }
         
         if (statusFilter != null) {
-            filter.append(".has('status', '").append(statusFilter).append("')");
+            filter.append(".has('status', statusFilterParam)");
         }
         
         if (sourceFilter != null) {
-            filter.append(".has('source', '").append(sourceFilter).append("')");
+            filter.append(".has('source', sourceFilterParam)");
+        }
+        
+        // 添加日期范围过滤
+        if (hasDateRangeFilter()) {
+            if (startDate != null) {
+                filter.append(".has('createdAt', gte(startDateParam))");
+            }
+            if (endDate != null) {
+                filter.append(".has('createdAt', lte(endDateParam))");
+            }
         }
         
         if (hasPriorityRangeFilter()) {
             if (minPriority != null) {
-                filter.append(".has('priority', gte(").append(minPriority).append("))");
+                filter.append(".has('priority', gte(minPriorityParam))");
             }
             if (maxPriority != null) {
-                filter.append(".has('priority', lte(").append(maxPriority).append("))");
+                filter.append(".has('priority', lte(maxPriorityParam))");
             }
+        }
+        
+        // 添加标签过滤
+        if (tagFilter != null && !tagFilter.isEmpty()) {
+            filter.append(".has('tags', within(tagFilterParam))");
         }
         
         if (partitionKeyFilter != null) {
-            filter.append(".has('partitionKey', '").append(partitionKeyFilter).append("')");
+            filter.append(".has('partitionKey', partitionKeyFilterParam)");
+        }
+        
+        // 添加元数据过滤 - 假设元数据以JSON字符串形式存储
+        if (hasMetadataFilter()) {
+            for (String metadataKey : metadataFilter.keySet()) {
+                String paramName = "metadata_" + metadataKey.replace(".", "_") + "_Param";
+                filter.append(".where(__.values('metadata').unfold().as('meta')")
+                      .append(".where(select('meta').is(containing(").append(paramName).append(")))");
+            }
+        }
+        
+        // 添加自定义字段过滤
+        if (customFieldFilter != null && !customFieldFilter.isEmpty()) {
+            for (String fieldKey : customFieldFilter.keySet()) {
+                String paramName = "custom_" + fieldKey.replace(".", "_") + "_Param";
+                filter.append(".has('").append(fieldKey).append("', ").append(paramName).append(")");
+            }
         }
         
         return filter.toString();
+    }
+    
+    /**
+     * 构建参数绑定映射
+     */
+    public Map<String, Object> buildGremlinBindings() {
+        Map<String, Object> bindings = new HashMap<>();
+        
+        if (vertexLabel != null) {
+            bindings.put("vertexLabelParam", vertexLabel);
+        }
+        
+        if (hasContentFilter()) {
+            bindings.put("contentFilterParam", contentFilter);
+        }
+        
+        if (docTypeFilter != null) {
+            bindings.put("docTypeFilterParam", docTypeFilter);
+        }
+        
+        if (languageFilter != null) {
+            bindings.put("languageFilterParam", languageFilter);
+        }
+        
+        if (categoryFilter != null) {
+            bindings.put("categoryFilterParam", categoryFilter);
+        }
+        
+        if (statusFilter != null) {
+            bindings.put("statusFilterParam", statusFilter);
+        }
+        
+        if (sourceFilter != null) {
+            bindings.put("sourceFilterParam", sourceFilter);
+        }
+        
+        if (hasDateRangeFilter()) {
+            if (startDate != null) {
+                bindings.put("startDateParam", startDate);
+            }
+            if (endDate != null) {
+                bindings.put("endDateParam", endDate);
+            }
+        }
+        
+        if (hasPriorityRangeFilter()) {
+            if (minPriority != null) {
+                bindings.put("minPriorityParam", minPriority);
+            }
+            if (maxPriority != null) {
+                bindings.put("maxPriorityParam", maxPriority);
+            }
+        }
+        
+        if (tagFilter != null && !tagFilter.isEmpty()) {
+            bindings.put("tagFilterParam", tagFilter);
+        }
+        
+        if (partitionKeyFilter != null) {
+            bindings.put("partitionKeyFilterParam", partitionKeyFilter);
+        }
+        
+        if (hasMetadataFilter()) {
+            for (Map.Entry<String, Object> entry : metadataFilter.entrySet()) {
+                String paramName = "metadata_" + entry.getKey().replace(".", "_") + "_Param";
+                // 构建用于匹配的JSON片段
+                String jsonFragment = "\"" + entry.getKey() + "\":\"" + entry.getValue() + "\"";
+                bindings.put(paramName, jsonFragment);
+            }
+        }
+        
+        if (customFieldFilter != null && !customFieldFilter.isEmpty()) {
+            for (Map.Entry<String, Object> entry : customFieldFilter.entrySet()) {
+                String paramName = "custom_" + entry.getKey().replace(".", "_") + "_Param";
+                bindings.put(paramName, entry.getValue());
+            }
+        }
+        
+        return bindings;
     }
     
     @Override

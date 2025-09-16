@@ -411,6 +411,18 @@ public class HugeGraphParam {
          */
         @Builder.Default
         private int prefetchSize = 100;
+        
+        /**
+         * 是否启用向量索引
+         */
+        @Builder.Default
+        private boolean enableVectorIndex = false;
+        
+        /**
+         * 批量查询大小
+         */
+        @Builder.Default
+        private int batchQuerySize = 500;
     }
     
     /**
