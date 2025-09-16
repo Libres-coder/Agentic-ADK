@@ -233,4 +233,11 @@ public class HugeGraph extends VectorStore {
             return Map.of("error", e.getMessage());
         }
     }
+
+    /**
+     * 获取 HugeGraphService 实例（主要用于测试）
+     */
+    public HugeGraphService getHugeGraphService() {
+        return hugeGraphService;
+    }
 }

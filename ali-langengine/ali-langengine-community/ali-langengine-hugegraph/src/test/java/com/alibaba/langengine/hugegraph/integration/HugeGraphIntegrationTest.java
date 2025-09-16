@@ -91,6 +91,9 @@ public class HugeGraphIntegrationTest {
 
         embeddings = new FakeEmbeddings();
         hugeGraph = new HugeGraph(embeddings, hugeGraphParam);
+        
+        // 确保 hugeGraphService 被正确地初始化
+        this.hugeGraphService = hugeGraph.getHugeGraphService();
     }
 
     /**
@@ -98,9 +101,15 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testSchemaInitialization() {
-        assertDoesNotThrow(() -> {
-            hugeGraphService.initializeSchema(embeddings);
-        });
+        // Schema已经在setUp中通过HugeGraph构造函数初始化
+        // 这里测试HugeGraphService实例是否正确初始化
+        assertNotNull(hugeGraphService, "HugeGraphService should be initialized");
+        assertNotNull(hugeGraph, "HugeGraph should be initialized");
+        
+        // 验证存储统计信息
+        Map<String, Object> stats = hugeGraph.getStorageStats();
+        assertNotNull(stats);
+        assertTrue((Boolean) stats.get("initialized"));
     }
 
     /**
@@ -108,9 +117,6 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testAddSingleDocument() {
-        // 初始化Schema
-        hugeGraphService.initializeSchema(embeddings);
-
         // 创建测试文档
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("source", "integration_test");
@@ -130,8 +136,6 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testAddBatchDocuments() {
-        // 初始化Schema
-        hugeGraphService.initializeSchema(embeddings);
 
         // 创建多个测试文档
         List<Document> documents = Arrays.asList(
@@ -151,8 +155,6 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testSimilaritySearch() {
-        // 初始化Schema
-        hugeGraphService.initializeSchema(embeddings);
 
         // 先添加一些测试文档
         List<Document> documents = Arrays.asList(
@@ -189,8 +191,6 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testSimilaritySearchWithDistanceThreshold() {
-        // 初始化Schema
-        hugeGraphService.initializeSchema(embeddings);
 
         // 添加测试文档
         List<Document> documents = Arrays.asList(
@@ -208,7 +208,7 @@ public class HugeGraphIntegrationTest {
         }
 
         // 使用严格的距离阈值搜索
-        List<Document> results = hugeGraphService.similaritySearch("machine learning AI", embeddings, 5, 0.5, null);
+        List<Document> results = hugeGraph.similaritySearch("machine learning AI", 5, 0.5);
 
         assertNotNull(results);
         // 验证所有结果都满足距离阈值
@@ -224,8 +224,6 @@ public class HugeGraphIntegrationTest {
      */
     @Test
     public void testGremlinInjectionPrevention() {
-        // 初始化Schema
-        hugeGraphService.initializeSchema(embeddings);
 
         // 创建包含特殊字符的文档（可能导致注入的字符）
         String maliciousContent = "Test document with 'single quotes' and \"double quotes\" and \n newlines and \\backslashes";
