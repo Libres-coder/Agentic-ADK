@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.langengine.dgraph.vectorstore.DgraphVectorStoreException;
 import static com.alibaba.langengine.dgraph.DgraphConfiguration.DGRAPH_SERVER_URL;
 
 
@@ -97,7 +98,7 @@ public class Dgraph extends VectorStore {
             log.info("Dgraph service initialized successfully with server: {}", serverUrl);
         } catch (Exception e) {
             log.error("Failed to initialize Dgraph service", e);
-            throw new RuntimeException("Failed to initialize Dgraph service", e);
+            throw new DgraphVectorStoreException.SchemaInitializationException("Failed to initialize Dgraph service", e);
         }
     }
 
@@ -135,7 +136,7 @@ public class Dgraph extends VectorStore {
             // 生成向量嵌入 - 使用 embedDocument 方法
             List<Document> embeddedDocs = embedding.embedDocument(documents);
             if (CollectionUtils.isEmpty(embeddedDocs)) {
-                throw new RuntimeException("Failed to generate embeddings for documents");
+                throw new DgraphVectorStoreException.EmbeddingGenerationException("Failed to generate embeddings for documents");
             }
 
             // 从嵌入文档中提取向量数据
@@ -161,7 +162,7 @@ public class Dgraph extends VectorStore {
 
         } catch (Exception e) {
             log.error("Failed to add documents to Dgraph vector store", e);
-            throw new RuntimeException("Failed to add documents to Dgraph vector store", e);
+            throw new DgraphVectorStoreException("Failed to add documents to Dgraph vector store", e);
         }
     }
 
@@ -202,7 +203,7 @@ public class Dgraph extends VectorStore {
             // 对查询文本进行向量化 - 使用正确的方法签名
             List<String> queryEmbeddingStr = embedding.embedQuery(query, 1);
             if (CollectionUtils.isEmpty(queryEmbeddingStr)) {
-                throw new RuntimeException("Failed to generate query embedding");
+                throw new DgraphVectorStoreException.EmbeddingGenerationException("Failed to generate query embedding");
             }
 
             // 解析向量字符串为 Float 向量
@@ -232,7 +233,7 @@ public class Dgraph extends VectorStore {
 
         } catch (Exception e) {
             log.error("Failed to perform similarity search", e);
-            throw new RuntimeException("Failed to perform similarity search", e);
+            throw new DgraphVectorStoreException.VectorSearchException("Failed to perform similarity search", e);
         }
     }
 

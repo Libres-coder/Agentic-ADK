@@ -89,8 +89,15 @@ public class DgraphService implements AutoCloseable {
         // 根据相似度算法选择合适的metric
         String metric = getSimilarityMetric(param.getSimilarityAlgorithm());
         
+        // 构建HNSW索引参数
+        String hnswParams = String.format("m: %d, efConstruction: %d, ef: %d, metric: \"%s\"",
+                param.getHnswM(),
+                param.getHnswEfConstruction(),
+                param.getHnswEf(),
+                metric);
+        
         return String.format(
-            "%s: float32vector @index(hnsw(metric: \"%s\")) .\n" +
+            "%s: float32vector @index(hnsw(%s)) .\n" +
             "%s: string @index(exact, fulltext) .\n" +
             "%s: string @index(exact) .\n" +
             "type VectorDocument {\n" +
@@ -98,7 +105,7 @@ public class DgraphService implements AutoCloseable {
             "    %s\n" +
             "    %s\n" +
             "}",
-            param.getVectorFieldName(), metric,
+            param.getVectorFieldName(), hnswParams,
             param.getContentFieldName(),
             param.getMetadataFieldName(),
             param.getVectorFieldName(),
