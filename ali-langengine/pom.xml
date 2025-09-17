@@ -153,8 +153,9 @@
         <module>ali-langengine-community/ali-langengine-pyexecutor</module>
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
         <module>ali-langengine-community/ali-langengine-tianyancha</module>
-		</modules>
         <module>ali-langengine-community/ali-langengine-gitcode</module>
+        <module>ali-langengine-community/ali-langengine-dgraph</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
