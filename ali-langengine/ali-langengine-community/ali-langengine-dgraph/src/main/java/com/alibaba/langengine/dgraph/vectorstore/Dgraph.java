@@ -135,15 +135,23 @@ public class Dgraph extends VectorStore {
             // 生成向量嵌入 - 使用 embedDocument 方法
             List<Document> embeddedDocs = embedding.embedDocument(documents);
             if (CollectionUtils.isEmpty(embeddedDocs)) {
-                throw new RuntimeException("Failed to generate embeddings");
+                throw new RuntimeException("Failed to generate embeddings for documents");
             }
 
-            // 模拟从嵌入文档中提取向量（实际实现中需要根据具体的 Embeddings 实现）
+            // 从嵌入文档中提取向量数据
             List<List<Float>> vectorEmbeddings = new ArrayList<>();
-            for (int i = 0; i < documents.size(); i++) {
-                // 这里是一个占位符实现，实际中需要从 Document 中提取向量数据
-                List<Float> mockVector = generateMockVector(param.getVectorDimension());
-                vectorEmbeddings.add(mockVector);
+            for (Document doc : embeddedDocs) {
+                if (doc.getEmbedding() != null && !doc.getEmbedding().isEmpty()) {
+                    // 将 Double 向量转换为 Float 向量
+                    List<Float> floatVector = doc.getEmbedding().stream()
+                            .map(Double::floatValue)
+                            .collect(Collectors.toList());
+                    vectorEmbeddings.add(floatVector);
+                } else {
+                    // 如果向量为空，使用占位符向量
+                    log.warn("Document embedding is null or empty, using placeholder vector");
+                    vectorEmbeddings.add(generateMockVector(param.getVectorDimension()));
+                }
             }
 
             // 添加到 Dgraph
@@ -197,8 +205,22 @@ public class Dgraph extends VectorStore {
                 throw new RuntimeException("Failed to generate query embedding");
             }
 
-            // 模拟转换为 Float 向量（实际实现中需要根据具体的 Embeddings 实现）
-            List<Float> queryEmbedding = generateMockVector(param.getVectorDimension());
+            // 解析向量字符串为 Float 向量
+            List<Float> queryEmbedding;
+            try {
+                String embeddingStr = queryEmbeddingStr.get(0);
+                if (embeddingStr.startsWith("[") && embeddingStr.endsWith("]")) {
+                    // 解析JSON格式的向量
+                    queryEmbedding = com.alibaba.fastjson.JSON.parseArray(embeddingStr, Float.class);
+                } else {
+                    // 如果不是标准格式，使用占位符向量
+                    log.warn("Query embedding format unexpected: {}, using placeholder vector", embeddingStr);
+                    queryEmbedding = generateMockVector(param.getVectorDimension());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse query embedding: {}, using placeholder vector", e.getMessage());
+                queryEmbedding = generateMockVector(param.getVectorDimension());
+            }
 
             // 执行相似性搜索
             List<Document> results = dgraphService.similaritySearch(queryEmbedding, k, filter);

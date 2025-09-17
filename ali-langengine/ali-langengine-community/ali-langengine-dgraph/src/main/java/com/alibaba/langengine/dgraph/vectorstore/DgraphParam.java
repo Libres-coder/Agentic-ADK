@@ -109,67 +109,118 @@ public class DgraphParam {
     }
 
     /**
-     * 构建器模式
+     * 构建器模式 - 确保每次build()都返回独立的实例
      */
     public static class Builder {
-        private DgraphParam param = new DgraphParam();
+        private String vectorFieldName = "vector_embedding";
+        private String contentFieldName = "content";
+        private String metadataFieldName = "metadata";
+        private String idFieldName = "uid";
+        private int vectorDimension = DGRAPH_DEFAULT_VECTOR_DIMENSION;
+        private String similarityAlgorithm = DGRAPH_SIMILARITY_ALGORITHM;
+        private int searchLimit = DGRAPH_DEFAULT_SEARCH_LIMIT;
+        private int batchSize = DGRAPH_DEFAULT_BATCH_SIZE;
+        private float similarityThreshold = 0.5f;
+        private Map<String, Object> searchParams = new HashMap<>();
+        private Map<String, String> predicateMapping = new HashMap<>();
+        private boolean transactionEnabled = true;
+        private int queryTimeoutMs = DGRAPH_TIMEOUT_MS;
 
         public Builder vectorFieldName(String vectorFieldName) {
-            param.setVectorFieldName(vectorFieldName);
+            this.vectorFieldName = vectorFieldName;
             return this;
         }
 
         public Builder contentFieldName(String contentFieldName) {
-            param.setContentFieldName(contentFieldName);
+            this.contentFieldName = contentFieldName;
             return this;
         }
 
         public Builder metadataFieldName(String metadataFieldName) {
-            param.setMetadataFieldName(metadataFieldName);
+            this.metadataFieldName = metadataFieldName;
+            return this;
+        }
+
+        public Builder idFieldName(String idFieldName) {
+            this.idFieldName = idFieldName;
             return this;
         }
 
         public Builder vectorDimension(int vectorDimension) {
-            param.setVectorDimension(vectorDimension);
+            this.vectorDimension = vectorDimension;
             return this;
         }
 
         public Builder similarityAlgorithm(String similarityAlgorithm) {
-            param.setSimilarityAlgorithm(similarityAlgorithm);
+            this.similarityAlgorithm = similarityAlgorithm;
             return this;
         }
 
         public Builder searchLimit(int searchLimit) {
-            param.setSearchLimit(searchLimit);
+            this.searchLimit = searchLimit;
             return this;
         }
 
         public Builder batchSize(int batchSize) {
-            param.setBatchSize(batchSize);
+            this.batchSize = batchSize;
             return this;
         }
 
         public Builder similarityThreshold(float similarityThreshold) {
-            param.setSimilarityThreshold(similarityThreshold);
+            this.similarityThreshold = similarityThreshold;
             return this;
         }
 
         public Builder searchParams(Map<String, Object> searchParams) {
-            param.setSearchParams(searchParams);
+            if (searchParams == null) {
+                this.searchParams = null;
+            } else {
+                this.searchParams = new HashMap<>(searchParams);
+            }
+            return this;
+        }
+
+        public Builder predicateMapping(Map<String, String> predicateMapping) {
+            this.predicateMapping = new HashMap<>(predicateMapping != null ? predicateMapping : new HashMap<>());
             return this;
         }
 
         public Builder transactionEnabled(boolean transactionEnabled) {
-            param.setTransactionEnabled(transactionEnabled);
+            this.transactionEnabled = transactionEnabled;
             return this;
         }
 
         public Builder queryTimeoutMs(int queryTimeoutMs) {
-            param.setQueryTimeoutMs(queryTimeoutMs);
+            this.queryTimeoutMs = queryTimeoutMs;
             return this;
         }
 
+        /**
+         * 构建独立的DgraphParam实例，确保每次调用都返回新的对象
+         */
         public DgraphParam build() {
+            DgraphParam param = new DgraphParam();
+            param.setVectorFieldName(this.vectorFieldName);
+            param.setContentFieldName(this.contentFieldName);
+            param.setMetadataFieldName(this.metadataFieldName);
+            param.setIdFieldName(this.idFieldName);
+            param.setVectorDimension(this.vectorDimension);
+            param.setSimilarityAlgorithm(this.similarityAlgorithm);
+            param.setSearchLimit(this.searchLimit);
+            param.setBatchSize(this.batchSize);
+            param.setSimilarityThreshold(this.similarityThreshold);
+            param.setSearchParams(this.searchParams != null ? new HashMap<>(this.searchParams) : null);
+            param.setTransactionEnabled(this.transactionEnabled);
+            param.setQueryTimeoutMs(this.queryTimeoutMs);
+            
+            // 重新初始化谓词映射
+            param.initializeDefaultPredicates();
+            
+            // 如果Builder中有自定义的谓词映射，则合并
+            if (!this.predicateMapping.isEmpty()) {
+                param.getPredicateMapping().putAll(this.predicateMapping);
+            }
+            
             return param;
         }
     }

@@ -168,10 +168,13 @@ class DgraphParamTest {
         DgraphParam param2 = builder.vectorDimension(512).build();
 
         // Then
-        // 注意：在当前实现中，Builder 会重用同一个 param 实例，所以这个测试可能会失败
-        // 如果需要确保不可变性，应该在每次 build() 时创建新的实例
-        assertEquals(512, param1.getVectorDimension()); // 这实际上会是 512，因为 Builder 修改了同一个实例
-        assertEquals(512, param2.getVectorDimension());
+        // 验证每次build都会创建新的独立实例
+        assertNotSame(param1, param2, "build()应该返回不同的实例");
+        
+        // 由于Builder是可变的，第二次修改会影响后续build的结果
+        // 但已经build的实例应该保持独立
+        assertEquals(256, param1.getVectorDimension()); // param1应该保持第一次build时的值
+        assertEquals(512, param2.getVectorDimension()); // param2应该是第二次build时的值
     }
 
     @Test
@@ -232,13 +235,16 @@ class DgraphParamTest {
         DgraphParam param2 = builder.searchLimit(10).build();
 
         // Then
-        // 验证 builder 可以重用，但要注意实例共享问题
+        // 验证 builder 可以重用，且每次build都创建独立实例
+        assertNotSame(param1, param2, "每次build应该返回不同的实例");
+        
         assertEquals(384, param1.getVectorDimension());
         assertEquals(384, param2.getVectorDimension());
         assertEquals("cosine", param1.getSimilarityAlgorithm());
         assertEquals("cosine", param2.getSimilarityAlgorithm());
-        // 由于当前实现的 Builder 重用同一个实例，两个参数的 searchLimit 都会是最后设置的值
-        assertEquals(10, param1.getSearchLimit());
-        assertEquals(10, param2.getSearchLimit());
+        
+        // 关键测试：验证每个实例保持构建时的状态
+        assertEquals(5, param1.getSearchLimit(), "param1应该保持第一次build时的searchLimit值");
+        assertEquals(10, param2.getSearchLimit(), "param2应该有第二次build时的searchLimit值");
     }
 }

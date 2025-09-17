@@ -86,8 +86,11 @@ public class DgraphService implements AutoCloseable {
      * 构建 Dgraph 模式定义
      */
     private String buildSchema() {
+        // 根据相似度算法选择合适的metric
+        String metric = getSimilarityMetric(param.getSimilarityAlgorithm());
+        
         return String.format(
-            "%s: [float] @index(exact) .\n" +
+            "%s: float32vector @index(hnsw(metric: \"%s\")) .\n" +
             "%s: string @index(exact, fulltext) .\n" +
             "%s: string @index(exact) .\n" +
             "type VectorDocument {\n" +
@@ -95,13 +98,31 @@ public class DgraphService implements AutoCloseable {
             "    %s\n" +
             "    %s\n" +
             "}",
-            param.getVectorFieldName(),
+            param.getVectorFieldName(), metric,
             param.getContentFieldName(),
             param.getMetadataFieldName(),
             param.getVectorFieldName(),
             param.getContentFieldName(),
             param.getMetadataFieldName()
         );
+    }
+
+    /**
+     * 根据相似度算法获取对应的metric参数
+     */
+    private String getSimilarityMetric(String algorithm) {
+        switch (algorithm.toLowerCase()) {
+            case "cosine":
+                return "cosine";
+            case "euclidean":
+                return "euclidean";
+            case "dotproduct":
+            case "dot":
+                return "dotproduct";
+            default:
+                log.warn("Unknown similarity algorithm: {}, using cosine as default", algorithm);
+                return "cosine";
+        }
     }
 
     /**
@@ -189,29 +210,46 @@ public class DgraphService implements AutoCloseable {
     }
 
     /**
-     * 构建相似性搜索查询
+     * 构建相似性搜索查询 - 使用Dgraph的similar_to向量搜索功能
      */
     private String buildSimilarityQuery(List<Float> queryEmbedding, int k, Map<String, Object> filter) {
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("{\n");
-        queryBuilder.append("  search(func: type(VectorDocument)) ");
+        
+        // 使用similar_to函数进行向量相似性搜索
+        queryBuilder.append("  search(func: similar_to(").append(param.getVectorFieldName()).append(", ");
+        queryBuilder.append(k).append(", \"");
+        
+        // 构建向量字符串
+        String vectorStr = queryEmbedding.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        queryBuilder.append("[").append(vectorStr).append("]");
+        queryBuilder.append("\")) ");
         
         // 添加过滤条件
         if (filter != null && !filter.isEmpty()) {
             queryBuilder.append("@filter(");
             List<String> filterConditions = new ArrayList<>();
             for (Map.Entry<String, Object> entry : filter.entrySet()) {
-                filterConditions.add(String.format("eq(%s, \"%s\")", entry.getKey(), entry.getValue()));
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof String) {
+                    filterConditions.add(String.format("eq(%s, \"%s\")", key, value));
+                } else {
+                    filterConditions.add(String.format("eq(%s, %s)", key, value));
+                }
             }
             queryBuilder.append(String.join(" AND ", filterConditions));
             queryBuilder.append(") ");
         }
         
-        queryBuilder.append(String.format("(first: %d) {\n", Math.min(k, param.getSearchLimit())));
+        queryBuilder.append("{\n");
         queryBuilder.append("    uid\n");
         queryBuilder.append(String.format("    %s\n", param.getContentFieldName()));
         queryBuilder.append(String.format("    %s\n", param.getVectorFieldName()));
         queryBuilder.append(String.format("    %s\n", param.getMetadataFieldName()));
+        queryBuilder.append("    _distance_\n"); // Dgraph向量搜索会返回距离信息
         queryBuilder.append("  }\n");
         queryBuilder.append("}\n");
         
@@ -224,6 +262,7 @@ public class DgraphService implements AutoCloseable {
     private List<Document> parseSearchResults(io.dgraph.DgraphProto.Response response) {
         try {
             String jsonResult = response.getJson().toStringUtf8();
+            @SuppressWarnings("unchecked")
             Map<String, Object> result = JSON.parseObject(jsonResult, Map.class);
             
             @SuppressWarnings("unchecked")
@@ -257,7 +296,9 @@ public class DgraphService implements AutoCloseable {
             Map<String, Object> metadata = new HashMap<>();
             String metadataStr = (String) result.get(param.getMetadataFieldName());
             if (StringUtils.isNotEmpty(metadataStr)) {
-                metadata = JSON.parseObject(metadataStr, Map.class);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> parsedMetadata = JSON.parseObject(metadataStr, Map.class);
+                metadata = parsedMetadata;
             }
             
             // 添加 UID 到元数据
@@ -341,6 +382,7 @@ public class DgraphService implements AutoCloseable {
     private List<String> extractUidsFromResponse(io.dgraph.DgraphProto.Response response) {
         try {
             String jsonResult = response.getJson().toStringUtf8();
+            @SuppressWarnings("unchecked")
             Map<String, Object> result = JSON.parseObject(jsonResult, Map.class);
             
             @SuppressWarnings("unchecked")
