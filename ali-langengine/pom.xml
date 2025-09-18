@@ -83,6 +83,7 @@
 		<module>ali-langengine-community/ali-langengine-milvus</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-tuargpg</module>
 		<module>ali-langengine-community/ali-langengine-scann</module>
 		<module>ali-langengine-community/ali-langengine-clickhouse</module>
     <module>ali-langengine-community/ali-langengine-firecrawl</module>
@@ -123,6 +124,8 @@
 		<module>ali-langengine-community/ali-langengine-zilliz</module>
 		<module>ali-langengine-community/ali-langengine-ollama</module>
 		<module>ali-langengine-community/ali-langengine-tusharestock</module>
+		<module>ali-langengine-community/ali-langengine-faiss</module>
+		<module>ali-langengine-community/ali-langengine-supabase</module>
 		<module>ali-langengine-community/ali-langengine-metaso</module>
 		<module>ali-langengine-community/ali-langengine-neo4j</module>
 		<module>ali-langengine-community/ali-langengine-janusgraph</module>
@@ -155,6 +158,7 @@
         <module>ali-langengine-community/ali-langengine-tianyancha</module>
         <module>ali-langengine-community/ali-langengine-gitcode</module>
         <module>ali-langengine-community/ali-langengine-dgraph</module>
+        <module>ali-langengine-community/ali-langengine-nebulagraph</module>
 	</modules>
 
 	<dependencyManagement>
