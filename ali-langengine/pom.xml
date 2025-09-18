@@ -129,6 +129,7 @@
 		<module>ali-langengine-community/ali-langengine-metaso</module>
 		<module>ali-langengine-community/ali-langengine-neo4j</module>
 		<module>ali-langengine-community/ali-langengine-janusgraph</module>
+		<module>ali-langengine-community/ali-langengine-hugegraph</module>
 		<module>ali-langengine-community/ali-langengine-annoy</module>
 		<module>ali-langengine-community/ali-langengine-googlesearch</module>
 		<module>ali-langengine-community/ali-langengine-feishu</module>
