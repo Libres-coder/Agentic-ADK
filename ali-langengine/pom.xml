@@ -83,6 +83,7 @@
 		<module>ali-langengine-community/ali-langengine-milvus</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-tuargpg</module>
 		<module>ali-langengine-community/ali-langengine-scann</module>
 		<module>ali-langengine-community/ali-langengine-clickhouse</module>
     <module>ali-langengine-community/ali-langengine-firecrawl</module>
@@ -153,8 +154,9 @@
         <module>ali-langengine-community/ali-langengine-pyexecutor</module>
         <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
         <module>ali-langengine-community/ali-langengine-tianyancha</module>
-		</modules>
         <module>ali-langengine-community/ali-langengine-gitcode</module>
+        <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
