@@ -124,6 +124,8 @@
 		<module>ali-langengine-community/ali-langengine-zilliz</module>
 		<module>ali-langengine-community/ali-langengine-ollama</module>
 		<module>ali-langengine-community/ali-langengine-tusharestock</module>
+		<module>ali-langengine-community/ali-langengine-faiss</module>
+		<module>ali-langengine-community/ali-langengine-supabase</module>
 		<module>ali-langengine-community/ali-langengine-metaso</module>
 		<module>ali-langengine-community/ali-langengine-neo4j</module>
 		<module>ali-langengine-community/ali-langengine-janusgraph</module>
