@@ -47,11 +47,17 @@ public class SingleStoreService {
         this.singleStoreParam = singleStoreParam;
 
         try {
-            String jdbcUrl = "jdbc:mysql://" + serverUrl + "/" + database + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+            // Build JDBC URL with configurable SSL settings
+            SingleStoreParam param = loadParam();
+            boolean useSSL = param.getInitParam().isUseSsl();
+            String jdbcUrl = String.format("jdbc:mysql://%s/%s?useSSL=%s&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8",
+                    serverUrl, database, useSSL);
+            
+            log.info("Connecting to SingleStore at: {} (SSL: {})", serverUrl, useSSL);
             this.connection = DriverManager.getConnection(jdbcUrl, username, password);
-            log.info("SingleStoreService connected to database: " + database + ", table: " + tableName);
+            log.info("SingleStoreService connected to database: {}, table: {}", database, tableName);
         } catch (SQLException e) {
-            log.error("Failed to connect to SingleStore", e);
+            log.error("Failed to connect to SingleStore at: {}, database: {}", serverUrl, database, e);
             throw new RuntimeException("Failed to connect to SingleStore", e);
         }
     }
@@ -176,6 +182,9 @@ public class SingleStoreService {
             embeddingsDimension = document.getEmbedding().size();
         }
 
+        String vectorIndexClause = String.format("VECTOR INDEX (%s) INDEX_TYPE=%s METRIC_TYPE=%s", 
+                fieldNameEmbedding, initParam.getVectorIndexType(), initParam.getVectorMetricType());
+        
         String createTableSQL;
         if (initParam.isFieldUniqueIdAsPrimaryKey()) {
             createTableSQL = String.format(
@@ -183,9 +192,9 @@ public class SingleStoreService {
                     "%s BIGINT PRIMARY KEY, " +
                     "%s TEXT, " +
                     "%s JSON, " +
-                    "VECTOR INDEX (%s) " +
+                    "%s" +
                     ") ENGINE=rowstore",
-                    tableName, fieldNameUniqueId, fieldNamePageContent, fieldNameEmbedding, fieldNameEmbedding);
+                    tableName, fieldNameUniqueId, fieldNamePageContent, fieldNameEmbedding, vectorIndexClause);
         } else {
             createTableSQL = String.format(
                     "CREATE TABLE %s (" +
@@ -193,9 +202,9 @@ public class SingleStoreService {
                     "%s BIGINT, " +
                     "%s TEXT, " +
                     "%s JSON, " +
-                    "VECTOR INDEX (%s) " +
+                    "%s" +
                     ") ENGINE=rowstore",
-                    tableName, fieldNameUniqueId, fieldNamePageContent, fieldNameEmbedding, fieldNameEmbedding);
+                    tableName, fieldNameUniqueId, fieldNamePageContent, fieldNameEmbedding, vectorIndexClause);
         }
 
         try (Statement stmt = connection.createStatement()) {

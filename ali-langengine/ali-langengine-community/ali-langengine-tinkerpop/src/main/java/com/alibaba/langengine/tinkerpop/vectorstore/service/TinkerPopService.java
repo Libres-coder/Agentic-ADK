@@ -121,7 +121,9 @@ public class TinkerPopService {
 
                 // Add embedding as property if available
                 if (CollectionUtils.isNotEmpty(embedding)) {
+                    // Store embedding as a more structured format
                     traversal.property("embedding", embedding.toString());
+                    traversal.property("embedding_size", embedding.size());
                 }
 
                 // Add metadata properties
@@ -152,32 +154,93 @@ public class TinkerPopService {
             List<Double> resultDistances = new ArrayList<>();
             List<Map<String, Object>> resultMetadatas = new ArrayList<>();
 
-            // For simplicity, we'll do a basic text search instead of vector similarity
-            // In a real implementation, you would implement vector similarity search
-            List<Map<Object, Object>> results = g.V()
-                    .has("collection", request.getCollectionName())
-                    .has("text", org.apache.tinkerpop.gremlin.process.traversal.TextP.containing(request.getQueryText()))
-                    .limit(request.getK())
-                    .valueMap(true)
-                    .toList();
+            List<Double> queryEmbedding = request.getQueryEmbedding();
+            
+            if (queryEmbedding != null && !queryEmbedding.isEmpty()) {
+                // Vector similarity search implementation
+                log.debug("Performing vector similarity search for collection: {}", request.getCollectionName());
+                
+                List<Map<Object, Object>> allResults = g.V()
+                        .has("collection", request.getCollectionName())
+                        .has("embedding")
+                        .valueMap()
+                        .toList();
 
-            for (Map<Object, Object> result : results) {
-                String id = result.get("id").toString();
-                String text = result.get("text").toString();
-
-                resultIds.add(id);
-                resultTexts.add(text);
-                resultDistances.add(0.5); // Placeholder distance
-
-                // Extract metadata
-                Map<String, Object> metadata = new HashMap<>();
-                for (Map.Entry<Object, Object> entry : result.entrySet()) {
-                    String key = entry.getKey().toString();
-                    if (key.startsWith("meta_")) {
-                        metadata.put(key.substring(5), entry.getValue());
+                // Calculate cosine similarity and sort results
+                List<VectorSearchResult> vectorResults = new ArrayList<>();
+                
+                for (Map<Object, Object> result : allResults) {
+                    try {
+                        String embeddingStr = result.get("embedding").toString();
+                        List<Double> docEmbedding = parseEmbedding(embeddingStr);
+                        
+                        if (docEmbedding != null && docEmbedding.size() == queryEmbedding.size()) {
+                            double similarity = calculateCosineSimilarity(queryEmbedding, docEmbedding);
+                            double distance = 1.0 - similarity; // Convert similarity to distance
+                            
+                            VectorSearchResult vectorResult = new VectorSearchResult(result, distance);
+                            vectorResults.add(vectorResult);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to process embedding for document, skipping", e);
                     }
                 }
-                resultMetadatas.add(metadata);
+
+                // Sort by distance (ascending) and limit results
+                vectorResults.sort((a, b) -> Double.compare(a.getDistance(), b.getDistance()));
+                vectorResults = vectorResults.subList(0, Math.min(request.getK(), vectorResults.size()));
+
+                // Build response from sorted results
+                for (VectorSearchResult vectorResult : vectorResults) {
+                    Map<Object, Object> result = vectorResult.getResult();
+                    String id = result.get("id").toString();
+                    String text = result.get("text").toString();
+
+                    resultIds.add(id);
+                    resultTexts.add(text);
+                    resultDistances.add(vectorResult.getDistance());
+
+                    // Extract metadata
+                    Map<String, Object> metadata = new HashMap<>();
+                    for (Map.Entry<Object, Object> entry : result.entrySet()) {
+                        String key = entry.getKey().toString();
+                        if (key.startsWith("meta_")) {
+                            metadata.put(key.substring(5), entry.getValue());
+                        }
+                    }
+                    resultMetadatas.add(metadata);
+                }
+                
+                log.debug("Vector similarity search completed, found {} results", resultIds.size());
+            } else {
+                // Fallback to text search if no query embedding provided
+                log.debug("No query embedding provided, performing text search for: {}", request.getQueryText());
+                
+                List<Map<Object, Object>> results = g.V()
+                        .has("collection", request.getCollectionName())
+                        .has("text", org.apache.tinkerpop.gremlin.process.traversal.TextP.containing(request.getQueryText()))
+                        .limit(request.getK())
+                        .valueMap()
+                        .toList();
+
+                for (Map<Object, Object> result : results) {
+                    String id = result.get("id").toString();
+                    String text = result.get("text").toString();
+
+                    resultIds.add(id);
+                    resultTexts.add(text);
+                    resultDistances.add(1.0); // Default distance for text search
+
+                    // Extract metadata
+                    Map<String, Object> metadata = new HashMap<>();
+                    for (Map.Entry<Object, Object> entry : result.entrySet()) {
+                        String key = entry.getKey().toString();
+                        if (key.startsWith("meta_")) {
+                            metadata.put(key.substring(5), entry.getValue());
+                        }
+                    }
+                    resultMetadatas.add(metadata);
+                }
             }
 
             TinkerPopQueryResponse response = new TinkerPopQueryResponse(
@@ -218,11 +281,91 @@ public class TinkerPopService {
             }
 
             if (serverUrl.contains(":")) {
-                return Integer.parseInt(serverUrl.split(":")[1]);
+                String[] parts = serverUrl.split(":");
+                if (parts.length >= 2) {
+                    // Remove path part if exists (e.g., "localhost:8182/gremlin" -> "8182")
+                    String portPart = parts[1].split("/")[0];
+                    return Integer.parseInt(portPart);
+                }
             }
             return 8182; // Default Gremlin server port
         } catch (Exception e) {
+            log.warn("Failed to extract port from URL: {}, using default port 8182", serverUrl);
             return 8182;
+        }
+    }
+
+    /**
+     * Parse embedding from string representation
+     */
+    private List<Double> parseEmbedding(String embeddingStr) {
+        try {
+            // Remove brackets and split by comma
+            embeddingStr = embeddingStr.trim();
+            if (embeddingStr.startsWith("[") && embeddingStr.endsWith("]")) {
+                embeddingStr = embeddingStr.substring(1, embeddingStr.length() - 1);
+            }
+            
+            String[] parts = embeddingStr.split(",");
+            List<Double> embedding = new ArrayList<>();
+            
+            for (String part : parts) {
+                embedding.add(Double.parseDouble(part.trim()));
+            }
+            
+            return embedding;
+        } catch (Exception e) {
+            log.warn("Failed to parse embedding: {}", embeddingStr, e);
+            return null;
+        }
+    }
+
+    /**
+     * Calculate cosine similarity between two vectors
+     */
+    private double calculateCosineSimilarity(List<Double> vector1, List<Double> vector2) {
+        if (vector1.size() != vector2.size()) {
+            throw new IllegalArgumentException("Vectors must have the same dimensions");
+        }
+
+        double dotProduct = 0.0;
+        double norm1 = 0.0;
+        double norm2 = 0.0;
+
+        for (int i = 0; i < vector1.size(); i++) {
+            dotProduct += vector1.get(i) * vector2.get(i);
+            norm1 += Math.pow(vector1.get(i), 2);
+            norm2 += Math.pow(vector2.get(i), 2);
+        }
+
+        norm1 = Math.sqrt(norm1);
+        norm2 = Math.sqrt(norm2);
+
+        if (norm1 == 0.0 || norm2 == 0.0) {
+            return 0.0;
+        }
+
+        return dotProduct / (norm1 * norm2);
+    }
+
+    /**
+     * Internal class to hold vector search results with distance
+     */
+    private static class VectorSearchResult {
+        private final Map<Object, Object> result;
+        private final double distance;
+
+        public VectorSearchResult(Map<Object, Object> result, double distance) {
+            this.result = result;
+            this.distance = distance;
+        }
+
+        public Map<Object, Object> getResult() {
+            return result;
+        }
+
+        public double getDistance() {
+            return distance;
         }
     }
 }

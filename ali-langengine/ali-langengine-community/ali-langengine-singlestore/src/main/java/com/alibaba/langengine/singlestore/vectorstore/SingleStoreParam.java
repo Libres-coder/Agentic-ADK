@@ -70,9 +70,14 @@ public class SingleStoreParam {
         private String vectorIndexType = "IVF_PQFS";
 
         /**
-         * 向量距离度量类型
+         * 向量距离度量类型 (SingleStore支持: EUCLIDEAN_DISTANCE, DOT_PRODUCT, COSINE_DISTANCE)
          */
         private String vectorMetricType = "EUCLIDEAN_DISTANCE";
+
+        /**
+         * 是否使用SSL连接 (生产环境建议设为true)
+         */
+        private boolean useSsl = false;
 
     }
 

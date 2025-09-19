@@ -372,26 +372,29 @@ public class TinkerPopBoundaryTest {
 
     @Test
     public void testConstructorWithNullEmbedding() {
-        assertDoesNotThrow(() -> {
-            TinkerPop nullEmbeddingTinkerPop = new TinkerPop(null, "test_collection");
-            assertNull(nullEmbeddingTinkerPop.getEmbedding());
-            nullEmbeddingTinkerPop.close();
+        // Null embedding should throw IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> {
+            new TinkerPop(null, "test_collection");
         });
     }
 
     @Test
     public void testConstructorWithEmptyCollectionId() {
         TinkerPop emptyIdTinkerPop = new TinkerPop(mockEmbedding, "");
-        assertEquals("", emptyIdTinkerPop.getCollectionId());
+        // When collection ID is empty, it should auto-generate a non-empty ID
+        assertNotNull(emptyIdTinkerPop.getCollectionId());
+        assertNotEquals("", emptyIdTinkerPop.getCollectionId());
+        assertTrue(emptyIdTinkerPop.getCollectionId().startsWith("collection_"));
         emptyIdTinkerPop.close();
     }
 
     @Test
     public void testConstructorWithVeryLongCollectionId() {
         String longId = "a".repeat(1000);
-        TinkerPop longIdTinkerPop = new TinkerPop(mockEmbedding, longId);
-        assertEquals(longId, longIdTinkerPop.getCollectionId());
-        longIdTinkerPop.close();
+        // Very long collection ID should throw IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> {
+            new TinkerPop(mockEmbedding, longId);
+        });
     }
 
     // ================== 辅助方法 ==================

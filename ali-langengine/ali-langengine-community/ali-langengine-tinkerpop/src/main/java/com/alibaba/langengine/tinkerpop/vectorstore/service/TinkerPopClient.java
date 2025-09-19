@@ -16,9 +16,7 @@
 package com.alibaba.langengine.tinkerpop.vectorstore.service;
 
 import lombok.Data;
-
-import java.util.List;
-import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 
 @Data
@@ -40,36 +38,23 @@ public class TinkerPopClient {
     private int requestTimeout;
 
     public TinkerPopClient(String serverUrl) {
-        this.serverUrl = serverUrl;
-        this.connectionTimeout = 30000; // 30 seconds default
-        this.requestTimeout = 60000; // 60 seconds default
+        this(serverUrl, 30000, 60000); // 30s connection, 60s request timeout defaults
     }
 
     public TinkerPopClient(String serverUrl, int connectionTimeout, int requestTimeout) {
+        if (StringUtils.isBlank(serverUrl)) {
+            throw new IllegalArgumentException("Server URL cannot be null or empty");
+        }
+        if (connectionTimeout <= 0) {
+            throw new IllegalArgumentException("Connection timeout must be positive: " + connectionTimeout);
+        }
+        if (requestTimeout <= 0) {
+            throw new IllegalArgumentException("Request timeout must be positive: " + requestTimeout);
+        }
+        
         this.serverUrl = serverUrl;
         this.connectionTimeout = connectionTimeout;
         this.requestTimeout = requestTimeout;
     }
 
-    /**
-     * Initialize the connection to TinkerPop server
-     */
-    public void connect() {
-        // Implementation will be handled by TinkerPopService
-    }
-
-    /**
-     * Close the connection to TinkerPop server
-     */
-    public void close() {
-        // Implementation will be handled by TinkerPopService
-    }
-
-    /**
-     * Check if the connection is alive
-     */
-    public boolean isConnected() {
-        // Implementation will be handled by TinkerPopService
-        return false;
-    }
 }

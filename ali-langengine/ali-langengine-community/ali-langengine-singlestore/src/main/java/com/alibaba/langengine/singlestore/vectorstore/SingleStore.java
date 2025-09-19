@@ -19,14 +19,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
 import com.alibaba.langengine.core.vectorstore.VectorStore;
+import com.alibaba.langengine.singlestore.SingleStoreConfiguration;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
-
-import static com.alibaba.langengine.singlestore.SingleStoreConfiguration.*;
 
 
 @Slf4j
@@ -55,14 +55,31 @@ public class SingleStore extends VectorStore {
     }
 
     public SingleStore(String database, String tableName, SingleStoreParam singleStoreParam) {
+        this(database, tableName, singleStoreParam, null);
+    }
+
+    public SingleStore(String database, String tableName, SingleStoreParam singleStoreParam, Embeddings embedding) {
+        if (StringUtils.isBlank(database)) {
+            throw new IllegalArgumentException("Database name cannot be null or empty");
+        }
+        if (StringUtils.isBlank(tableName)) {
+            throw new IllegalArgumentException("Table name cannot be null or empty");
+        }
+        
         this.database = database;
         this.tableName = tableName;
+        this.embedding = embedding;
 
-        String serverUrl = SINGLESTORE_SERVER_URL;
-        String username = SINGLESTORE_USERNAME;
-        String password = SINGLESTORE_PASSWORD;
+        String serverUrl = SingleStoreConfiguration.SINGLESTORE_SERVER_URL;
+        String username = SingleStoreConfiguration.SINGLESTORE_USERNAME;
+        String password = SingleStoreConfiguration.SINGLESTORE_PASSWORD;
 
-        singleStoreService = new SingleStoreService(serverUrl, database, username, password, tableName, singleStoreParam);
+        try {
+            singleStoreService = new SingleStoreService(serverUrl, database, username, password, tableName, singleStoreParam);
+        } catch (Exception e) {
+            log.error("Failed to initialize SingleStore service for database: {}, table: {}", database, tableName, e);
+            throw new RuntimeException("Failed to initialize SingleStore service", e);
+        }
     }
 
     /**
@@ -88,14 +105,25 @@ public class SingleStore extends VectorStore {
         if (CollectionUtils.isEmpty(documents)) {
             return;
         }
+        if (embedding == null) {
+            throw new IllegalStateException("Embedding model is not set. Please set embedding model before adding documents.");
+        }
         documents = embedding.embedDocument(documents);
         singleStoreService.addDocuments(documents);
     }
 
     @Override
     public List<Document> similaritySearch(String query, int k, Double maxDistanceValue, Integer type) {
+        if (embedding == null) {
+            throw new IllegalStateException("Embedding model is not set. Please set embedding model before performing search.");
+        }
+        if (StringUtils.isBlank(query)) {
+            return Lists.newArrayList();
+        }
+        
         List<String> embeddingStrings = embedding.embedQuery(query, k);
         if (CollectionUtils.isEmpty(embeddingStrings) || !embeddingStrings.get(0).startsWith("[")) {
+            log.warn("Invalid embedding format from embedding model, expected JSON array format");
             return Lists.newArrayList();
         }
         List<Float> embeddings = JSON.parseArray(embeddingStrings.get(0), Float.class);

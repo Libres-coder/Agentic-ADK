@@ -16,28 +16,112 @@
 package com.alibaba.langengine.singlestore;
 
 import com.alibaba.langengine.core.util.WorkPropertiesUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 
+@Slf4j
 public class SingleStoreConfiguration {
 
-    /**
-     * singlestore server url
-     */
-    public static String SINGLESTORE_SERVER_URL = WorkPropertiesUtils.get("singlestore_server_url");
+    // Public static constants for backward compatibility with tests
+    public static final String SINGLESTORE_SERVER_URL = getConfigValue("singlestore_server_url", "localhost:3306");
+    public static final String SINGLESTORE_DATABASE = getConfigValue("singlestore_database", "vectordb");
+    public static final String SINGLESTORE_USERNAME = getConfigValue("singlestore_username");
+    public static final String SINGLESTORE_PASSWORD = getConfigValue("singlestore_password");
+
+    private static volatile boolean initialized = false;
 
     /**
-     * singlestore database name
+     * Get configuration value with optional default
      */
-    public static String SINGLESTORE_DATABASE = WorkPropertiesUtils.get("singlestore_database");
+    private static String getConfigValue(String key, String defaultValue) {
+        String value = WorkPropertiesUtils.get(key, defaultValue);
+        return value;
+    }
 
     /**
-     * singlestore username
+     * Get configuration value without default
      */
-    public static String SINGLESTORE_USERNAME = WorkPropertiesUtils.get("singlestore_username");
+    private static String getConfigValue(String key) {
+        return WorkPropertiesUtils.get(key);
+    }
 
     /**
-     * singlestore password
+     * Initialize configuration with validation (called on first access)
      */
-    public static String SINGLESTORE_PASSWORD = WorkPropertiesUtils.get("singlestore_password");
+    private static synchronized void initialize() {
+        if (!initialized) {
+            validateConfiguration();
+            initialized = true;
+        }
+    }
+
+    /**
+     * Validate required configuration parameters
+     */
+    private static void validateConfiguration() {
+        if (StringUtils.isBlank(SINGLESTORE_SERVER_URL)) {
+            log.warn("SingleStore server URL is not configured. Using default: localhost:3306");
+        }
+        if (StringUtils.isBlank(SINGLESTORE_USERNAME)) {
+            log.warn("SingleStore username is not configured. Please set 'singlestore_username' property.");
+        }
+        if (StringUtils.isBlank(SINGLESTORE_PASSWORD)) {
+            log.warn("SingleStore password is not configured. This may cause authentication failures.");
+        }
+        log.info("SingleStore configuration loaded - Server: {}, Database: {}, Username: {}", 
+                SINGLESTORE_SERVER_URL, SINGLESTORE_DATABASE, 
+                StringUtils.isBlank(SINGLESTORE_USERNAME) ? "[NOT_SET]" : SINGLESTORE_USERNAME);
+    }
+
+    /**
+     * Get SingleStore server URL
+     */
+    public static String getSingleStoreServerUrl() {
+        if (!initialized) {
+            initialize();
+        }
+        return SINGLESTORE_SERVER_URL;
+    }
+
+    /**
+     * Get SingleStore database name
+     */
+    public static String getSingleStoreDatabase() {
+        if (!initialized) {
+            initialize();
+        }
+        return SINGLESTORE_DATABASE;
+    }
+
+    /**
+     * Get SingleStore username
+     */
+    public static String getSingleStoreUsername() {
+        if (!initialized) {
+            initialize();
+        }
+        return SINGLESTORE_USERNAME;
+    }
+
+    /**
+     * Get SingleStore password (should not be logged)
+     */
+    public static String getSingleStorePassword() {
+        if (!initialized) {
+            initialize();
+        }
+        return SINGLESTORE_PASSWORD;
+    }
+
+    /**
+     * Get masked password for logging purposes
+     */
+    public static String getMaskedPassword() {
+        if (!initialized) {
+            initialize();
+        }
+        return StringUtils.isBlank(SINGLESTORE_PASSWORD) ? "[NOT_SET]" : "****";
+    }
 
 }

@@ -24,19 +24,25 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.alibaba.langengine.tinkerpop.TinkerPopConfiguration.TINKERPOP_SERVER_URL;
+import com.alibaba.langengine.tinkerpop.TinkerPopConfiguration;
+import java.util.regex.Pattern;
 
 
 @Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class TinkerPop extends VectorStore {
+
+    // Collection ID validation pattern
+    private static final Pattern COLLECTION_ID_PATTERN = Pattern.compile("^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$");
+    private static final int MIN_COLLECTION_ID_LENGTH = 3;
+    private static final int MAX_COLLECTION_ID_LENGTH = 63;
 
     /**
      * 向量库的embedding
@@ -64,43 +70,89 @@ public class TinkerPop extends VectorStore {
     private TinkerPopService _service;
 
     public TinkerPop(Embeddings embedding, String collectionId) {
-        String serverUrl = TINKERPOP_SERVER_URL != null ? TINKERPOP_SERVER_URL : "ws://localhost:8182";
-        this.collectionId = collectionId == null ? UUID.randomUUID().toString() : collectionId;
-        this.embedding = embedding;
-        this._client = new TinkerPopClient(serverUrl);
-        this._service = new TinkerPopService(_client);
-
-        try {
-            this._service.connect();
-        } catch (Exception e) {
-            log.error("Failed to connect to TinkerPop server during initialization", e);
-        }
+        this(TinkerPopConfiguration.getTinkerPopServerUrl(), embedding, collectionId,
+             TinkerPopConfiguration.getTinkerPopConnectionTimeout(),
+             TinkerPopConfiguration.getTinkerPopRequestTimeout());
     }
 
     public TinkerPop(String serverUrl, Embeddings embedding, String collectionId) {
-        this.collectionId = collectionId == null ? UUID.randomUUID().toString() : collectionId;
-        this.embedding = embedding;
-        this._client = new TinkerPopClient(serverUrl);
-        this._service = new TinkerPopService(_client);
-
-        try {
-            this._service.connect();
-        } catch (Exception e) {
-            log.error("Failed to connect to TinkerPop server during initialization", e);
-        }
+        this(serverUrl, embedding, collectionId,
+             TinkerPopConfiguration.getTinkerPopConnectionTimeout(),
+             TinkerPopConfiguration.getTinkerPopRequestTimeout());
     }
 
     public TinkerPop(String serverUrl, Embeddings embedding, String collectionId,
                      int connectionTimeout, int requestTimeout) {
-        this.collectionId = collectionId == null ? UUID.randomUUID().toString() : collectionId;
+        if (embedding == null) {
+            throw new IllegalArgumentException("Embedding model cannot be null");
+        }
+        if (StringUtils.isBlank(serverUrl)) {
+            throw new IllegalArgumentException("Server URL cannot be null or empty");
+        }
+        
+        this.collectionId = validateAndSetCollectionId(collectionId);
         this.embedding = embedding;
-        this._client = new TinkerPopClient(serverUrl, connectionTimeout, requestTimeout);
-        this._service = new TinkerPopService(_client);
-
+        
         try {
+            this._client = new TinkerPopClient(serverUrl, connectionTimeout, requestTimeout);
+            this._service = new TinkerPopService(_client);
             this._service.connect();
+            log.info("Successfully initialized TinkerPop with collection: {}", this.collectionId);
         } catch (Exception e) {
-            log.error("Failed to connect to TinkerPop server during initialization", e);
+            log.error("Failed to initialize TinkerPop service for collection: {}", this.collectionId, e);
+            throw new RuntimeException("Failed to initialize TinkerPop service", e);
+        }
+    }
+
+    /**
+     * Validate and set collection ID with proper validation rules
+     */
+    private String validateAndSetCollectionId(String collectionId) {
+        if (StringUtils.isBlank(collectionId)) {
+            String generated = "collection_" + UUID.randomUUID().toString().replace("-", "_");
+            log.info("No collection ID provided, generated: {}", generated);
+            return generated;
+        }
+        
+        if (collectionId.length() < MIN_COLLECTION_ID_LENGTH || collectionId.length() > MAX_COLLECTION_ID_LENGTH) {
+            throw new IllegalArgumentException(String.format(
+                "Collection ID length must be between %d and %d characters: %s",
+                MIN_COLLECTION_ID_LENGTH, MAX_COLLECTION_ID_LENGTH, collectionId));
+        }
+        
+        if (!COLLECTION_ID_PATTERN.matcher(collectionId).matches()) {
+            throw new IllegalArgumentException(
+                "Collection ID must start and end with lowercase letter or number, " +
+                "and can contain dots, dashes, and underscores in the middle: " + collectionId);
+        }
+        
+        if (collectionId.contains("..")) {
+            throw new IllegalArgumentException("Collection ID cannot contain consecutive dots: " + collectionId);
+        }
+        
+        // Check if it's a valid IP address (not allowed)
+        if (isValidIPAddress(collectionId)) {
+            throw new IllegalArgumentException("Collection ID cannot be a valid IP address: " + collectionId);
+        }
+        
+        return collectionId;
+    }
+
+    /**
+     * Check if a string is a valid IP address
+     */
+    private boolean isValidIPAddress(String ip) {
+        try {
+            String[] parts = ip.split("\\.");
+            if (parts.length != 4) return false;
+            
+            for (String part : parts) {
+                int num = Integer.parseInt(part);
+                if (num < 0 || num > 255) return false;
+            }
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
@@ -122,6 +174,7 @@ public class TinkerPop extends VectorStore {
                     document.setUniqueId(UUID.randomUUID().toString());
                 }
                 if (StringUtils.isEmpty(document.getPageContent())) {
+                    log.warn("Skipping document with empty content, ID: {}", document.getUniqueId());
                     continue;
                 }
                 if (MapUtils.isEmpty(document.getMetadata())) {
@@ -177,7 +230,9 @@ public class TinkerPop extends VectorStore {
         // Handle the case where the user doesn't provide ids on the Collection
         if (ids == null) {
             ids = new ArrayList<>();
-            for (String text : texts) {
+            Iterator<String> textIterator = texts.iterator();
+            while (textIterator.hasNext()) {
+                textIterator.next(); // Iterate through texts
                 ids.add(UUID.randomUUID().toString());
             }
         }
@@ -275,8 +330,15 @@ public class TinkerPop extends VectorStore {
         if (value == null) {
             return "";
         }
-        value = value.replaceAll("<[^>]+>", ""); // 去掉所有HTML标签
-        value = StringEscapeUtils.unescapeHtml4(value); // 去掉HTML实体
+        // 去掉所有HTML标签 (简单的正则表达式过滤)
+        value = value.replaceAll("<[^>]+>", "");
+        // 去掉HTML实体 (基本的实体处理)
+        value = value.replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replace("&amp;", "&")
+                    .replace("&quot;", "\"")
+                    .replace("&#39;", "'")
+                    .replace("&nbsp;", " ");
         return value;
     }
 }
