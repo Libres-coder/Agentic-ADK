@@ -154,6 +154,7 @@
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
 		<module>ali-langengine-community/ali-langengine-qrcode</module>
     <module>ali-langengine-community/ali-langengine-siliconflow</module>
+    <module>ali-langengine-community/ali-langengine-singlestore</module>
     <module>ali-langengine-community/ali-langengine-timescaledb</module>
     <module>ali-langengine-community/ali-langengine-pyexecutor</module>
     <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
