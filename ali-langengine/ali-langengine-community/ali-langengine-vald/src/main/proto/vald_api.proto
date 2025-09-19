@@ -1,0 +1,245 @@
+/**
+ * Copyright (C) 2024 AIDC-AI
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Protocol buffer definitions for Vald API
+syntax = "proto3";
+
+package vald.v1;
+
+option java_multiple_files = true;
+option java_package = "com.alibaba.langengine.vald.api.v1";
+option java_outer_classname = "ValdProto";
+
+// ==================== Common Types ====================
+
+// Common payload structure
+message Object {
+  // Object ID
+  string id = 1;
+  // Vector data
+  repeated float vector = 2;
+}
+
+// Object location response
+message ObjectLocation {
+  // Name of the location
+  string name = 1;
+  // UUID of the location
+  string uuid = 2;
+  // IPs of the location
+  repeated string ips = 3;
+}
+
+// Multiple object locations
+message ObjectLocations {
+  repeated ObjectLocation locations = 1;
+}
+
+// ==================== Search ====================
+
+// Search configuration
+message SearchConfig {
+  // Number of search results to return
+  uint32 num = 1;
+  // Search radius
+  float radius = 2;
+  // Search epsilon
+  float epsilon = 3;
+  // Search timeout in nanoseconds
+  int64 timeout = 4;
+  // Enable linear search
+  bool enable_linear_search = 5;
+}
+
+// Search request
+message SearchRequest {
+  // Query vector
+  repeated float vector = 1;
+  // Search configuration
+  SearchConfig config = 2;
+}
+
+// Search response with distance information
+message SearchResponse {
+  // Search result
+  message Result {
+    // Object ID
+    string id = 1;
+    // Distance from query vector
+    float distance = 2;
+  }
+  
+  // Search results
+  repeated Result results = 1;
+  // Request ID for tracking
+  string request_id = 2;
+}
+
+// Search by ID request
+message SearchByIDRequest {
+  // Object ID to search
+  string id = 1;
+  // Search configuration
+  SearchConfig config = 2;
+}
+
+// Multi search request
+message MultiSearchRequest {
+  // Multiple search requests
+  repeated SearchRequest requests = 1;
+}
+
+// Multi search response
+message MultiSearchResponse {
+  // Multiple search responses
+  repeated SearchResponse responses = 1;
+}
+
+// ==================== Insert ====================
+
+// Insert configuration
+message InsertConfig {
+  // Skip strict exist check
+  bool skip_strict_exist_check = 1;
+  // Insert timestamp
+  int64 timestamp = 2;
+  // Disable balanced update
+  bool disable_balanced_update = 3;
+  // Insert filters
+  repeated string filters = 4;
+}
+
+// Insert request
+message InsertRequest {
+  // Vector object to insert
+  Object vector = 1;
+  // Insert configuration
+  InsertConfig config = 2;
+}
+
+// Multi insert request
+message MultiInsertRequest {
+  // Multiple insert requests
+  repeated InsertRequest requests = 1;
+}
+
+// ==================== Update ====================
+
+// Update configuration
+message UpdateConfig {
+  // Skip strict exist check
+  bool skip_strict_exist_check = 1;
+  // Update timestamp
+  int64 timestamp = 2;
+  // Disable balanced update
+  bool disable_balanced_update = 3;
+  // Update filters
+  repeated string filters = 4;
+}
+
+// Update request
+message UpdateRequest {
+  // Vector object to update
+  Object vector = 1;
+  // Update configuration
+  UpdateConfig config = 2;
+}
+
+// Multi update request
+message MultiUpdateRequest {
+  // Multiple update requests
+  repeated UpdateRequest requests = 1;
+}
+
+// ==================== Remove ====================
+
+// Remove configuration
+message RemoveConfig {
+  // Skip strict exist check
+  bool skip_strict_exist_check = 1;
+  // Remove timestamp
+  int64 timestamp = 2;
+}
+
+// Remove request
+message RemoveRequest {
+  // Object ID to remove
+  string id = 1;
+  // Remove configuration
+  RemoveConfig config = 2;
+}
+
+// Multi remove request
+message MultiRemoveRequest {
+  // Multiple remove requests
+  repeated RemoveRequest requests = 1;
+}
+
+// ==================== Services ====================
+
+// Search service
+service SearchService {
+  // Search for similar vectors
+  rpc Search(SearchRequest) returns (SearchResponse);
+  
+  // Search by ID
+  rpc SearchByID(SearchByIDRequest) returns (SearchResponse);
+  
+  // Stream search
+  rpc StreamSearch(stream SearchRequest) returns (stream SearchResponse);
+  
+  // Multi search
+  rpc MultiSearch(MultiSearchRequest) returns (MultiSearchResponse);
+  
+  // Linear search
+  rpc LinearSearch(SearchRequest) returns (SearchResponse);
+}
+
+// Insert service
+service InsertService {
+  // Insert a single vector
+  rpc Insert(InsertRequest) returns (ObjectLocation);
+  
+  // Stream insert multiple vectors
+  rpc StreamInsert(stream InsertRequest) returns (stream ObjectLocation);
+  
+  // Multi insert multiple vectors
+  rpc MultiInsert(MultiInsertRequest) returns (ObjectLocations);
+}
+
+// Update service
+service UpdateService {
+  // Update a single vector
+  rpc Update(UpdateRequest) returns (ObjectLocation);
+  
+  // Stream update multiple vectors
+  rpc StreamUpdate(stream UpdateRequest) returns (stream ObjectLocation);
+  
+  // Multi update multiple vectors
+  rpc MultiUpdate(MultiUpdateRequest) returns (ObjectLocations);
+}
+
+// Remove service
+service RemoveService {
+  // Remove a single vector by ID
+  rpc Remove(RemoveRequest) returns (ObjectLocation);
+  
+  // Stream remove multiple vectors
+  rpc StreamRemove(stream RemoveRequest) returns (stream ObjectLocation);
+  
+  // Multi remove multiple vectors
+  rpc MultiRemove(MultiRemoveRequest) returns (ObjectLocations);
+}
