@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.alibaba</groupId>
+        <artifactId>ali-langengine</artifactId>
+        <version>1.2.6-202508111516</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ali-langengine-marqo</artifactId>
+    <packaging>jar</packaging>
+    <name>ali-langengine-marqo</name>
+    <description>LangEngine integration with Marqo vector search engine</description>
+
+    <dependencies>
+        <!-- Core LangEngine dependency -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>ali-langengine-core</artifactId>
+            <version>1.2.6-202508111516</version>
+        </dependency>
+
+        <!-- OkHttp for HTTP client -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.11.0</version>
+        </dependency>
+
+        <!-- FastJSON for compatibility -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
+        </dependency>
+
+        <!-- Jackson dependencies - use consistent versions that work with Java 8 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        
+        <!-- Commons Collections -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+        
+        <!-- Commons Lang for utilities -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+    </dependencies>
+
+</project>

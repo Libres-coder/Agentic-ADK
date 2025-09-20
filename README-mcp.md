@@ -1,36 +1,37 @@
+**"[中文版说明](https://github.com/AIDC-AI/Agentic-ADK/blob/main/README-mcp.md)"**
 # ali-langengine-mcp-jdk8
 
-## 项目简介
+## Project Overview
 
-`ali-langengine-mcp-jdk8` 是阿里巴巴 LangEngine 项目的一个独立模块，提供了 Model Context Protocol (MCP) 的 JDK 8 兼容实现。该模块允许在 JDK 8 环境中使用 MCP 协议与 AI 模型进行交互。
+`ali-langengine-mcp-jdk8` is an independent module of Alibaba's LangEngine project that provides a JDK 8 compatible implementation of the Model Context Protocol (MCP). This module enables interaction with AI models using the MCP protocol in JDK 8 environments.
 
-## 版本说明
+## Version Management
 
-本模块采用独立的版本号管理策略，不与主项目 `ali-langengine` 的版本号保持一致。这是因为：
+This module adopts an independent versioning strategy and does not maintain consistency with the main `ali-langengine` project version. This is because:
 
-1. 本模块是完全独立的组件，不依赖于主项目的其他部分
-2. 独立的版本号允许本模块按照自己的节奏演进
-3. 可以更好地遵循语义化版本控制原则
-4. 为依赖本模块的项目提供更清晰的依赖关系
-5. 便于针对 JDK 8 环境进行长期维护
+1. This module is a completely independent component that doesn't depend on other parts of the main project
+2. Independent versioning allows this module to evolve at its own pace
+3. Better adherence to semantic versioning principles
+4. Provides clearer dependency relationships for projects that depend on this module
+5. Facilitates long-term maintenance for JDK 8 environments
 
-当前版本：`1.0.1-SNAPSHOT`
+Current Version: `1.0.1-SNAPSHOT`
 
-## 功能特性
+## Features
 
-- 完全兼容 JDK 8 环境
-- 实现 Model Context Protocol (MCP) 客户端
-- 支持同步和异步 API
-- 支持多种传输方式（标准输入/输出、SSE 等）
-- 提供工具发现和调用功能
-- 支持资源访问和管理
-- 支持提示模板处理
-- 支持实时更新
-- 支持结构化日志记录
+- Full compatibility with JDK 8 environment
+- Implementation of Model Context Protocol (MCP) client
+- Support for synchronous and asynchronous APIs
+- Support for multiple transport methods (stdin/stdout, SSE, etc.)
+- Tool discovery and invocation capabilities
+- Resource access and management support
+- Prompt template processing support
+- Real-time update support
+- Structured logging support
 
-## 使用方法
+## Usage
 
-### Maven 依赖
+### Maven Dependency
 
 ```xml
 <dependency>
@@ -40,10 +41,10 @@
 </dependency>
 ```
 
-### 基本用法
+### Basic Usage
 
 ```java
-// 创建同步客户端
+// Create synchronous client
 McpSyncClient client = McpClient.createSync(
     StdioClientTransport.create(
         ServerParameters.builder("path/to/server")
@@ -52,27 +53,27 @@ McpSyncClient client = McpClient.createSync(
     )
 );
 
-// 初始化客户端
+// Initialize client
 client.initialize();
 
-// 获取可用工具列表
+// Get available tools list
 List<Tool> tools = client.listTools();
 
-// 调用工具
+// Call tool
 CallToolResult result = client.callTool("tool-name", params);
 ```
 
-## 调试指南
+## Debugging Guide
 
-详细的调试信息请参考 [README-DEBUG.md](README-DEBUG.md)。
+For detailed debugging information, please refer to [README-DEBUG.md](README-DEBUG.md).
 
-## 许可证
+## License
 
-本项目采用 Apache License 2.0 许可证。详情请参阅 [LICENSE](LICENSE) 文件。
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
-## 仓库配置
+## Repository Configuration
 
-本模块使用 GitHub 包仓库进行发布：
+This module uses GitHub Package Registry for publishing:
 
 ```xml
 <distributionManagement>
@@ -89,15 +90,15 @@ CallToolResult result = client.callTool("tool-name", params);
 </distributionManagement>
 ```
 
-## 贡献指南
+## Contributing
 
-欢迎提交 Pull Request 或 Issue 来帮助改进本项目。在提交代码前，请确保：
+We welcome Pull Requests and Issues to help improve this project. Before submitting code, please ensure:
 
-1. 代码符合项目的编码规范
-2. 添加了适当的单元测试
-3. 所有测试都能通过
-4. 更新了相关文档
+1. Code follows the project's coding standards
+2. Appropriate unit tests have been added
+3. All tests pass
+4. Relevant documentation has been updated
 
-## 联系方式
+## Contact
 
-如有问题或建议，请通过 GitHub Issue 与我们联系。
+For questions or suggestions, please contact us through GitHub Issues.

@@ -1,0 +1,18 @@
+# Perplexity API Configuration
+# Copy this file to your application's resources directory and rename to perplexity.properties
+# Configure the values according to your setup
+
+# Required: Your Perplexity API key
+perplexity_api_key=your_perplexity_api_key_here
+
+# Optional: Perplexity API base URL (defaults to https://api.perplexity.ai/)
+# perplexity_api_url=https://api.perplexity.ai/
+
+# Optional: Timeout configurations in seconds
+# perplexity_sync_timeout=60
+# perplexity_deep_research_timeout=300
+
+# Optional: Custom endpoint configurations
+# perplexity_sync_endpoint=chat/completions
+# perplexity_async_endpoint=async/chat/completions
+# perplexity_async_list_endpoint=async/chat/completions
