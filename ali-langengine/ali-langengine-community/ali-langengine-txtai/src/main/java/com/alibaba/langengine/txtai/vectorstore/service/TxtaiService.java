@@ -47,8 +47,10 @@ public class TxtaiService {
             String response = client.post("/add", request);
             log.debug("添加文档成功: {}", response);
         } catch (IOException e) {
-            log.error("添加文档到txtai失败", e);
-            throw TxtaiException.networkError("添加文档到txtai失败: " + e.getMessage(), e);
+            String errorMessage = String.format("添加文档到txtai失败，文档数量: %d, 错误: %s",
+                                               request.getDocuments().size(), e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.networkError(errorMessage, e);
         }
     }
 
@@ -72,8 +74,10 @@ public class TxtaiService {
             log.debug("搜索返回 {} 个结果", results.size());
             return results;
         } catch (IOException e) {
-            log.error("搜索txtai失败", e);
-            throw TxtaiException.networkError("搜索txtai失败: " + e.getMessage(), e);
+            String errorMessage = String.format("搜索txtai失败，查询: %s, 限制: %d, 错误: %s",
+                                               request.getQuery(), request.getLimit(), e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.networkError(errorMessage, e);
         }
     }
 

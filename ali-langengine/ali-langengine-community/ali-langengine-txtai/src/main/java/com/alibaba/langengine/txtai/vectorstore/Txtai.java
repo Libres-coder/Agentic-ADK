@@ -86,12 +86,12 @@ public class Txtai extends VectorStore {
             List<TxtaiAddRequest.Document> txtaiDocs = new ArrayList<>();
 
             for (Document document : documents) {
-                if (StringUtils.isEmpty(document.getPageContent())) {
+                if (StringUtils.isBlank(document.getPageContent())) {
                     log.warn("文档内容为空，跳过文档: {}", document.getUniqueId());
                     continue;
                 }
 
-                if (StringUtils.isEmpty(document.getUniqueId())) {
+                if (StringUtils.isBlank(document.getUniqueId())) {
                     document.setUniqueId(UUID.randomUUID().toString());
                 }
 
@@ -119,11 +119,13 @@ public class Txtai extends VectorStore {
             }
 
         } catch (TxtaiException e) {
-            log.error("添加文档到txtai失败", e);
+            log.error("添加文档到txtai失败，索引: {} 文档数量: {}", indexName, documents.size(), e);
             throw e;
         } catch (Exception e) {
-            log.error("添加文档到txtai失败", e);
-            throw TxtaiException.processingError("添加文档到txtai失败: " + e.getMessage(), e);
+            String errorMessage = String.format("添加文档到txtai失败，索引: %s, 文档数量: %d, 错误: %s",
+                                               indexName, documents.size(), e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.processingError(errorMessage, e);
         }
     }
 
@@ -179,11 +181,13 @@ public class Txtai extends VectorStore {
             return documents;
 
         } catch (TxtaiException e) {
-            log.error("txtai相似性搜索失败", e);
+            log.error("txtai相似性搜索失败，索引: {} 查询: {} 返回数量: {}", indexName, query, k, e);
             throw e;
         } catch (Exception e) {
-            log.error("txtai相似性搜索失败", e);
-            throw TxtaiException.processingError("txtai相似性搜索失败: " + e.getMessage(), e);
+            String errorMessage = String.format("txtai相似性搜索失败，索引: %s, 查询: %s, 返回数量: %d, 错误: %s",
+                                               indexName, query, k, e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.processingError(errorMessage, e);
         }
     }
 
@@ -196,11 +200,13 @@ public class Txtai extends VectorStore {
         try {
             return service.info();
         } catch (TxtaiException e) {
-            log.error("获取txtai索引信息失败", e);
+            log.error("获取txtai索引信息失败，索引: {}", indexName, e);
             throw e;
         } catch (Exception e) {
-            log.error("获取txtai索引信息失败", e);
-            throw TxtaiException.processingError("获取txtai索引信息失败: " + e.getMessage(), e);
+            String errorMessage = String.format("获取txtai索引信息失败，索引: %s, 错误: %s",
+                                               indexName, e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.processingError(errorMessage, e);
         }
     }
 
@@ -212,11 +218,13 @@ public class Txtai extends VectorStore {
             service.index();
             log.info("txtai索引重建完成: {}", indexName);
         } catch (TxtaiException e) {
-            log.error("重建txtai索引失败", e);
+            log.error("重建txtai索引失败，索引: {}", indexName, e);
             throw e;
         } catch (Exception e) {
-            log.error("重建txtai索引失败", e);
-            throw TxtaiException.processingError("重建txtai索引失败: " + e.getMessage(), e);
+            String errorMessage = String.format("重建txtai索引失败，索引: %s, 错误: %s",
+                                               indexName, e.getMessage());
+            log.error(errorMessage, e);
+            throw TxtaiException.processingError(errorMessage, e);
         }
     }
 
@@ -242,7 +250,7 @@ public class Txtai extends VectorStore {
      * 验证服务器URL
      */
     private void validateServerUrl(String serverUrl) {
-        if (StringUtils.isEmpty(serverUrl)) {
+        if (StringUtils.isBlank(serverUrl)) {
             throw TxtaiException.configurationError("txtai服务器URL不能为空，请配置 txtai_server_url 参数");
         }
         if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
@@ -254,7 +262,7 @@ public class Txtai extends VectorStore {
      * 验证索引名称
      */
     private String validateIndexName(String indexName) {
-        if (StringUtils.isEmpty(indexName)) {
+        if (StringUtils.isBlank(indexName)) {
             return "default";
         }
 
@@ -297,11 +305,8 @@ public class Txtai extends VectorStore {
      * 验证查询文本
      */
     private void validateQuery(String query) {
-        if (StringUtils.isEmpty(query)) {
-            throw TxtaiException.validationError("查询文本不能为空");
-        }
-        if (query.trim().length() == 0) {
-            throw TxtaiException.validationError("查询文本不能只包含空白字符");
+        if (StringUtils.isBlank(query)) {
+            throw TxtaiException.validationError("查询文本不能为空或只包含空白字符");
         }
     }
 

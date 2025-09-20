@@ -73,8 +73,10 @@ public class TxtaiClient {
                 log.debug("POST请求成功，状态码: {} 响应: {}", statusCode, responseBody);
                 return responseBody;
             } else {
-                log.error("POST请求失败，状态码: {} 响应: {}", statusCode, responseBody);
-                throw TxtaiException.apiError(statusCode, responseBody);
+                log.error("POST请求失败，URL: {} 状态码: {} 响应: {}", serverUrl + endpoint, statusCode, responseBody);
+                String errorMessage = String.format("POST请求失败 - URL: %s, 状态码: %d, 响应: %s",
+                                                   serverUrl + endpoint, statusCode, responseBody);
+                throw TxtaiException.apiError(statusCode, errorMessage);
             }
         }
     }
@@ -103,8 +105,10 @@ public class TxtaiClient {
                 log.debug("GET请求成功，状态码: {} 响应: {}", statusCode, responseBody);
                 return responseBody;
             } else {
-                log.error("GET请求失败，状态码: {} 响应: {}", statusCode, responseBody);
-                throw TxtaiException.apiError(statusCode, responseBody);
+                log.error("GET请求失败，URL: {} 状态码: {} 响应: {}", serverUrl + endpoint, statusCode, responseBody);
+                String errorMessage = String.format("GET请求失败 - URL: %s, 状态码: %d, 响应: %s",
+                                                   serverUrl + endpoint, statusCode, responseBody);
+                throw TxtaiException.apiError(statusCode, errorMessage);
             }
         }
     }

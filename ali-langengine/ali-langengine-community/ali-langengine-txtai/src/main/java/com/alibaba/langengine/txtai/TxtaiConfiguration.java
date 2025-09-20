@@ -16,6 +16,8 @@
 package com.alibaba.langengine.txtai;
 
 import com.alibaba.langengine.core.util.WorkPropertiesUtils;
+import com.alibaba.langengine.txtai.exception.TxtaiException;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * txtai configuration
@@ -27,6 +29,30 @@ public class TxtaiConfiguration {
     /**
      * txtai server url
      */
-    public static String TXTAI_SERVER_URL = WorkPropertiesUtils.get("txtai_server_url");
+    public static final String TXTAI_SERVER_URL = getConfigValue("txtai_server_url");
 
+    /**
+     * 默认服务器URL（用于开发和测试）
+     */
+    private static final String DEFAULT_TXTAI_URL = "http://localhost:8000";
+
+    /**
+     * 获取配置值，提供默认值处理
+     */
+    private static String getConfigValue(String key) {
+        String value = WorkPropertiesUtils.get(key);
+        if (StringUtils.isBlank(value) && "txtai_server_url".equals(key)) {
+            return DEFAULT_TXTAI_URL;
+        }
+        return value;
+    }
+
+    /**
+     * 验证配置是否完整
+     */
+    public static void validateConfiguration() {
+        if (StringUtils.isBlank(TXTAI_SERVER_URL)) {
+            throw TxtaiException.configurationError("txtai服务器URL未配置，请设置 txtai_server_url 参数");
+        }
+    }
 }
