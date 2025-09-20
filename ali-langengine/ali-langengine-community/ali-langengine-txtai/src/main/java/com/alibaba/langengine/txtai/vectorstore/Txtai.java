@@ -305,8 +305,14 @@ public class Txtai extends VectorStore {
      * 验证查询文本
      */
     private void validateQuery(String query) {
-        if (StringUtils.isBlank(query)) {
-            throw TxtaiException.validationError("查询文本不能为空或只包含空白字符");
+        if (query == null) {
+            throw TxtaiException.validationError("查询文本不能为空");
+        }
+        if (query.isEmpty()) {
+            throw TxtaiException.validationError("查询文本不能为空");
+        }
+        if (query.trim().isEmpty()) {
+            throw TxtaiException.validationError("查询文本不能只包含空白字符");
         }
     }
 
