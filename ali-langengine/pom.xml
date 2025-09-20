@@ -83,6 +83,9 @@
 		<module>ali-langengine-community/ali-langengine-milvus</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-txtai</module>
+		<module>ali-langengine-community/ali-langengine-typesense</module>
+		<module>ali-langengine-community/ali-langengine-vald</module>
 		<module>ali-langengine-community/ali-langengine-tuargpg</module>
 		<module>ali-langengine-community/ali-langengine-scann</module>
 		<module>ali-langengine-community/ali-langengine-clickhouse</module>
@@ -130,6 +133,7 @@
 		<module>ali-langengine-community/ali-langengine-neo4j</module>
 		<module>ali-langengine-community/ali-langengine-janusgraph</module>
 		<module>ali-langengine-community/ali-langengine-hugegraph</module>
+		<module>ali-langengine-community/ali-langengine-tinkerpop</module>
 		<module>ali-langengine-community/ali-langengine-annoy</module>
 		<module>ali-langengine-community/ali-langengine-googlesearch</module>
 		<module>ali-langengine-community/ali-langengine-feishu</module>
@@ -153,6 +157,7 @@
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
 		<module>ali-langengine-community/ali-langengine-qrcode</module>
     <module>ali-langengine-community/ali-langengine-siliconflow</module>
+    <module>ali-langengine-community/ali-langengine-singlestore</module>
     <module>ali-langengine-community/ali-langengine-timescaledb</module>
     <module>ali-langengine-community/ali-langengine-pyexecutor</module>
     <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
