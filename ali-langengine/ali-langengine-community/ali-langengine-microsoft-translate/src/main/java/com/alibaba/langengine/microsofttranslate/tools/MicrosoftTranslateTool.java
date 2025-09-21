@@ -75,10 +75,7 @@ public class MicrosoftTranslateTool extends DefaultTool {
         log.info("Microsoft 翻译输入: {}", toolInput);
         
         if (StringUtils.isBlank(toolInput)) {
-            return ToolExecuteResult.builder()
-                    .success(false)
-                    .error("翻译文本不能为空")
-                    .build();
+            return new ToolExecuteResult("翻译文本不能为空");
         }
         
         try {
@@ -92,10 +89,7 @@ public class MicrosoftTranslateTool extends DefaultTool {
             MicrosoftTranslateResponse response = microsoftTranslateService.translate(request);
             
             if (response.getTranslations() == null || response.getTranslations().isEmpty()) {
-                return ToolExecuteResult.builder()
-                        .success(false)
-                        .error("翻译失败: 无翻译结果")
-                        .build();
+                return new ToolExecuteResult("翻译失败: 无翻译结果");
             }
             
             String translatedText = response.getTranslations().get(0).getText();
@@ -105,17 +99,11 @@ public class MicrosoftTranslateTool extends DefaultTool {
             log.info("Microsoft 翻译结果: {}", translatedText);
             log.info("检测到的源语言: {}", detectedLang);
             
-            return ToolExecuteResult.builder()
-                    .success(true)
-                    .result(translatedText)
-                    .build();
+            return new ToolExecuteResult(translatedText);
                     
         } catch (Exception e) {
             log.error("Microsoft 翻译异常", e);
-            return ToolExecuteResult.builder()
-                    .success(false)
-                    .error("翻译异常: " + e.getMessage())
-                    .build();
+            return new ToolExecuteResult("翻译异常: " + e.getMessage());
         }
     }
 }
