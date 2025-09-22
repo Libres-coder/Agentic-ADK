@@ -168,6 +168,7 @@
     <module>ali-langengine-community/ali-langengine-nebulagraph</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
+    <module>ali-langengine-community/ali-langengine-usearch</module>
   </modules>
 
 	<dependencyManagement>
