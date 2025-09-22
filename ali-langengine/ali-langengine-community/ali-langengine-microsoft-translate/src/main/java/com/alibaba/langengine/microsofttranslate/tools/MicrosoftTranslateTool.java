@@ -2,7 +2,6 @@ package com.alibaba.langengine.microsofttranslate.tools;
 
 import com.alibaba.langengine.core.tool.DefaultTool;
 import com.alibaba.langengine.core.tool.ToolExecuteResult;
-import com.alibaba.langengine.microsofttranslate.MicrosoftTranslateConfiguration;
 import com.alibaba.langengine.microsofttranslate.model.MicrosoftTranslateRequest;
 import com.alibaba.langengine.microsofttranslate.model.MicrosoftTranslateResponse;
 import com.alibaba.langengine.microsofttranslate.service.MicrosoftTranslateService;

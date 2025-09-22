@@ -89,7 +89,7 @@
 		<module>ali-langengine-community/ali-langengine-tuargpg</module>
 		<module>ali-langengine-community/ali-langengine-scann</module>
 		<module>ali-langengine-community/ali-langengine-clickhouse</module>
-         <module>ali-langengine-community/ali-langengine-firecrawl</module>
+    <module>ali-langengine-community/ali-langengine-firecrawl</module>
 		<module>ali-langengine-community/ali-langengine-djl</module>
 		<module>ali-langengine-community/ali-langengine-huggingface</module>
 		<module>ali-langengine-community/ali-langengine-sqlite</module>
@@ -103,7 +103,7 @@
 		<module>ali-langengine-community/ali-langengine-deepseek</module>
 		<module>ali-langengine-community/ali-langengine-openmanus</module>
 		<module>ali-langengine-community/ali-langengine-tablestore</module>
-        <module>ali-langengine-community/ali-langengine-jina</module>
+    <module>ali-langengine-community/ali-langengine-jina</module>
 		<module>ali-langengine-community/ali-langengine-jsonrepair</module>
 		<module>ali-langengine-community/ali-langengine-tavily</module>
 		<module>ali-langengine-community/ali-langengine-weaviate</module>
@@ -147,25 +147,27 @@
 		<module>ali-langengine-community/ali-langengine-douyin</module>
 		<module>ali-langengine-community/ali-langengine-zhihu</module>
 		<module>ali-langengine-community/ali-langengine-kagi</module>
-        <module>ali-langengine-community/ali-langengine-aliyun-oss</module>
+    <module>ali-langengine-community/ali-langengine-aliyun-oss</module>
 		<module>ali-langengine-community/ali-langengine-qiniu-kodo</module>
 		<module>ali-langengine-community/ali-langengine-tencent-cos</module>
-        <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
+    <module>ali-langengine-community/ali-langengine-sqlexecutor</module>
 		<module>ali-langengine-community/ali-langengine-perplexity</module>
 		<module>ali-langengine-community/ali-langengine-jieyue</module>
 		<module>ali-langengine-community/ali-langengine-trello</module>
 		<module>ali-langengine-community/ali-langengine-influxdb</module>
 		<module>ali-langengine-community/ali-langengine-qrcode</module>
-        <module>ali-langengine-community/ali-langengine-siliconflow</module>
-        <module>ali-langengine-community/ali-langengine-singlestore</module>
-        <module>ali-langengine-community/ali-langengine-timescaledb</module>
-        <module>ali-langengine-community/ali-langengine-pyexecutor</module>
-        <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
-        <module>ali-langengine-community/ali-langengine-tianyancha</module>
-        <module>ali-langengine-community/ali-langengine-gitcode</module>
-        <module>ali-langengine-community/ali-langengine-gitee</module>
-        <module>ali-langengine-community/ali-langengine-dgraph</module>
-        <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+    <module>ali-langengine-community/ali-langengine-siliconflow</module>
+    <module>ali-langengine-community/ali-langengine-singlestore</module>
+    <module>ali-langengine-community/ali-langengine-timescaledb</module>
+    <module>ali-langengine-community/ali-langengine-pyexecutor</module>
+    <module>ali-langengine-community/ali-langengine-cxxexecutor</module>
+    <module>ali-langengine-community/ali-langengine-tianyancha</module>
+    <module>ali-langengine-community/ali-langengine-gitcode</module>
+    <module>ali-langengine-community/ali-langengine-gitee</module>
+    <module>ali-langengine-community/ali-langengine-dgraph</module>
+    <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+    <module>ali-langengine-community/ali-langengine-deeplake</module>
+    <module>ali-langengine-community/ali-langengine-rockset</module>
         <module>ali-langengine-community/ali-langengine-alipay</module>
         <module>ali-langengine-community/ali-langengine-arxiv</module>
         <module>ali-langengine-community/ali-langengine-cassandra</module>
