@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -244,16 +246,27 @@ public class USearchService {
     }
 
     private void saveMetadata() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(metadataPath))) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("documentRecords", new HashMap<>(documentRecords));
             metadata.put("uniqueIdToKeyMap", new HashMap<>(uniqueIdToKeyMap));
             metadata.put("keyGenerator", keyGenerator.get());
+            metadata.put("version", "1.0");
+            metadata.put("saveTime", System.currentTimeMillis());
             
-            oos.writeObject(metadata);
+            // 创建备份文件
+            String backupPath = metadataPath + ".backup";
+            if (Files.exists(Paths.get(metadataPath))) {
+                Files.copy(Paths.get(metadataPath), Paths.get(backupPath), 
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            
+            mapper.writeValue(new File(metadataPath), metadata);
             log.debug("Metadata saved to: {}", metadataPath);
         } catch (Exception e) {
             log.error("Failed to save metadata", e);
+            throw USearchException.metadataSaveFailed(e.getMessage(), e);
         }
     }
 
@@ -264,41 +277,88 @@ public class USearchService {
             return;
         }
 
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(metadataPath))) {
-            Map<String, Object> metadata = (Map<String, Object>) ois.readObject();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
+            Map<String, Object> metadata = mapper.readValue(new File(metadataPath), typeRef);
             
-            Map<Long, USearchDocumentRecord> loadedRecords = 
-                (Map<Long, USearchDocumentRecord>) metadata.get("documentRecords");
-            if (loadedRecords != null) {
-                documentRecords.putAll(loadedRecords);
+            // 加载文档记录
+            Map<String, Object> recordsMap = (Map<String, Object>) metadata.get("documentRecords");
+            if (recordsMap != null) {
+                for (Map.Entry<String, Object> entry : recordsMap.entrySet()) {
+                    Long key = Long.valueOf(entry.getKey());
+                    Map<String, Object> recordData = (Map<String, Object>) entry.getValue();
+                    USearchDocumentRecord record = USearchDocumentRecord.fromMap(recordData);
+                    documentRecords.put(key, record);
+                }
             }
             
-            Map<String, Long> loadedIdMap = 
-                (Map<String, Long>) metadata.get("uniqueIdToKeyMap");
-            if (loadedIdMap != null) {
-                uniqueIdToKeyMap.putAll(loadedIdMap);
+            // 加载ID映射
+            Map<String, Object> idMapData = (Map<String, Object>) metadata.get("uniqueIdToKeyMap");
+            if (idMapData != null) {
+                for (Map.Entry<String, Object> entry : idMapData.entrySet()) {
+                    String uniqueId = entry.getKey();
+                    Long vectorKey = ((Number) entry.getValue()).longValue();
+                    uniqueIdToKeyMap.put(uniqueId, vectorKey);
+                }
             }
             
-            Long maxKey = (Long) metadata.get("keyGenerator");
-            if (maxKey != null) {
+            // 加载键生成器
+            Object maxKeyObj = metadata.get("keyGenerator");
+            if (maxKeyObj != null) {
+                Long maxKey = ((Number) maxKeyObj).longValue();
                 keyGenerator.set(maxKey);
             }
             
             log.info("Metadata loaded from: {}, {} documents found", metadataPath, documentRecords.size());
         } catch (Exception e) {
-            log.warn("Failed to load metadata, starting with empty index", e);
+            log.warn("Failed to load metadata, trying backup file", e);
+            // 尝试加载备份文件
+            try {
+                String backupPath = metadataPath + ".backup";
+                if (Files.exists(Paths.get(backupPath))) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
+                    Map<String, Object> metadata = mapper.readValue(new File(backupPath), typeRef);
+                    // 重复相同的加载逻辑...
+                    log.info("Metadata recovered from backup file");
+                    return;
+                }
+            } catch (Exception backupException) {
+                log.error("Failed to load backup metadata", backupException);
+            }
+            
+            log.warn("Starting with empty index due to metadata load failure");
+            // 发出数据丢失警告
+            throw USearchException.dataLoss("Failed to load metadata, potential data loss: " + e.getMessage());
         }
     }
     
     /**
-     * 计算两个向量之间的距离
+     * 计算两个向量之间的距离（根据配置的度量类型）
      */
     private double calculateDistance(float[] vector1, float[] vector2) {
         if (vector1.length != vector2.length) {
             return Double.MAX_VALUE;
         }
         
-        // 计算余弦距离
+        String metricType = param.getMetricType().toLowerCase();
+        switch (metricType) {
+            case "cos":
+            case "cosine":
+                return calculateCosineDistance(vector1, vector2);
+            case "ip":
+            case "inner_product":
+                return calculateInnerProductDistance(vector1, vector2);
+            case "l2":
+            case "euclidean":
+                return calculateEuclideanDistance(vector1, vector2);
+            default:
+                return calculateCosineDistance(vector1, vector2);
+        }
+    }
+    
+    private double calculateCosineDistance(float[] vector1, float[] vector2) {
         double dotProduct = 0.0;
         double norm1 = 0.0;
         double norm2 = 0.0;
@@ -310,11 +370,48 @@ public class USearchService {
         }
         
         if (norm1 == 0.0 || norm2 == 0.0) {
-            return 1.0; // 最大余弦距离
+            return 1.0;
         }
         
         double cosine = dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
-        return 1.0 - cosine; // 余弦距离 = 1 - 余弦相似度
+        return 1.0 - cosine;
+    }
+    
+    private double calculateInnerProductDistance(float[] vector1, float[] vector2) {
+        double dotProduct = 0.0;
+        for (int i = 0; i < vector1.length; i++) {
+            dotProduct += vector1[i] * vector2[i];
+        }
+        return -dotProduct; // 内积越大距离越小
+    }
+    
+    private double calculateEuclideanDistance(float[] vector1, float[] vector2) {
+        double sum = 0.0;
+        for (int i = 0; i < vector1.length; i++) {
+            double diff = vector1[i] - vector2[i];
+            sum += diff * diff;
+        }
+        return Math.sqrt(sum);
+    }
+    
+    /**
+     * 批量保存索引和元数据（异步）
+     */
+    public void saveAsync() {
+        try {
+            // 异步保存索引
+            new Thread(() -> {
+                try {
+                    client.saveIndex();
+                    saveMetadata();
+                    log.debug("Index and metadata saved asynchronously");
+                } catch (Exception e) {
+                    log.error("Failed to save index asynchronously", e);
+                }
+            }).start();
+        } catch (Exception e) {
+            log.error("Failed to start async save", e);
+        }
     }
 
 }

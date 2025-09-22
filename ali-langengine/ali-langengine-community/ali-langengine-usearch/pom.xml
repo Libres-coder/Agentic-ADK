@@ -25,9 +25,16 @@
             <version>4.4</version>
         </dependency>
 
+        <!-- Jackson for JSON serialization -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+
         <!-- usearch start -->
         <!-- USearch Java JNI binding -->
-        <!-- USearch JAR will be downloaded and installed manually -->
+        <!-- Option 1: System dependency (default, requires manual JAR installation) -->
         <dependency>
             <groupId>cloud.unum</groupId>
             <artifactId>usearch</artifactId>
@@ -35,6 +42,15 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/usearch-2.21.0.jar</systemPath>
         </dependency>
+        
+        <!-- Option 2: Maven Central dependency (uncomment if available) -->
+        <!--
+        <dependency>
+            <groupId>cloud.unum</groupId>
+            <artifactId>usearch</artifactId>
+            <version>2.21.0</version>
+        </dependency>
+        -->
         <!-- usearch end -->
     </dependencies>
 

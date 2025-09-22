@@ -55,17 +55,17 @@ public class USearchClient {
             }
 
             // 创建USearch索引配置
-            String metric = param.getMetricType().toLowerCase();
+            String metric = parseMetricType(param.getMetricType());
             String quantization = "f32";
             
-            // 创建索引
+            // 创建索引 - 使用正确的构造函数参数
             this.index = new Index(
                 metric,
                 quantization,
-                param.getDimension(),
-                param.getInitParam().getConnectivity(),
-                param.getInitParam().getExpansionAdd(),
-                param.getInitParam().getExpansionSearch(),
+                (long)param.getDimension(),
+                (long)param.getInitParam().getConnectivity(),
+                (long)param.getInitParam().getExpansionAdd(),
+                (long)param.getInitParam().getExpansionSearch(),
                 param.getInitParam().getCapacity()
             );
             
@@ -117,7 +117,7 @@ public class USearchClient {
             }
             return index.search(queryVector, k);
         } catch (Exception e) {
-            throw USearchException.searchFaile​d("Failed to search vectors", e);
+            throw USearchException.searchFailed("Failed to search vectors", e);
         }
     }
 
@@ -227,6 +227,9 @@ public class USearchClient {
     }
 
     private String parseMetricType(String metricType) {
+        if (metricType == null) {
+            return "cos";
+        }
         switch (metricType.toLowerCase()) {
             case "cos":
             case "cosine":
@@ -237,6 +240,10 @@ public class USearchClient {
             case "l2":
             case "euclidean":
                 return "l2sq";
+            case "hamming":
+                return "hamming";
+            case "tanimoto":
+                return "tanimoto";
             default:
                 log.warn("Unknown metric type: {}, using cosine as default", metricType);
                 return "cos";

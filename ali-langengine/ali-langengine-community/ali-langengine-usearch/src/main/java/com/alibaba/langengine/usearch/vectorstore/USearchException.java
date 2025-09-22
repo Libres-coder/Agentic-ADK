@@ -75,4 +75,20 @@ public class USearchException extends RuntimeException {
         return new USearchException("LOAD_FAILED", "Failed to load USearch index: " + message, cause);
     }
 
+    public static USearchException metadataSaveFailed(String message, Throwable cause) {
+        return new USearchException("METADATA_SAVE_FAILED", "Failed to save metadata: " + message, cause);
+    }
+
+    public static USearchException metadataLoadFailed(String message, Throwable cause) {
+        return new USearchException("METADATA_LOAD_FAILED", "Failed to load metadata: " + message, cause);
+    }
+
+    public static USearchException configurationError(String message) {
+        return new USearchException("CONFIGURATION_ERROR", "Configuration error: " + message);
+    }
+
+    public static USearchException dataLoss(String message) {
+        return new USearchException("DATA_LOSS", "Potential data loss detected: " + message);
+    }
+
 }

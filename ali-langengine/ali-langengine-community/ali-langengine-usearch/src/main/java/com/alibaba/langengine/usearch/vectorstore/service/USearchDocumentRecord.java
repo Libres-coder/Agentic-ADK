@@ -103,4 +103,33 @@ public class USearchDocumentRecord {
         return document;
     }
 
+    /**
+     * 从Map对象创建记录（用于JSON反序列化）
+     */
+    public static USearchDocumentRecord fromMap(java.util.Map<String, Object> map) {
+        USearchDocumentRecord record = new USearchDocumentRecord();
+        
+        if (map.get("uniqueId") != null) {
+            record.setUniqueId(map.get("uniqueId").toString());
+        }
+        
+        if (map.get("pageContent") != null) {
+            record.setPageContent(map.get("pageContent").toString());
+        }
+        
+        if (map.get("metadata") != null) {
+            record.setMetadata(map.get("metadata").toString());
+        }
+        
+        if (map.get("vectorKey") != null) {
+            record.setVectorKey(((Number) map.get("vectorKey")).longValue());
+        }
+        
+        if (map.get("timestamp") != null) {
+            record.setTimestamp(((Number) map.get("timestamp")).longValue());
+        }
+        
+        return record;
+    }
+
 }
