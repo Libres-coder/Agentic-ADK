@@ -37,7 +37,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -51,7 +51,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -65,7 +65,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -79,7 +79,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -94,7 +94,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -112,7 +112,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -131,7 +131,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -145,7 +145,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -159,7 +159,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -172,7 +172,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -185,7 +185,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -198,7 +198,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -212,7 +212,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -226,7 +226,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -240,7 +240,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -268,7 +268,7 @@ class AlipayTransferToolTest {
 
                 ToolExecuteResult result = transferTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -283,7 +283,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -297,7 +297,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -311,7 +311,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -325,7 +325,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -352,7 +352,7 @@ class AlipayTransferToolTest {
 
                 ToolExecuteResult result = transferTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -375,7 +375,7 @@ class AlipayTransferToolTest {
 
                 ToolExecuteResult result = transferTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -390,7 +390,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -409,7 +409,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(invalidJson, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -417,7 +417,7 @@ class AlipayTransferToolTest {
         void testEmptyInput() {
             ToolExecuteResult result = transferTool.run("", null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -425,7 +425,7 @@ class AlipayTransferToolTest {
         void testNullInput() {
             ToolExecuteResult result = transferTool.run(null, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -434,7 +434,7 @@ class AlipayTransferToolTest {
             String nonJsonInput = "这不是JSON格式的输入";
             ToolExecuteResult result = transferTool.run(nonJsonInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -512,7 +512,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -527,7 +527,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -542,7 +542,7 @@ class AlipayTransferToolTest {
 
             ToolExecuteResult result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 }
