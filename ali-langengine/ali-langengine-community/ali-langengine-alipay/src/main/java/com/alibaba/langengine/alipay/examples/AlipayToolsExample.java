@@ -51,7 +51,7 @@ public class AlipayToolsExample {
                 "}";
         
         ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
-        log.info("查询结果: {}", result.getResult());
+        log.info("查询结果: {}", result.getOutput());
     }
     
     /**
@@ -68,7 +68,7 @@ public class AlipayToolsExample {
                 "}";
         
         ToolExecuteResult result = billQueryTool.run(toolInput, null);
-        log.info("查询结果: {}", result.getResult());
+        log.info("查询结果: {}", result.getOutput());
     }
     
     /**
@@ -87,7 +87,7 @@ public class AlipayToolsExample {
                 "}";
         
         ToolExecuteResult result = transferTool.run(toolInput, null);
-        log.info("转账结果: {}", result.getResult());
+        log.info("转账结果: {}", result.getOutput());
     }
     
     /**
