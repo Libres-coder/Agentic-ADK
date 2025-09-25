@@ -59,7 +59,7 @@ public class AstraDBConfiguration {
         this.applicationToken = getTokenFromEnvironment();
         this.apiEndpoint = getApiEndpointFromEnvironment();
         this.keyspace = getKeyspaceFromEnvironment();
-        this.region = WorkPropertiesUtils.get("astradb.region");
+        this.region = getRegionFromEnvironment();
     }
     
     private String getTokenFromEnvironment() {
@@ -90,6 +90,15 @@ public class AstraDBConfiguration {
             keyspace = Constants.DEFAULT_KEYSPACE;
         }
         return keyspace;
+    }
+    
+    private String getRegionFromEnvironment() {
+        // Try properties first, then environment variables
+        String region = WorkPropertiesUtils.get("astradb.region");
+        if (region == null) {
+            region = System.getenv(Constants.ENV_ASTRA_DB_REGION);
+        }
+        return region;
     }
     
     /**

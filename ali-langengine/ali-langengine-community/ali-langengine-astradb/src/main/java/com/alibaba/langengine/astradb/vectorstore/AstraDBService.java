@@ -79,6 +79,9 @@ public class AstraDBService {
 
     public void init() {
         try {
+            if (client == null) {
+                throw AstraDBException.initializationError("AstraDB client is not initialized", null);
+            }
             client.ensureCollectionExists(collectionName);
             log.info("AstraDB service initialized successfully for collection: {}", collectionName);
         } catch (Exception e) {
@@ -186,6 +189,21 @@ public class AstraDBService {
             for (com.datastax.astra.client.model.Document astraDoc : results) {
                 Document document = convertFromAstraDocument(astraDoc);
                 if (document != null) {
+                    // Apply distance filtering if specified
+                    if (maxDistanceValue != null) {
+                        // Note: AstraDB returns similarity scores, filtering would need to be implemented
+                        // based on the actual similarity metric used
+                        log.debug("Distance filtering not yet implemented for maxDistanceValue: {}", maxDistanceValue);
+                    }
+                    
+                    // Apply type filtering if specified
+                    if (type != null) {
+                        Object docType = document.getMetadata() != null ? document.getMetadata().get("type") : null;
+                        if (docType != null && !type.equals(docType)) {
+                            continue; // Skip documents that don't match the type filter
+                        }
+                    }
+                    
                     documents.add(document);
                 }
             }
@@ -198,6 +216,10 @@ public class AstraDBService {
     }
 
     private Document convertFromAstraDocument(com.datastax.astra.client.model.Document astraDoc) {
+        if (astraDoc == null) {
+            return null;
+        }
+        
         try {
             Document document = new Document();
             String contentField = astraDBParam.getFieldNamePageContent();
@@ -221,8 +243,8 @@ public class AstraDBService {
 
             return document;
         } catch (Exception e) {
-            log.error("Failed to convert AstraDB document to Document", e);
-            return null;
+            log.error("Failed to convert AstraDB document to Document: {}", e.getMessage(), e);
+            throw AstraDBException.operationError("Failed to convert AstraDB document", e);
         }
     }
 
@@ -238,6 +260,9 @@ public class AstraDBService {
             } else {
                 return JSON.parseObject(metadataJson, Map.class);
             }
+        } catch (JsonProcessingException e) {
+            log.error("JSON processing failed for metadata: {}", metadataJson, e);
+            throw AstraDBException.operationError("Failed to deserialize metadata JSON", e);
         } catch (Exception e) {
             log.error("Failed to deserialize metadata JSON: {}", metadataJson, e);
             return new HashMap<>();
@@ -283,6 +308,7 @@ public class AstraDBService {
             }
         } catch (Exception e) {
             log.error("Failed to close AstraDB service", e);
+            throw new RuntimeException("Failed to close AstraDB service", e);
         }
     }
 }

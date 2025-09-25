@@ -16,6 +16,7 @@
 package com.alibaba.langengine.astradb.vectorstore;
 
 import com.alibaba.langengine.astradb.exception.AstraDBException;
+import com.alibaba.langengine.astradb.utils.AstraDBUtils;
 import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.Database;
 import com.datastax.astra.client.Collection;
@@ -78,20 +79,15 @@ public class AstraDBClient {
     }
 
     private void validateConfiguration() {
-        if (StringUtils.isBlank(applicationToken)) {
-            throw AstraDBException.configurationError("Application token is required");
-        }
-        if (StringUtils.isBlank(apiEndpoint)) {
-            throw AstraDBException.configurationError("API endpoint is required");
-        }
-        if (StringUtils.isBlank(keyspace)) {
-            throw AstraDBException.configurationError("Keyspace is required");
-        }
+        AstraDBUtils.validateApplicationToken(applicationToken);
+        AstraDBUtils.validateApiEndpoint(apiEndpoint);
+        AstraDBUtils.validateKeyspaceName(keyspace);
     }
 
     public void ensureCollectionExists(String collectionName) {
         try {
             ensureInitialized();
+            AstraDBUtils.validateCollectionName(collectionName);
             
             // Check if collection exists
             Collection<Document> existingCollection = database.getCollection(collectionName);
@@ -102,8 +98,15 @@ public class AstraDBClient {
             }
             
             // Create collection with vector configuration
+            AstraDBParam.InitParam initParam = astraDBParam.getInitParam();
+            if (initParam == null) {
+                throw AstraDBException.configurationError("InitParam is required for collection creation");
+            }
+            
+            AstraDBUtils.validateVectorDimensions(initParam.getVectorDimensions());
+            
             CollectionOptions options = CollectionOptions.builder()
-                    .vectorDimension(astraDBParam.getInitParam().getVectorDimensions())
+                    .vectorDimension(initParam.getVectorDimensions())
                     .vectorSimilarity(com.datastax.astra.client.model.SimilarityMetric.COSINE)
                     .build();
             
@@ -174,6 +177,8 @@ public class AstraDBClient {
     }
 
     public Optional<Document> findById(String documentId) {
+        AstraDBUtils.validateDocumentId(documentId);
+        
         try {
             ensureInitialized();
             ensureCollectionInitialized();
@@ -186,6 +191,8 @@ public class AstraDBClient {
     }
 
     public void deleteById(String documentId) {
+        AstraDBUtils.validateDocumentId(documentId);
+        
         try {
             ensureInitialized();
             ensureCollectionInitialized();

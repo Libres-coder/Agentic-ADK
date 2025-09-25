@@ -66,6 +66,7 @@ public class Constants {
     public static final String ENV_ASTRA_DB_APPLICATION_TOKEN = "ASTRA_DB_APPLICATION_TOKEN";
     public static final String ENV_ASTRA_DB_API_ENDPOINT = "ASTRA_DB_API_ENDPOINT";
     public static final String ENV_ASTRA_DB_KEYSPACE = "ASTRA_DB_KEYSPACE";
+    public static final String ENV_ASTRA_DB_REGION = "ASTRA_DB_REGION";
     
     private Constants() {
         // Utility class

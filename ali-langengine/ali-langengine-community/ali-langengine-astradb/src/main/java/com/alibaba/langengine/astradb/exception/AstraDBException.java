@@ -56,6 +56,10 @@ public class AstraDBException extends RuntimeException {
         return new AstraDBException("AUTHENTICATION_ERROR", message);
     }
 
+    public static AstraDBException authenticationError(String message, Throwable cause) {
+        return new AstraDBException("AUTHENTICATION_ERROR", message, cause);
+    }
+
     public static AstraDBException initializationError(String message, Throwable cause) {
         return new AstraDBException("INITIALIZATION_ERROR", message, cause);
     }
@@ -68,7 +72,28 @@ public class AstraDBException extends RuntimeException {
         return new AstraDBException("CONFIGURATION_ERROR", message);
     }
 
+    public static AstraDBException configurationError(String message, Throwable cause) {
+        return new AstraDBException("CONFIGURATION_ERROR", message, cause);
+    }
+
     public static AstraDBException vectorSearchError(String message, Throwable cause) {
         return new AstraDBException("VECTOR_SEARCH_ERROR", message, cause);
+    }
+
+    public static AstraDBException validationError(String message) {
+        return new AstraDBException("VALIDATION_ERROR", message);
+    }
+
+    public static AstraDBException timeoutError(String message, Throwable cause) {
+        return new AstraDBException("TIMEOUT_ERROR", message, cause);
+    }
+
+    public static AstraDBException resourceError(String message, Throwable cause) {
+        return new AstraDBException("RESOURCE_ERROR", message, cause);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("AstraDBException[%s]: %s", errorCode, getMessage());
     }
 }

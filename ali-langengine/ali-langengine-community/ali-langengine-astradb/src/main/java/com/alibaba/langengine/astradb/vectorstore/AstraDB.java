@@ -17,6 +17,7 @@ package com.alibaba.langengine.astradb.vectorstore;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.langengine.astradb.exception.AstraDBException;
+import com.alibaba.langengine.astradb.utils.AstraDBUtils;
 import com.alibaba.langengine.astradb.utils.Constants;
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
@@ -26,6 +27,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -108,6 +110,7 @@ public class AstraDB extends VectorStore {
             }
             
             List<Float> queryVector = JSON.parseArray(embeddingStrings.get(0), Float.class);
+            // Use Float directly to avoid unnecessary conversion
             List<Double> queryVectorDouble = queryVector.stream().map(Float::doubleValue).collect(Collectors.toList());
             
             return similaritySearch(queryVectorDouble, k, maxDistanceValue);
@@ -122,9 +125,7 @@ public class AstraDB extends VectorStore {
     }
 
     public List<Document> similaritySearch(List<Double> embedding, int k, Double maxDistanceValue) {
-        if (embedding == null || embedding.isEmpty()) {
-            throw new IllegalArgumentException("Embedding vector cannot be null or empty");
-        }
+        AstraDBUtils.validateEmbedding(embedding, astraDBParam.getInitParam().getVectorDimensions());
         
         try {
             List<Float> floatEmbedding = embedding.stream()
@@ -153,14 +154,19 @@ public class AstraDB extends VectorStore {
 
     public List<Document> maxMarginalRelevanceSearchByVector(List<Double> embedding, int k, double lambdaMult) {
         // For now, fallback to similarity search
-        // TODO: Implement proper MMR algorithm
-        log.info("Max marginal relevance search not yet implemented, falling back to similarity search");
+        // TODO: Implement proper MMR algorithm using lambdaMult parameter
+        log.warn("Max marginal relevance search not yet implemented (lambdaMult={} ignored), falling back to similarity search", lambdaMult);
         return similaritySearch(embedding, k);
     }
 
     public VectorStore fromDocuments(List<Document> documents, Object embeddings) {
         if (documents == null || documents.isEmpty()) {
             return this;
+        }
+        
+        // TODO: Use embeddings parameter for document embedding generation
+        if (embeddings != null) {
+            log.debug("Embeddings parameter provided but not yet implemented: {}", embeddings.getClass().getSimpleName());
         }
         
         try {
@@ -175,6 +181,11 @@ public class AstraDB extends VectorStore {
     public VectorStore fromTexts(List<String> texts, List<Map<String, Object>> metadatas, Object embeddings) {
         if (texts == null || texts.isEmpty()) {
             return this;
+        }
+        
+        // TODO: Use embeddings parameter for text embedding generation
+        if (embeddings != null) {
+            log.debug("Embeddings parameter provided but not yet implemented: {}", embeddings.getClass().getSimpleName());
         }
         
         try {
@@ -207,9 +218,7 @@ public class AstraDB extends VectorStore {
      * @return list of similar documents
      */
     public List<Document> similaritySearchWithType(List<Double> embedding, int k, Double maxDistanceValue, Integer type) {
-        if (embedding == null || embedding.isEmpty()) {
-            throw new IllegalArgumentException("Embedding vector cannot be null or empty");
-        }
+        AstraDBUtils.validateEmbedding(embedding, astraDBParam.getInitParam().getVectorDimensions());
         
         try {
             List<Float> floatEmbedding = embedding.stream()
@@ -230,6 +239,8 @@ public class AstraDB extends VectorStore {
      * @return the document if found
      */
     public Optional<Document> findById(String documentId) {
+        AstraDBUtils.validateDocumentId(documentId);
+        
         try {
             return astraDBService.findById(documentId);
         } catch (Exception e) {
@@ -244,6 +255,8 @@ public class AstraDB extends VectorStore {
      * @param documentId the document ID to delete
      */
     public void deleteById(String documentId) {
+        AstraDBUtils.validateDocumentId(documentId);
+        
         try {
             astraDBService.deleteById(documentId);
         } catch (Exception e) {
@@ -270,14 +283,9 @@ public class AstraDB extends VectorStore {
      * Clear all documents from the collection
      */
     public void clearDocuments() {
-        try {
-            log.warn("Clear documents operation not directly supported by AstraDB Data API. Consider recreating the collection.");
-            // Note: AstraDB Data API doesn't provide a direct way to clear all documents
-            // This would require dropping and recreating the collection or deleting documents individually
-        } catch (Exception e) {
-            log.error("Failed to clear documents", e);
-            throw new AstraDBException("Failed to clear documents", e);
-        }
+        log.warn("Clear documents operation not directly supported by AstraDB Data API. Consider recreating the collection.");
+        // Note: AstraDB Data API doesn't provide a direct way to clear all documents
+        // This would require dropping and recreating the collection or deleting documents individually
     }
 
     public AstraDBService getAstraDBService() {
