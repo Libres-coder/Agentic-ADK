@@ -84,11 +84,11 @@ public class RelevanceParam {
         this.projectId = RelevanceConfiguration.RELEVANCE_PROJECT_ID;
         this.vectorField = "vector_";
         this.textField = "text";
-        this.vectorSize = Integer.parseInt(RelevanceConfiguration.RELEVANCE_DEFAULT_VECTOR_SIZE);
+        this.vectorSize = RelevanceConfiguration.getDefaultVectorSize();
         this.metric = RelevanceConfiguration.RELEVANCE_DEFAULT_METRIC;
-        this.connectionTimeout = Integer.parseInt(RelevanceConfiguration.RELEVANCE_CONNECTION_TIMEOUT);
-        this.requestTimeout = Integer.parseInt(RelevanceConfiguration.RELEVANCE_REQUEST_TIMEOUT);
-        this.maxRetries = Integer.parseInt(RelevanceConfiguration.RELEVANCE_MAX_RETRIES);
+        this.connectionTimeout = RelevanceConfiguration.getConnectionTimeout();
+        this.requestTimeout = RelevanceConfiguration.getRequestTimeout();
+        this.maxRetries = RelevanceConfiguration.getMaxRetries();
     }
 
     /**
@@ -253,8 +253,8 @@ public class RelevanceParam {
     public String toString() {
         return "RelevanceParam{" +
                 "apiUrl='" + apiUrl + '\'' +
-                ", apiKey='" + (apiKey != null ? "***" : "null") + '\'' +
-                ", projectId='" + projectId + '\'' +
+                ", apiKey='" + RelevanceConfiguration.maskSensitiveValue(apiKey) + '\'' +
+                ", projectId='" + RelevanceConfiguration.maskSensitiveValue(projectId) + '\'' +
                 ", datasetName='" + datasetName + '\'' +
                 ", vectorField='" + vectorField + '\'' +
                 ", textField='" + textField + '\'' +

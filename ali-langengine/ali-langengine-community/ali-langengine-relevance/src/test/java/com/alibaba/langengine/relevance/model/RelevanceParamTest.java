@@ -129,9 +129,10 @@ public class RelevanceParamTest {
         assertTrue(str.contains("RelevanceParam{"));
         assertTrue(str.contains("https://test.com"));
         assertTrue(str.contains("***")); // API key should be masked
-        assertTrue(str.contains("test-project"));
+        assertTrue(str.contains("te") && str.contains("ct")); // 掩码后的项目ID包含前后字符
         assertTrue(str.contains("test-dataset"));
         assertFalse(str.contains("secret-key")); // API key should not appear in plain text
+        assertFalse(str.contains("test-project")); // Project ID should also be masked now
     }
 
     @Test
