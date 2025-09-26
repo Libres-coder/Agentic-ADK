@@ -111,7 +111,7 @@ class AlipayToolFactoryTest {
             
             var result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -126,7 +126,7 @@ class AlipayToolFactoryTest {
             
             var result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -142,7 +142,7 @@ class AlipayToolFactoryTest {
             
             var result = transferTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
