@@ -15,8 +15,10 @@
  */
 package com.alibaba.agentic.core.engine.utils;
 
+import com.alibaba.agentic.core.engine.delegation.domain.AgentRequest;
 import com.alibaba.agentic.core.engine.dto.FlowDefinition;
 import com.alibaba.agentic.core.engine.node.FlowCanvas;
+import com.alibaba.agentic.core.engine.node.sub.AgentFlowNode;
 import com.alibaba.agentic.core.engine.node.sub.ReferenceFlowNode;
 import com.alibaba.agentic.core.engine.node.sub.ToolFlowNode;
 import com.alibaba.agentic.core.engine.node.sub.ToolParam;
@@ -45,11 +47,22 @@ public class FlowNodeFactory {
         return node;
     }
 
+    public static AgentFlowNode createAgentNode(String name) {
+        AgentFlowNode node = new AgentFlowNode();
+        node.setName(name);
+        return node;
+    }
+
+    public static AgentFlowNode createAgentNode(String name, AgentRequest agentRequest) {
+        AgentFlowNode node = new AgentFlowNode(agentRequest);
+        node.setName(name);
+        return node;
+    }
 
     public static ReferenceFlowNode createReferenceNode(FlowDefinition flowDefinition, Map<String, Object> parameter) {
         ReferenceFlowNode flowNode = new ReferenceFlowNode();
-        flowNode.setFlowDefinitionId(flowNode.getFlowDefinitionId());
-        flowNode.setFlowVersion(flowNode.getFlowVersion());
+        flowNode.setFlowDefinitionId(flowDefinition.getDefinitionId());
+        flowNode.setFlowVersion(flowDefinition.getVersion());
         flowNode.setParameter(parameter);
 
         return flowNode;

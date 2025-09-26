@@ -16,33 +16,36 @@
 package com.alibaba.agentic.core.engine.node.sub;
 
 import com.alibaba.agentic.core.engine.constants.NodeType;
-import com.alibaba.agentic.core.engine.node.FlowCanvas;
+import com.alibaba.agentic.core.engine.delegation.DelegationAgent;
+import com.alibaba.agentic.core.engine.delegation.domain.AgentRequest;
 import com.alibaba.agentic.core.engine.node.FlowNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class LoopFlowNode extends FlowNode {
+@Accessors(chain = true)
+public class AgentFlowNode extends FlowNode {
 
-    //内部循环执行的runner
-    private FlowCanvas innerCanvas;
+    private AgentRequest agentRequest;
 
-    public FlowCanvas getInnerRunner() {
-        return innerCanvas;
+    public AgentFlowNode() {
+        this.name = "agentNode";
     }
 
-    public void setInnerRunner(FlowCanvas innerCanvas) {
-        this.innerCanvas = innerCanvas;
+    public AgentFlowNode(AgentRequest agentRequest) {
+        this();
+        this.agentRequest = agentRequest;
     }
 
     @Override
     protected String getNodeType() {
-        return NodeType.LOOP;
+        return NodeType.AGENT;
     }
 
     @Override
     protected String getDelegationClassName() {
-        return null;
+        return DelegationAgent.class.getName();
     }
 }

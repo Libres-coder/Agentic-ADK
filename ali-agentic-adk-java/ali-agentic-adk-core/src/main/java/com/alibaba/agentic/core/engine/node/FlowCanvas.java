@@ -133,6 +133,11 @@ public class FlowCanvas {
         this.addEndNode(processElement);
 
         String xmlString = getXmlString(document);
+        if (xmlString == null) {
+            log.error("Failed to generate XML string for flow definition, processDefinitionId: {}, version: {}", processDefinitionId, version);
+            throw new RuntimeException("Failed to generate BPMN XML for flow definition");
+        }
+        
         // deploy到smart engine中
         this.deployProcessDefinition(processDefinitionId, version, xmlString);
 

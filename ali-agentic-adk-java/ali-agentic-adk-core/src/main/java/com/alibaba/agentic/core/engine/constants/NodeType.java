@@ -56,4 +56,9 @@ public class NodeType {
      */
     public static final String NOP = "nop";
 
+    /**
+     * Agent节点类型。
+     */
+    public static final String AGENT = "agentTask";
+
 }

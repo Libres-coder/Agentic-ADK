@@ -66,7 +66,7 @@
     <dependencies>
         <dependency>
             <groupId>com.google.adk</groupId>
-            <artifactId>google-adk</artifactId>
+            <artifactId>google-adk-dev</artifactId>
             <version>0.2.0</version>
         </dependency>
         <dependency>
@@ -197,14 +197,6 @@
                 </executions>
                 <configuration>
                     <attach>true</attach>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
                 </configuration>
             </plugin>
             <plugin>
