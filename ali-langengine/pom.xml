@@ -166,6 +166,10 @@
     <module>ali-langengine-community/ali-langengine-gitee</module>
     <module>ali-langengine-community/ali-langengine-dgraph</module>
     <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+		<module>ali-langengine-community/ali-langengine-gmail</module>
+		<module>ali-langengine-community/ali-langengine-outlook</module>
+		<module>ali-langengine-community/ali-langengine-imap</module>
+		<module>ali-langengine-community/ali-langengine-smtp</module>
   </modules>
 
 	<dependencyManagement>
