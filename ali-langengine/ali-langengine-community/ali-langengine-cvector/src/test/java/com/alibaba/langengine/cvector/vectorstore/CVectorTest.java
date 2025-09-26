@@ -17,11 +17,13 @@ package com.alibaba.langengine.cvector.vectorstore;
 
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
+import com.alibaba.langengine.cvector.CVectorConfiguration;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -52,7 +54,13 @@ public class CVectorTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        cVector = new CVector("http://localhost:8080", "test-collection");
+        CVectorConfiguration config = CVectorConfiguration.builder()
+            .serverUrl("http://localhost:8080")
+            .apiKey("test-api-key")
+            .database("test-db")
+            .defaultCollection("default")
+            .build();
+        cVector = new CVector(config, "test-collection");
         cVector.setEmbedding(mockEmbeddings);
         // Replace the real HTTP client with mock
         try {
@@ -78,9 +86,12 @@ public class CVectorTest {
 
     @Test
     public void testConstructorWithInvalidUrl() {
-        assertThrows(CVectorException.class, () -> new CVector(null, "test"));
-        assertThrows(CVectorException.class, () -> new CVector("", "test"));
-        assertThrows(CVectorException.class, () -> new CVector("ftp://invalid", "test"));
+        assertThrows(IllegalArgumentException.class, () -> 
+            new CVector(CVectorConfiguration.builder().serverUrl(null).build(), "test"));
+        assertThrows(IllegalArgumentException.class, () -> 
+            new CVector(CVectorConfiguration.builder().serverUrl("").build(), "test"));
+        assertThrows(IllegalArgumentException.class, () -> 
+            new CVector(CVectorConfiguration.builder().serverUrl("ftp://invalid").build(), "test"));
     }
 
     @Test
@@ -188,8 +199,46 @@ public class CVectorTest {
     }
 
     @Test
-    public void testClose() {
+    public void testClose() throws Exception {
         assertDoesNotThrow(() -> cVector.close());
+        verify(mockHttpClient, times(1)).close();
+    }
+
+    @Test
+    public void testConfigurationValidation() {
+        CVectorConfiguration config = CVectorConfiguration.builder()
+            .serverUrl("http://localhost:8080")
+            .apiKey("test-key")
+            .database("test-db")
+            .defaultCollection("default")
+            .build();
+        assertDoesNotThrow(() -> config.validate());
+    }
+
+    @Test
+    public void testAddDocumentsWithRequestBodyValidation() throws Exception {
+        List<Document> inputDocs = Arrays.asList(
+            createEmbeddedDocument("doc1", "Test content 1", Arrays.asList(0.1, 0.2, 0.3))
+        );
+
+        when(mockEmbeddings.embedDocument(anyList())).thenReturn(inputDocs);
+        when(mockResponse.getStatusCode()).thenReturn(200);
+        when(mockFuture.get()).thenReturn(mockResponse);
+
+        org.asynchttpclient.BoundRequestBuilder mockBuilder = mock(org.asynchttpclient.BoundRequestBuilder.class);
+        when(mockHttpClient.preparePost(anyString())).thenReturn(mockBuilder);
+        when(mockBuilder.setHeader(anyString(), anyString())).thenReturn(mockBuilder);
+        when(mockBuilder.setBody(anyString())).thenReturn(mockBuilder);
+        when(mockBuilder.execute()).thenReturn(mockFuture);
+
+        ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+        
+        cVector.addDocuments(inputDocs);
+        
+        verify(mockBuilder).setBody(bodyCaptor.capture());
+        String requestBody = bodyCaptor.getValue();
+        assertTrue(requestBody.contains("doc1"));
+        assertTrue(requestBody.contains("Test content 1"));
     }
 
     private Document createTestDocument(String id, String content) {

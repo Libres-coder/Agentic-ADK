@@ -16,27 +16,38 @@
 package com.alibaba.langengine.cvector;
 
 import com.alibaba.langengine.core.util.WorkPropertiesUtils;
+import lombok.Builder;
+import lombok.Data;
 
-
+@Data
+@Builder
 public class CVectorConfiguration {
 
-    /**
-     * cVector server URL
-     */
-    public static String CVECTOR_SERVER_URL = getConfigValue("cvector_server_url", "http://localhost:8080");
+    private final String serverUrl;
+    private final String apiKey;
+    private final String database;
+    private final String defaultCollection;
 
-    /**
-     * cVector API key
-     */
-    public static String CVECTOR_API_KEY = getConfigValue("cvector_api_key", "");
-
-    /**
-     * cVector database name
-     */
-    public static String CVECTOR_DATABASE = getConfigValue("cvector_database", "default");
+    public static CVectorConfiguration fromProperties() {
+        return CVectorConfiguration.builder()
+            .serverUrl(getConfigValue("cvector_server_url", "http://localhost:8080"))
+            .apiKey(getConfigValue("cvector_api_key", ""))
+            .database(getConfigValue("cvector_database", "default"))
+            .defaultCollection(getConfigValue("cvector_default_collection", "default"))
+            .build();
+    }
 
     private static String getConfigValue(String key, String defaultValue) {
         String value = WorkPropertiesUtils.get(key);
         return value != null ? value : defaultValue;
+    }
+
+    public void validate() {
+        if (serverUrl == null || serverUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Server URL cannot be null or empty");
+        }
+        if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
+            throw new IllegalArgumentException("Server URL must use HTTP or HTTPS protocol");
+        }
     }
 }

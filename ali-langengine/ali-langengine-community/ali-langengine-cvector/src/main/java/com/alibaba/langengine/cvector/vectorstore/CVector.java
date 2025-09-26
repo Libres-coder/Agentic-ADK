@@ -40,27 +40,34 @@ public class CVector extends VectorStore {
     private Embeddings embedding;
 
     private final String collection;
-
-    private static final String CVECTOR_SERVER_URL = CVectorConfiguration.CVECTOR_SERVER_URL;
-
-    private static final String CVECTOR_API_KEY = CVectorConfiguration.CVECTOR_API_KEY;
-
+    private final CVectorConfiguration configuration;
     private String upsertUrl;
-
     private String queryUrl;
-
     private AsyncHttpClient httpClient;
 
     public CVector(String collection) {
-        this.collection = collection == null ? "default" : collection;
-        validateAndSetUrls(CVECTOR_SERVER_URL);
+        this(CVectorConfiguration.fromProperties(), collection);
+    }
+
+    public CVector(CVectorConfiguration configuration, String collection) {
+        if (configuration == null) {
+            throw new IllegalArgumentException("CVectorConfiguration cannot be null");
+        }
+        configuration.validate();
+        this.configuration = configuration;
+        this.collection = collection == null ? configuration.getDefaultCollection() : collection;
+        validateAndSetUrls(configuration.getServerUrl());
         this.httpClient = new DefaultAsyncHttpClient();
     }
 
+    @Deprecated
     public CVector(String serverUrl, String collection) {
-        this.collection = collection == null ? "default" : collection;
-        validateAndSetUrls(serverUrl);
-        this.httpClient = new DefaultAsyncHttpClient();
+        this(CVectorConfiguration.builder()
+            .serverUrl(serverUrl)
+            .apiKey("")
+            .database("default")
+            .defaultCollection("default")
+            .build(), collection);
     }
 
     private void validateAndSetUrls(String serverUrl) {
@@ -119,7 +126,7 @@ public class CVector extends VectorStore {
             ListenableFuture<Response> whenResponse = httpClient.preparePost(upsertUrl)
                     .setHeader("accept", "application/json")
                     .setHeader("content-type", "application/json")
-                    .setHeader("Authorization", "Bearer " + CVECTOR_API_KEY)
+                    .setHeader("Authorization", "Bearer " + configuration.getApiKey())
                     .setBody(body)
                     .execute();
 
@@ -147,17 +154,20 @@ public class CVector extends VectorStore {
         }
 
         String embeddingString = embeddingStrings.get(0);
-        List<String> embeddings = JSON.parseArray(embeddingString, String.class);
+        List<Double> queryVector = JSON.parseArray(embeddingString, Double.class);
+        if (queryVector == null || queryVector.isEmpty()) {
+            return new ArrayList<>();
+        }
         
-        CVectorQueryRequest request = buildQueryRequest(k, maxDistanceValue, embeddings);
+        CVectorQueryRequest request = buildQueryRequest(k, maxDistanceValue, queryVector);
         return executeQueryRequest(request);
     }
 
-    private CVectorQueryRequest buildQueryRequest(int k, Double maxDistanceValue, List<String> embeddings) {
+    private CVectorQueryRequest buildQueryRequest(int k, Double maxDistanceValue, List<Double> queryVector) {
         CVectorQueryRequest request = new CVectorQueryRequest();
         request.setCollection(collection);
         request.setTopK(k);
-        request.setVector(embeddings.stream().map(Double::parseDouble).collect(Collectors.toList()));
+        request.setVector(queryVector);
         request.setIncludeMetadata(true);
         if (maxDistanceValue != null) {
             request.setThreshold(maxDistanceValue);
@@ -171,7 +181,7 @@ public class CVector extends VectorStore {
             ListenableFuture<Response> whenResponse = httpClient.preparePost(queryUrl)
                     .setHeader("accept", "application/json")
                     .setHeader("content-type", "application/json")
-                    .setHeader("Authorization", "Bearer " + CVECTOR_API_KEY)
+                    .setHeader("Authorization", "Bearer " + configuration.getApiKey())
                     .setBody(body)
                     .execute();
 
