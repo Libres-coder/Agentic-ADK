@@ -78,11 +78,10 @@
 		<module>ali-langengine-community/ali-langengine-hologres</module>
 		<module>ali-langengine-community/ali-langengine-arangodb</module>
 		<module>ali-langengine-community/ali-langengine-adbpg</module>
+		<module>ali-langengine-community/ali-langengine-astradb</module>
 		<module>ali-langengine-community/ali-langengine-polardb</module>
 		<module>ali-langengine-community/ali-langengine-pinecone</module>
-		<module>ali-langengine-community/ali-langengine-relevance</module>
 		<module>ali-langengine-community/ali-langengine-milvus</module>
-		<module>ali-langengine-community/ali-langengine-myscale</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
 		<module>ali-langengine-community/ali-langengine-txtai</module>
@@ -170,6 +169,9 @@
     <module>ali-langengine-community/ali-langengine-nebulagraph</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
+    <module>ali-langengine-community/ali-langengine-usearch</module>
+    <module>ali-langengine-community/ali-langengine-azuresearch</module>
+    <module>ali-langengine-community/ali-langengine-cvector</module>
   </modules>
 
 	<dependencyManagement>
