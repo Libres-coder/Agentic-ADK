@@ -54,7 +54,13 @@ public class HippoService {
                 HippoParam.InitParam initParam = loadParam().getInitParam();
                 if (initParam.getFieldEmbeddingsDimension() <= 0) {
                     List<Document> embeddingDocuments = embedding.embedTexts(Lists.newArrayList("test"));
+                    if (embeddingDocuments == null || embeddingDocuments.isEmpty()) {
+                        throw new HippoException("INIT_003", "Failed to get embedding dimension from model");
+                    }
                     Document document = embeddingDocuments.get(0);
+                    if (document.getEmbedding() == null || document.getEmbedding().isEmpty()) {
+                        throw new HippoException("INIT_004", "Embedding model returned empty embedding");
+                    }
                     initParam.setFieldEmbeddingsDimension(document.getEmbedding().size());
                 }
                 
@@ -82,12 +88,17 @@ public class HippoService {
             docMap.put(fieldNameUniqueId, NumberUtils.toLong(document.getUniqueId()));
             docMap.put(fieldNamePageContent, document.getPageContent());
             
-            // 转换向量为字符串格式
-            List<Float> embeddings = new ArrayList<>();
-            for (Double embedding : document.getEmbedding()) {
-                embeddings.add(embedding.floatValue());
+            // 优化向量转换性能
+            List<Double> docEmbedding = document.getEmbedding();
+            if (docEmbedding != null && !docEmbedding.isEmpty()) {
+                List<Float> embeddings = new ArrayList<>(docEmbedding.size());
+                for (Double embedding : docEmbedding) {
+                    embeddings.add(embedding.floatValue());
+                }
+                docMap.put(fieldNameEmbedding, JSON.toJSONString(embeddings));
+            } else {
+                throw new HippoException("ADD_001", "Document embedding cannot be null or empty");
             }
-            docMap.put(fieldNameEmbedding, JSON.toJSONString(embeddings));
             docMaps.add(docMap);
         }
 
@@ -128,7 +139,12 @@ public class HippoService {
      * 删除表
      */
     public void dropTable() {
-        hippoClient.dropTable(tableName);
+        try {
+            hippoClient.dropTable(tableName);
+        } catch (Exception e) {
+            log.error("Failed to drop table: {}", tableName, e);
+            throw e;
+        }
     }
 
     /**
@@ -146,7 +162,11 @@ public class HippoService {
      */
     public void close() {
         if (hippoClient != null) {
-            hippoClient.close();
+            try {
+                hippoClient.close();
+            } catch (Exception e) {
+                log.error("Failed to close Hippo client", e);
+            }
         }
     }
 }

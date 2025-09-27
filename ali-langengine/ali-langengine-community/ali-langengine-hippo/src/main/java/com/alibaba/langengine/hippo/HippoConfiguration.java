@@ -23,16 +23,27 @@ public class HippoConfiguration {
     /**
      * hippo server url
      */
-    public static String HIPPO_SERVER_URL = WorkPropertiesUtils.get("hippo_server_url");
+    public static final String HIPPO_SERVER_URL;
 
     /**
      * hippo username
      */
-    public static String HIPPO_USERNAME = WorkPropertiesUtils.get("hippo_username");
+    public static final String HIPPO_USERNAME;
 
     /**
      * hippo password
      */
-    public static String HIPPO_PASSWORD = WorkPropertiesUtils.get("hippo_password");
+    public static final String HIPPO_PASSWORD;
+    
+    static {
+        HIPPO_SERVER_URL = getConfigValue("hippo_server_url", "localhost:5432");
+        HIPPO_USERNAME = getConfigValue("hippo_username", "hippo");
+        HIPPO_PASSWORD = getConfigValue("hippo_password", "hippo");
+    }
+    
+    private static String getConfigValue(String key, String defaultValue) {
+        String value = WorkPropertiesUtils.get(key);
+        return value != null ? value : defaultValue;
+    }
 
 }

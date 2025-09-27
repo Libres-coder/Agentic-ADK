@@ -52,11 +52,14 @@ public class Hippo extends VectorStore {
     }
 
     public Hippo(String tableName, HippoParam hippoParam) {
-        this.tableName = tableName;
+        if (tableName == null || tableName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Table name cannot be null or empty");
+        }
+        this.tableName = tableName.trim();
         String serverUrl = HIPPO_SERVER_URL;
         String username = HIPPO_USERNAME;
         String password = HIPPO_PASSWORD;
-        hippoService = new HippoService(serverUrl, username, password, tableName, hippoParam);
+        hippoService = new HippoService(serverUrl, username, password, this.tableName, hippoParam);
     }
 
     /**

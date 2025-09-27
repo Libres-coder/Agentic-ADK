@@ -1,2 +1,2 @@
 #!/bin/bash
-mvn clean deploy -Dmaven.test.skip=true
+mvn clean deploy -DskipTests=true
