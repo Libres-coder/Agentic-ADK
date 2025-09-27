@@ -81,7 +81,7 @@ public class Proxima extends VectorStore {
 
     public Proxima(ProximaParam param, Embeddings embedding) {
         if (param == null) {
-            throw new IllegalArgumentException("ProximaParam cannot be null");
+            throw new ProximaValidationException("ProximaParam cannot be null");
         }
         param.validate(); // 验证参数
         

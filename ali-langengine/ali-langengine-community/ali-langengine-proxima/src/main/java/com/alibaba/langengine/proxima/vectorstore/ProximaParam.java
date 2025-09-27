@@ -68,13 +68,13 @@ public class ProximaParam {
      */
     public void validate() {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalArgumentException("API key cannot be null or empty");
+            throw new ProximaValidationException("API key cannot be null or empty");
         }
         if (collectionName == null || collectionName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Collection name cannot be null or empty");
+            throw new ProximaValidationException("Collection name cannot be null or empty");
         }
         if (serverUrl == null || serverUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("Server URL cannot be null or empty");
+            throw new ProximaValidationException("Server URL cannot be null or empty");
         }
     }
 }
