@@ -85,6 +85,7 @@
 		<module>ali-langengine-community/ali-langengine-myscale</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-proxima</module>
 		<module>ali-langengine-community/ali-langengine-txtai</module>
 		<module>ali-langengine-community/ali-langengine-typesense</module>
 		<module>ali-langengine-community/ali-langengine-vald</module>
