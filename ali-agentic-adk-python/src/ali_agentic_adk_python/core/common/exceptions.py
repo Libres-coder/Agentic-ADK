@@ -19,10 +19,12 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-from .role import Role
-from .exceptions import EmbeddingProviderError
+class EmbeddingProviderError(RuntimeError):
+    """Raised when an embedding provider fails to return a usable response."""
 
-__all__ = [
-    "Role",
-    "EmbeddingProviderError",
-]
+    def __init__(self, message: str, *, original_exception: Exception | None = None) -> None:
+        super().__init__(message)
+        self.original_exception = original_exception
+
+
+__all__ = ["EmbeddingProviderError"]
