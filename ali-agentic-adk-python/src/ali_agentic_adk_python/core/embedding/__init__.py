@@ -21,8 +21,10 @@
 
 from .basic_embedding import BasicEmbedding
 from .openai_embedding import OpenAIEmbedding
+from .cohere_embedding import CohereEmbedding
 
 __all__ = [
     "BasicEmbedding",
     "OpenAIEmbedding",
+    "CohereEmbedding",
 ]

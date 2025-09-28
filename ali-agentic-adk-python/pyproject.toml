@@ -21,6 +21,7 @@ dependencies = [
     "aiohttp",
     "dashscope",
     "openai",
+    "cohere",
 
     # Alibaba Cloud SDKs
     "alibabacloud_ecd20200930",
@@ -32,7 +33,6 @@ dependencies = [
 [tool.hatch.build]
 include = ["src/*"]
 exclude = ["examples/**", "tests/**", "docs/**"]
-
 
 
 
