@@ -18,6 +18,7 @@ authors = [
 
 dependencies = [
     "google-adk",
+    "google-generativeai",
     "aiohttp",
     "dashscope",
     "openai",
@@ -32,7 +33,6 @@ dependencies = [
 [tool.hatch.build]
 include = ["src/*"]
 exclude = ["examples/**", "tests/**", "docs/**"]
-
 
 
 
