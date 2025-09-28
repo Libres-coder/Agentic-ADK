@@ -21,8 +21,10 @@
 
 from .basic_embedding import BasicEmbedding
 from .openai_embedding import OpenAIEmbedding
+from .aws_embedding import AWSEmbedding
 
 __all__ = [
     "BasicEmbedding",
     "OpenAIEmbedding",
+    "AWSEmbedding",
 ]
