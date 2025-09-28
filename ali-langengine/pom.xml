@@ -172,6 +172,7 @@
     <module>ali-langengine-community/ali-langengine-deeplake</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
     <module>ali-langengine-community/ali-langengine-hippo</module>
+    <module>ali-langengine-community/ali-langengine-greatdb</module>
   </modules>
 
 	<dependencyManagement>
