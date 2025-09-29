@@ -204,6 +204,7 @@
     <module>ali-langengine-community/ali-langengine-cvector</module>
     <module>ali-langengine-community/ali-langengine-hippo</module>
     <module>ali-langengine-community/ali-langengine-greatdb</module>
+    <module>ali-langengine-community/ali-langengine-stellardb</module>
   </modules>
 
 	<dependencyManagement>
