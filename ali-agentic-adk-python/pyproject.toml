@@ -22,6 +22,7 @@ dependencies = [
     "aiohttp",
     "dashscope",
     "openai",
+    "boto3",
     "cohere",
 
     # Alibaba Cloud SDKs

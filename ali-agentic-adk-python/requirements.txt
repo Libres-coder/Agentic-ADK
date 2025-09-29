@@ -4,6 +4,7 @@ google-generativeai
 aiohttp
 dashscope
 openai
+boto3
 cohere
 
 # Alibaba Cloud SDKs
