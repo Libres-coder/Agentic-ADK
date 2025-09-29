@@ -78,11 +78,13 @@
 		<module>ali-langengine-community/ali-langengine-hologres</module>
 		<module>ali-langengine-community/ali-langengine-arangodb</module>
 		<module>ali-langengine-community/ali-langengine-adbpg</module>
+		<module>ali-langengine-community/ali-langengine-astradb</module>
 		<module>ali-langengine-community/ali-langengine-polardb</module>
 		<module>ali-langengine-community/ali-langengine-pinecone</module>
 		<module>ali-langengine-community/ali-langengine-milvus</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-proxima</module>
 		<module>ali-langengine-community/ali-langengine-txtai</module>
 		<module>ali-langengine-community/ali-langengine-typesense</module>
 		<module>ali-langengine-community/ali-langengine-vald</module>
@@ -166,31 +168,41 @@
     <module>ali-langengine-community/ali-langengine-gitee</module>
     <module>ali-langengine-community/ali-langengine-dgraph</module>
     <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+		<module>ali-langengine-community/ali-langengine-gmail</module>
+		<module>ali-langengine-community/ali-langengine-outlook</module>
+		<module>ali-langengine-community/ali-langengine-imap</module>
+		<module>ali-langengine-community/ali-langengine-smtp</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
+	  <module>ali-langengine-community/ali-langengine-vearch</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
-        <module>ali-langengine-community/ali-langengine-alipay</module>
-        <module>ali-langengine-community/ali-langengine-arxiv</module>
-        <module>ali-langengine-community/ali-langengine-cassandra</module>
-        <module>ali-langengine-community/ali-langengine-deepl</module>
-        <module>ali-langengine-community/ali-langengine-dflow</module>
-        <module>ali-langengine-community/ali-langengine-dingtalk</module>
-        <module>ali-langengine-community/ali-langengine-github</module>
-        <module>ali-langengine-community/ali-langengine-googlescholar</module>
-        <module>ali-langengine-community/ali-langengine-lancedb</module>
-        <module>ali-langengine-community/ali-langengine-microsoft-translate</module>
-        <module>ali-langengine-community/ali-langengine-opensearch</module>
-        <module>ali-langengine-community/ali-langengine-pubmed</module>
-        <module>ali-langengine-community/ali-langengine-qdrant</module>
-        <module>ali-langengine-community/ali-langengine-reddit</module>
-        <module>ali-langengine-community/ali-langengine-slack</module>
-        <module>ali-langengine-community/ali-langengine-sms</module>
-        <module>ali-langengine-community/ali-langengine-tair</module>
-        <module>ali-langengine-community/ali-langengine-tencent-translate</module>
-        <module>ali-langengine-community/ali-langengine-volcengine-translate</module>
-        <module>ali-langengine-community/ali-langengine-wecom</module>
-        <module>ali-langengine-community/ali-langengine-wework</module>
-        <module>ali-langengine-community/ali-langengine-youdao-translate</module>
-        <module>ali-langengine-community/ali-langengine-youtube</module>
+    <module>ali-langengine-community/ali-langengine-alipay</module>
+    <module>ali-langengine-community/ali-langengine-arxiv</module>
+    <module>ali-langengine-community/ali-langengine-cassandra</module>
+    <module>ali-langengine-community/ali-langengine-deepl</module>
+    <module>ali-langengine-community/ali-langengine-dflow</module>
+    <module>ali-langengine-community/ali-langengine-dingtalk</module>
+    <module>ali-langengine-community/ali-langengine-github</module>
+    <module>ali-langengine-community/ali-langengine-googlescholar</module>
+    <module>ali-langengine-community/ali-langengine-lancedb</module>
+    <module>ali-langengine-community/ali-langengine-microsoft-translate</module>
+    <module>ali-langengine-community/ali-langengine-opensearch</module>
+    <module>ali-langengine-community/ali-langengine-pubmed</module>
+    <module>ali-langengine-community/ali-langengine-qdrant</module>
+    <module>ali-langengine-community/ali-langengine-reddit</module>
+    <module>ali-langengine-community/ali-langengine-slack</module>
+    <module>ali-langengine-community/ali-langengine-sms</module>
+    <module>ali-langengine-community/ali-langengine-tair</module>
+    <module>ali-langengine-community/ali-langengine-tencent-translate</module>
+    <module>ali-langengine-community/ali-langengine-volcengine-translate</module>
+    <module>ali-langengine-community/ali-langengine-wecom</module>
+    <module>ali-langengine-community/ali-langengine-wework</module>
+    <module>ali-langengine-community/ali-langengine-youdao-translate</module>
+    <module>ali-langengine-community/ali-langengine-youtube</module>
+    <module>ali-langengine-community/ali-langengine-usearch</module>
+    <module>ali-langengine-community/ali-langengine-azuresearch</module>
+    <module>ali-langengine-community/ali-langengine-cvector</module>
+    <module>ali-langengine-community/ali-langengine-hippo</module>
+    <module>ali-langengine-community/ali-langengine-greatdb</module>
   </modules>
 
 	<dependencyManagement>
