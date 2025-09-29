@@ -35,7 +35,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -47,7 +47,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -59,7 +59,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -71,7 +71,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -83,7 +83,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -98,7 +98,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -110,7 +110,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -122,7 +122,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -134,7 +134,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -152,7 +152,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(invalidJson, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -160,7 +160,7 @@ class DingTalkDepartmentToolTest {
         void testEmptyInput() {
             ToolExecuteResult result = departmentTool.run("", null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -168,7 +168,7 @@ class DingTalkDepartmentToolTest {
         void testNullInput() {
             ToolExecuteResult result = departmentTool.run(null, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -177,7 +177,7 @@ class DingTalkDepartmentToolTest {
             String nonJsonInput = "这不是JSON格式的输入";
             ToolExecuteResult result = departmentTool.run(nonJsonInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -248,7 +248,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -260,7 +260,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -272,7 +272,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -289,7 +289,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -301,7 +301,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -313,7 +313,7 @@ class DingTalkDepartmentToolTest {
 
             ToolExecuteResult result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 }

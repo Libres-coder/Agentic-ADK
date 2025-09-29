@@ -16,7 +16,7 @@
 package com.alibaba.langengine.faiss.vectorstore;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.langengine.core.document.Document;
+import com.alibaba.langengine.core.indexes.Document;
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.vectorstore.VectorStore;
 import com.alibaba.langengine.faiss.FaissConfiguration;
