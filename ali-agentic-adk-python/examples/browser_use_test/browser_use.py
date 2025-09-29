@@ -7,10 +7,12 @@ import os
 import sys
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 
+from typing import Any, Dict, List, Optional, Tuple, Union
+import re
 from playwright.async_api import (FrameLocator, Keyboard, Locator, Mouse,
                                   Page, async_playwright)
+
 
 # 配置目录
 commands_dir = r"D:\scripts\commands"
@@ -77,11 +79,18 @@ def clear_or_delete_file(file_path: str) -> bool:
         logger.error(f"处理文件 {file_path} 时发生错误: {e}")
     return False
 
-async def callback_dom(file_name:str,dom_tree: Dict[str, Any], retry_count: int = 3) -> bool:
+async def callback_dom(file_name: str, dom_tree: Union[Dict[str, Any], str], retry_count: int = 3) -> bool:
     """回调DOM树到服务器"""
     
     try:
         os.makedirs(dom_dir, exist_ok=True)
+
+        if isinstance(dom_tree, str):
+            try:
+                dom_tree = json.loads(dom_tree)
+            except json.JSONDecodeError:
+                logger.error("DOM 树内容不是有效的 JSON 字符串，放弃写入。")
+                return False
         
         if not file_name.endswith('.json'):
             file_name = file_name + '.json'
@@ -376,7 +385,7 @@ async def main():
             # 获取并回调初始DOM树
             dom_tree = await get_filtered_dom_tree(page)
             if dom_tree:
-                await callback_dom(file_name,json.dumps(dom_tree, indent=2, ensure_ascii=False))
+                await callback_dom(file_name, dom_tree)
             
             # 等待登录完成
             logger.info("等待用户登录...")
@@ -385,7 +394,7 @@ async def main():
                 dom_tree = await get_filtered_dom_tree(page)
                 if dom_tree:
                     logger.info("登录完成，回传最新的DOM树")
-                    await callback_dom(file_name,json.dumps(dom_tree, indent=2, ensure_ascii=False))
+                    await callback_dom(file_name, dom_tree)
                     logger.info("回传最新的DOM树完成")
             else:
                 logger.warning("用户未成功登录...，结束任务")
@@ -419,7 +428,7 @@ async def main():
                                 logger.info(f"命令执行结果：{result}")
                                 
                                 dom_tree = await get_filtered_dom_tree(page)
-                                await callback_dom(file_name.split('.')[0],json.dumps(dom_tree, indent=2, ensure_ascii=False))
+                                await callback_dom(file_name.split('.')[0], dom_tree)
                                 logger.info("又执行了回调")
                     # 删除已执行的指令文件
                     if os.path.exists(file_path):
