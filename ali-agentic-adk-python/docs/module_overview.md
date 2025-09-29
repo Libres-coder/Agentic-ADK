@@ -6,6 +6,7 @@
 - Consumed across `core` modules and examples; preferred entrypoint is `get_runtime_settings()`.
 
 ## Core Runtime Packages
+- `core.runtime`: Houses the minimum execution runtime — `Request`, `Result`, `SystemContext`, `InvokeMode`, and the `Executor`/`SyncExecutor` pair. Provides structured runtime event logging (`RuntimeEventLogger`) and helper utilities consumed by higher layers.
 - `core.model`: LLM wrappers such as `DashscopeLLM` that adapt Google ADK abstractions to provider-specific SDKs. Uses the config layer to build API clients and converts ADK requests/responses through utility helpers.
 - `core.tool`: Tool abstractions including `BailianAppTool` and DashScope toolsets. They ingest configuration and compose with Google ADK tool interfaces.
 - `core.embedding`: Embedding providers (currently OpenAI-compatible). Implements error handling, request normalisation, and provider response parsing.
@@ -17,7 +18,7 @@
 
 ## Examples
 - `examples/app_call_demo`: Demonstrates orchestrating a chat agent with DashScope tools using the shared configuration helper.
-- `examples/browser_use_demo`: Provides a multi-agent browser automation scenario that relies on `DashscopeLLM` and the extension services.
+- `examples/browser_use_demo`: Provides a multi-agent browser automation scenario that relies on `DashscopeLLM` and the extension services. `runtime_example.py` shows how to bridge Browser Use with the new runtime context.
 
 ## Testing Strategy
 - Unit tests live under `tests/` and mock remote SDKs to keep test execution offline.

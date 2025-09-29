@@ -1,6 +1,6 @@
 # Ali Agentic ADK (Python)
 
-A Python-first toolkit that mirrors the concepts of the Ali Agentic ADK Java stack while integrating tightly with Google ADK components. The package currently wraps core LLM, tool, and embedding providers and exposes examples for browser automation and application flows.
+A Python-first toolkit delivering agentic building blocks that integrate tightly with Google ADK components. The package currently wraps core LLM, tool, and embedding providers and exposes examples for browser automation and application flows.
 
 ## Quick Start
 
@@ -53,10 +53,35 @@ llm = DashscopeLLM.from_settings(dashscope_settings)
 ├── src/
 │   └── ali_agentic_adk_python/
 │       ├── config/             # Pydantic settings models
-│       ├── core/               # Models, tools, embeddings, utilities
+│       ├── core/               # Models, tools, runtime, embeddings, utilities
 │       └── extension/          # Browser-use and other integrations
 └── tests/                      # Unit and integration-oriented tests
 ```
+
+## Runtime Execution
+
+The `core.runtime` package introduces minimal execution primitives tailored for the Python runtime. Create a `SystemContext`, attach services (e.g. Browser Use), and delegate a request through the `SyncExecutor`:
+
+```python
+from ali_agentic_adk_python.core.runtime import Request, SyncExecutor, SystemContext
+from ali_agentic_adk_python.extension.web.runtime import attach_browser_use_service, get_browser_use_service
+
+def handler(ctx: SystemContext, request: Request):
+    service = get_browser_use_service(ctx)
+    request_id = request.request_id or "demo"
+    service.call_and_wait(request_id, lambda: service.handle_callback(request_id, "ok"))
+    return {"status": "ok"}
+
+context = attach_browser_use_service(SystemContext())
+executor = SyncExecutor("demo", handler)
+request = Request.from_payload({"action": "open"}, request_id="demo")
+
+async def run():
+    async for result in executor.invoke(context, request):
+        print(result.model_dump())
+```
+
+See `examples/browser_use_demo/runtime_example.py` for a runnable end-to-end snippet with structured runtime logs.
 
 ## Running Tests
 
