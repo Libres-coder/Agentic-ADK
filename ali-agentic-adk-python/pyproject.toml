@@ -18,6 +18,7 @@ authors = [
 
 dependencies = [
     "google-adk",
+    "google-generativeai",
     "aiohttp",
     "dashscope",
     "openai",
@@ -43,6 +44,5 @@ include = [
     "LICENSE",
     "NOTICE",
 ]
-
 
 
