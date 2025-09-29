@@ -37,7 +37,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -51,7 +51,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -70,7 +70,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -85,7 +85,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -100,7 +100,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -122,7 +122,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -138,7 +138,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -155,7 +155,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -174,7 +174,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -188,7 +188,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -202,7 +202,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -216,7 +216,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -231,7 +231,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -246,7 +246,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -266,7 +266,7 @@ class DingTalkMessageToolTest {
 
             ToolExecuteResult result = messageTool.run(invalidJson, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -274,7 +274,7 @@ class DingTalkMessageToolTest {
         void testEmptyInput() {
             ToolExecuteResult result = messageTool.run("", null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -282,7 +282,7 @@ class DingTalkMessageToolTest {
         void testNullInput() {
             ToolExecuteResult result = messageTool.run(null, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
