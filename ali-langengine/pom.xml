@@ -81,9 +81,7 @@
 		<module>ali-langengine-community/ali-langengine-astradb</module>
 		<module>ali-langengine-community/ali-langengine-polardb</module>
 		<module>ali-langengine-community/ali-langengine-pinecone</module>
-		<module>ali-langengine-community/ali-langengine-relevance</module>
 		<module>ali-langengine-community/ali-langengine-milvus</module>
-		<module>ali-langengine-community/ali-langengine-myscale</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
 		<module>ali-langengine-community/ali-langengine-proxima</module>
@@ -175,11 +173,13 @@
 		<module>ali-langengine-community/ali-langengine-imap</module>
 		<module>ali-langengine-community/ali-langengine-smtp</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
+	  <module>ali-langengine-community/ali-langengine-vearch</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
-    <module>ali-langengine-community/ali-langengine-hippo</module>
-    <module>ali-langengine-community/ali-langengine-greatdb</module>
     <module>ali-langengine-community/ali-langengine-usearch</module>
     <module>ali-langengine-community/ali-langengine-azuresearch</module>
+    <module>ali-langengine-community/ali-langengine-cvector</module>
+    <module>ali-langengine-community/ali-langengine-hippo</module>
+    <module>ali-langengine-community/ali-langengine-greatdb</module>
   </modules>
 
 	<dependencyManagement>
