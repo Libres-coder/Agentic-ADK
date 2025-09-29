@@ -17,15 +17,14 @@ package com.alibaba.langengine.stellardb.vectorstore;
 
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
-import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Slf4j
@@ -35,7 +34,7 @@ public class StellarDBService {
     private final String collection;
     private final StellarDBParam param;
     private final StellarDBClient client;
-    private volatile Integer cachedDimension;
+    private final AtomicInteger cachedDimension = new AtomicInteger(-1);
 
     public StellarDBService(String serverUrl, String username, String password, String collection, StellarDBParam param) {
         this.collection = collection;
@@ -56,6 +55,8 @@ public class StellarDBService {
                 int dimension = getDimension(embedding);
                 client.createCollection(collection, dimension);
             }
+        } catch (StellarDBException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to initialize StellarDB collection: {}", collection, e);
             throw new StellarDBException("INIT_ERROR", "Failed to initialize collection", e);
@@ -74,9 +75,11 @@ public class StellarDBService {
             int batchSize = param.getBatchSize();
             for (int i = 0; i < documents.size(); i += batchSize) {
                 int endIndex = Math.min(i + batchSize, documents.size());
-                List<Document> batch = documents.subList(i, endIndex);
+                List<Document> batch = new ArrayList<>(documents.subList(i, endIndex));
                 processBatch(batch);
             }
+        } catch (StellarDBException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to add documents to StellarDB", e);
             throw new StellarDBException("ADD_DOCUMENTS_ERROR", "Failed to add documents", e);
@@ -96,9 +99,9 @@ public class StellarDBService {
             
             if (document.getEmbedding() != null) {
                 List<Double> embedding = document.getEmbedding();
-                List<Float> embeddings = new ArrayList<>(embedding.size());
-                for (Double value : embedding) {
-                    embeddings.add(value.floatValue());
+                float[] embeddings = new float[embedding.size()];
+                for (int i = 0; i < embedding.size(); i++) {
+                    embeddings[i] = embedding.get(i).floatValue();
                 }
                 stellarDoc.put(param.getFieldNameEmbedding(), embeddings);
             }
@@ -121,7 +124,7 @@ public class StellarDBService {
         }
         try {
             List<Map<String, Object>> results = client.search(collection, embeddings, k);
-            List<Document> documents = Lists.newArrayList();
+            List<Document> documents = new ArrayList<>(results.size());
             
             for (Map<String, Object> result : results) {
                 if (result == null) continue;
@@ -148,6 +151,8 @@ public class StellarDBService {
             }
             
             return documents;
+        } catch (StellarDBException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to perform similarity search in StellarDB", e);
             throw new StellarDBException("SEARCH_ERROR", "Failed to perform similarity search", e);
@@ -164,6 +169,8 @@ public class StellarDBService {
         
         try {
             client.delete(collection, ids);
+        } catch (StellarDBException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to delete documents from StellarDB", e);
             throw new StellarDBException("DELETE_ERROR", "Failed to delete documents", e);
@@ -171,28 +178,35 @@ public class StellarDBService {
     }
 
     /**
-     * 获取向量维度，使用缓存避免重复计算
+     * 获取向量维度，使用线程安全缓存避免重复计算
      */
     private int getDimension(Embeddings embedding) {
-        if (cachedDimension != null) {
-            return cachedDimension;
+        int cached = cachedDimension.get();
+        if (cached > 0) {
+            return cached;
         }
         
-        int dimension = param.getVectorDimension();
-        if (dimension <= 0 && embedding != null) {
-            // 使用更小的测试输入以减少计算开销
-            List<Document> testDocs = embedding.embedTexts(Lists.newArrayList("a"));
-            if (!testDocs.isEmpty() && testDocs.get(0).getEmbedding() != null) {
-                dimension = testDocs.get(0).getEmbedding().size();
+        synchronized (this) {
+            cached = cachedDimension.get();
+            if (cached > 0) {
+                return cached;
             }
+            
+            int dimension = param.getVectorDimension();
+            if (dimension <= 0 && embedding != null) {
+                List<Document> testDocs = embedding.embedTexts(List.of("test"));
+                if (!testDocs.isEmpty() && testDocs.get(0).getEmbedding() != null) {
+                    dimension = testDocs.get(0).getEmbedding().size();
+                }
+            }
+            
+            if (dimension <= 0) {
+                throw new StellarDBException("INVALID_DIMENSION", "Cannot determine valid vector dimension");
+            }
+            
+            cachedDimension.set(dimension);
+            return dimension;
         }
-        
-        if (dimension <= 0) {
-            throw new StellarDBException("INVALID_DIMENSION", "Cannot determine valid vector dimension");
-        }
-        
-        cachedDimension = dimension;
-        return dimension;
     }
 
     /**
@@ -208,7 +222,11 @@ public class StellarDBService {
      */
     public void close() {
         if (client != null) {
-            client.close();
+            try {
+                client.close();
+            } catch (Exception e) {
+                log.warn("Error occurred while closing StellarDB client", e);
+            }
         }
     }
 
