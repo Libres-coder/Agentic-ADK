@@ -21,10 +21,12 @@
 
 from .basic_embedding import BasicEmbedding
 from .openai_embedding import OpenAIEmbedding
+from .cohere_embedding import CohereEmbedding
 from .google_embedding import GoogleEmbedding
 
 __all__ = [
     "BasicEmbedding",
     "OpenAIEmbedding",
+    "CohereEmbedding",
     "GoogleEmbedding",
 ]

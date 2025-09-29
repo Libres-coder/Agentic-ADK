@@ -22,6 +22,7 @@ dependencies = [
     "aiohttp",
     "dashscope",
     "openai",
+    "cohere",
 
     # Alibaba Cloud SDKs
     "alibabacloud_ecd20200930",
@@ -44,5 +45,4 @@ include = [
     "LICENSE",
     "NOTICE",
 ]
-
 

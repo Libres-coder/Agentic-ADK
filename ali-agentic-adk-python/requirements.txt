@@ -4,6 +4,7 @@ google-generativeai
 aiohttp
 dashscope
 openai
+cohere
 
 # Alibaba Cloud SDKs
 alibabacloud_ecd20200930
