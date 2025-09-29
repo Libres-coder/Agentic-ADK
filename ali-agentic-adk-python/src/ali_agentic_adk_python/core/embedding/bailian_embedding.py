@@ -19,17 +19,40 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-from .basic_embedding import BasicEmbedding
+"""Bailian embedding provider built on any's OpenAI-compatible API."""
+
+from __future__ import annotations
+
+from typing import Any, Dict
+
 from .openai_embedding import OpenAIEmbedding
-from .bailian_embedding import BailianEmbedding
-from .cohere_embedding import CohereEmbedding
-from .google_embedding import GoogleEmbedding
+
+_DEFAULT_BAILIAN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
-__all__ = [
-    "BasicEmbedding",
-    "OpenAIEmbedding",
-    "BailianEmbedding",
-    "CohereEmbedding",
-    "GoogleEmbedding",
-]
+class BailianEmbedding(OpenAIEmbedding):
+    """Embedding provider that targets Alibaba Cloud Bailian platform."""
+    def __init__(
+        self,
+        api_key: str,
+        model: str = "text-embedding-v1",
+        *,
+        base_url: str | None = None,
+        dimensions: int | None = None,
+        user: str | None = None,
+        client_options: Dict[str, Any] | None = None,
+        request_options: Dict[str, Any] | None = None,
+    ) -> None:
+        resolved_base_url = base_url or _DEFAULT_BAILIAN_BASE_URL
+        super().__init__(
+            api_key=api_key,
+            model=model,
+            base_url=resolved_base_url,
+            dimensions=dimensions,
+            user=user,
+            client_options=client_options,
+            request_options=request_options,
+        )
+
+
+__all__ = ["BailianEmbedding"]
