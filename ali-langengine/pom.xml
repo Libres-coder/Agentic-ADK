@@ -78,6 +78,7 @@
 		<module>ali-langengine-community/ali-langengine-hologres</module>
 		<module>ali-langengine-community/ali-langengine-arangodb</module>
 		<module>ali-langengine-community/ali-langengine-adbpg</module>
+		<module>ali-langengine-community/ali-langengine-astradb</module>
 		<module>ali-langengine-community/ali-langengine-polardb</module>
 		<module>ali-langengine-community/ali-langengine-pinecone</module>
 		<module>ali-langengine-community/ali-langengine-relevance</module>
@@ -169,10 +170,16 @@
     <module>ali-langengine-community/ali-langengine-gitee</module>
     <module>ali-langengine-community/ali-langengine-dgraph</module>
     <module>ali-langengine-community/ali-langengine-nebulagraph</module>
+		<module>ali-langengine-community/ali-langengine-gmail</module>
+		<module>ali-langengine-community/ali-langengine-outlook</module>
+		<module>ali-langengine-community/ali-langengine-imap</module>
+		<module>ali-langengine-community/ali-langengine-smtp</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
     <module>ali-langengine-community/ali-langengine-hippo</module>
     <module>ali-langengine-community/ali-langengine-greatdb</module>
+    <module>ali-langengine-community/ali-langengine-usearch</module>
+    <module>ali-langengine-community/ali-langengine-azuresearch</module>
   </modules>
 
 	<dependencyManagement>
