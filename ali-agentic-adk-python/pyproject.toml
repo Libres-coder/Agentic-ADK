@@ -18,10 +18,12 @@ authors = [
 
 dependencies = [
     "google-adk",
+    "google-generativeai",
     "aiohttp",
     "dashscope",
     "openai",
     "boto3",
+    "cohere",
 
     # Alibaba Cloud SDKs
     "alibabacloud_ecd20200930",
@@ -31,9 +33,17 @@ dependencies = [
 ]
 
 [tool.hatch.build]
-include = ["src/*"]
 exclude = ["examples/**", "tests/**", "docs/**"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/ali_agentic_adk_python"]
 
-
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/ali_agentic_adk_python",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+]
 
