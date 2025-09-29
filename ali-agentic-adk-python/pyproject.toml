@@ -30,9 +30,19 @@ dependencies = [
 ]
 
 [tool.hatch.build]
-include = ["src/*"]
 exclude = ["examples/**", "tests/**", "docs/**"]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/ali_agentic_adk_python"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/ali_agentic_adk_python",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+]
 
 
 

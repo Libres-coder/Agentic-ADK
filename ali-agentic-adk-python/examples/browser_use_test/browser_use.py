@@ -1,13 +1,16 @@
 import asyncio
-import os
+import ast
+import inspect
 import json
 import logging
+import os
 import sys
 import traceback
 from datetime import datetime
-from playwright.async_api import async_playwright
-from typing import Optional, Dict, Any
-import re
+from typing import Any, Dict, List, Optional, Tuple
+
+from playwright.async_api import (FrameLocator, Keyboard, Locator, Mouse,
+                                  Page, async_playwright)
 
 # 配置目录
 commands_dir = r"D:\scripts\commands"
@@ -186,12 +189,159 @@ async def get_filtered_dom_tree(page):
         logger.debug(f"详细错误信息: {traceback.format_exc()}")
         return None
 
-async def run_command(page, command):
+class UnsafeBrowserCommand(Exception):
+    """Raised when a browser command violates the safety policy."""
+
+
+ALLOWED_PAGE_ATTRIBUTES = {
+    "locator",
+    "frame_locator",
+    "wait_for_timeout",
+    "wait_for_load_state",
+    "wait_for_selector",
+    "reload",
+    "goto",
+    "go_back",
+    "go_forward",
+    "keyboard",
+    "mouse",
+    "screenshot",
+}
+
+ALLOWED_LOCATOR_METHODS = {
+    "locator",
+    "first",
+    "last",
+    "nth",
+    "filter",
+    "click",
+    "dblclick",
+    "fill",
+    "type",
+    "press",
+    "hover",
+    "focus",
+    "check",
+    "uncheck",
+    "clear",
+    "select_option",
+    "wait_for",
+    "scroll_into_view_if_needed",
+}
+
+ALLOWED_FRAME_LOCATOR_METHODS = {
+    "locator",
+    "first",
+    "last",
+    "nth",
+}
+
+ALLOWED_KEYBOARD_METHODS = {
+    "press",
+    "type",
+    "down",
+    "up",
+    "insert_text",
+}
+
+ALLOWED_MOUSE_METHODS = {
+    "click",
+    "dblclick",
+    "move",
+    "down",
+    "up",
+}
+
+
+def _ensure_allowed_attribute(value: Any, attr: str) -> None:
+    if attr.startswith("_"):
+        raise UnsafeBrowserCommand("Attribute access is restricted.")
+    if isinstance(value, Page):
+        if attr not in ALLOWED_PAGE_ATTRIBUTES:
+            raise UnsafeBrowserCommand(f"Page attribute '{attr}' is not allowed.")
+        return
+    if isinstance(value, Locator):
+        if attr not in ALLOWED_LOCATOR_METHODS:
+            raise UnsafeBrowserCommand(f"Locator method '{attr}' is not allowed.")
+        return
+    if isinstance(value, FrameLocator):
+        if attr not in ALLOWED_FRAME_LOCATOR_METHODS:
+            raise UnsafeBrowserCommand(f"FrameLocator method '{attr}' is not allowed.")
+        return
+    if isinstance(value, Keyboard):
+        if attr not in ALLOWED_KEYBOARD_METHODS:
+            raise UnsafeBrowserCommand(f"Keyboard method '{attr}' is not allowed.")
+        return
+    if isinstance(value, Mouse):
+        if attr not in ALLOWED_MOUSE_METHODS:
+            raise UnsafeBrowserCommand(f"Mouse method '{attr}' is not allowed.")
+        return
+    raise UnsafeBrowserCommand("Unsafe object access attempt detected.")
+
+
+def _literal_eval_node(node: ast.AST) -> Any:
     try:
-        result = await eval(f"page.{command}")
+        return ast.literal_eval(node)
+    except Exception as exc:
+        raise UnsafeBrowserCommand("Only literal arguments are supported.") from exc
+
+
+def _parse_call_arguments(call_node: ast.Call) -> Tuple[List[Any], Dict[str, Any]]:
+    args = [_literal_eval_node(arg) for arg in call_node.args]
+    kwargs: Dict[str, Any] = {}
+    for keyword in call_node.keywords:
+        if keyword.arg is None:
+            raise UnsafeBrowserCommand("*args or **kwargs are not supported.")
+        kwargs[keyword.arg] = _literal_eval_node(keyword.value)
+    return args, kwargs
+
+
+async def _evaluate_expression(node: ast.AST, page: Page) -> Any:
+    if isinstance(node, ast.Name):
+        if node.id != "page":
+            raise UnsafeBrowserCommand("Only the 'page' object is accessible.")
+        return page
+
+    if isinstance(node, ast.Attribute):
+        value = await _evaluate_expression(node.value, page)
+        _ensure_allowed_attribute(value, node.attr)
+        return getattr(value, node.attr)
+
+    if isinstance(node, ast.Call):
+        func = await _evaluate_expression(node.func, page)
+        args, kwargs = _parse_call_arguments(node)
+        try:
+            result = func(*args, **kwargs)
+        except TypeError as exc:  # unexpected arguments, propagate as unsafe command
+            raise UnsafeBrowserCommand(str(exc)) from exc
+
+        if inspect.isawaitable(result):
+            result = await result
         return result
-    except Exception as e:
-        return str(e)
+
+    raise UnsafeBrowserCommand("Unsupported command structure.")
+
+
+async def run_command(page, command):
+    command = command.strip()
+    if not command:
+        return ""
+
+    try:
+        expression = ast.parse(f"page.{command}", mode='eval')
+    except SyntaxError as exc:
+        logger.warning("收到非法命令，语法错误: %s", command)
+        return f"Invalid command syntax: {exc.msg}"
+
+    try:
+        result = await _evaluate_expression(expression.body, page)
+        return result
+    except UnsafeBrowserCommand as exc:
+        logger.warning("阻止执行非法命令: %s", command)
+        return f"Invalid command: {exc}"
+    except Exception as exc:
+        logger.error("执行命令时发生错误: %s", command, exc_info=exc)
+        return str(exc)
     
 async def main():
     """主函数"""
