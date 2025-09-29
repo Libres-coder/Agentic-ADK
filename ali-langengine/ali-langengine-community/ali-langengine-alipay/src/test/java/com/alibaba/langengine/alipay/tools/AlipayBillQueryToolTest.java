@@ -36,7 +36,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -49,7 +49,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -71,7 +71,7 @@ class AlipayBillQueryToolTest {
 
                 ToolExecuteResult result = billQueryTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -85,7 +85,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -98,7 +98,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -116,7 +116,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -129,7 +129,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -141,7 +141,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -153,7 +153,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -166,7 +166,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -179,7 +179,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -192,7 +192,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -219,7 +219,7 @@ class AlipayBillQueryToolTest {
 
                 ToolExecuteResult result = billQueryTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -242,7 +242,7 @@ class AlipayBillQueryToolTest {
 
                 ToolExecuteResult result = billQueryTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
 
@@ -266,7 +266,7 @@ class AlipayBillQueryToolTest {
 
                 ToolExecuteResult result = billQueryTool.run(toolInput, null);
                 assertNotNull(result);
-                assertNotNull(result.getResult());
+                assertNotNull(result.getOutput());
             }
         }
     }
@@ -286,7 +286,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(invalidJson, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -294,7 +294,7 @@ class AlipayBillQueryToolTest {
         void testEmptyInput() {
             ToolExecuteResult result = billQueryTool.run("", null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -302,7 +302,7 @@ class AlipayBillQueryToolTest {
         void testNullInput() {
             ToolExecuteResult result = billQueryTool.run(null, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -311,7 +311,7 @@ class AlipayBillQueryToolTest {
             String nonJsonInput = "这不是JSON格式的输入";
             ToolExecuteResult result = billQueryTool.run(nonJsonInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -385,7 +385,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -399,7 +399,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -413,7 +413,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -431,7 +431,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -444,7 +444,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -457,7 +457,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -470,7 +470,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -483,7 +483,7 @@ class AlipayBillQueryToolTest {
 
             ToolExecuteResult result = billQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 }

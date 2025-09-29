@@ -35,7 +35,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -47,7 +47,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -59,7 +59,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -72,7 +72,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -84,7 +84,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -96,7 +96,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -108,7 +108,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -125,7 +125,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -137,7 +137,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -147,7 +147,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -159,7 +159,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -171,7 +171,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -183,7 +183,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -201,7 +201,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(invalidJson, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -209,7 +209,7 @@ class AlipayTradeQueryToolTest {
         void testEmptyInput() {
             ToolExecuteResult result = tradeQueryTool.run("", null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -217,7 +217,7 @@ class AlipayTradeQueryToolTest {
         void testNullInput() {
             ToolExecuteResult result = tradeQueryTool.run(null, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -226,7 +226,7 @@ class AlipayTradeQueryToolTest {
             String nonJsonInput = "这不是JSON格式的输入";
             ToolExecuteResult result = tradeQueryTool.run(nonJsonInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -235,7 +235,7 @@ class AlipayTradeQueryToolTest {
             String arrayInput = "[\"2024010100000000000000000000000000\"]";
             ToolExecuteResult result = tradeQueryTool.run(arrayInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
 
         @Test
@@ -244,7 +244,7 @@ class AlipayTradeQueryToolTest {
             String stringInput = "\"2024010100000000000000000000000000\"";
             ToolExecuteResult result = tradeQueryTool.run(stringInput, null);
             assertNotNull(result);
-            assertTrue(result.getResult().contains("错误"));
+            assertTrue(result.getOutput().contains("错误"));
         }
     }
 
@@ -317,7 +317,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -330,7 +330,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -347,7 +347,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -360,7 +360,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
@@ -377,7 +377,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -389,7 +389,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -401,7 +401,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -413,7 +413,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -425,7 +425,7 @@ class AlipayTradeQueryToolTest {
 
             ToolExecuteResult result = tradeQueryTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 }
