@@ -19,13 +19,12 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import os
-
 from google.adk.agents import LlmAgent
 import logging
 
 from google.genai import types
 
+from ali_agentic_adk_python.config import get_runtime_settings
 from src.ali_agentic_adk_python.core.model.dashscope_llm import DashscopeLLM
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
@@ -42,15 +41,17 @@ SESSION_ID = "123344"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+runtime_settings = get_runtime_settings()
+dashscope_settings = runtime_settings.dashscope()
+if dashscope_settings is None:
+    raise RuntimeError("DashScope configuration is missing. Set DASHSCOPE_API_KEY in the environment.")
 
-api_key = os.getenv("DASHSCOPE_API_KEY")
-model_name = "qwen-plus"
-ak = os.getenv("AK")
-model = DashscopeLLM(api_key=api_key, model=model_name)
+model = DashscopeLLM.from_settings(dashscope_settings)
 
 tool = DashscopeAppTool(name="dash_scope_tool", description="这是一个阿里百炼的工具簇，集合了常用的信息查询能力，如天气、汇率、油价、IP等，统一提供标准化接口，便于集成和扩展。")
-tool.app_id = os.getenv("DASHSCOPE_APP_ID")
-tool.api_key = api_key
+if dashscope_settings.app_id:
+    tool.app_id = dashscope_settings.app_id
+tool.api_key = dashscope_settings.api_key_value
 
 chat_agent = LlmAgent(
     name="chatAgent",

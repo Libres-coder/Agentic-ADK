@@ -21,6 +21,8 @@ dependencies = [
     "aiohttp",
     "dashscope",
     "openai",
+    "pydantic>=2.6,<3.0",
+    "pydantic-settings>=2.6,<3.0",
 
     # Alibaba Cloud SDKs
     "alibabacloud_ecd20200930",
@@ -32,7 +34,5 @@ dependencies = [
 [tool.hatch.build]
 include = ["src/*"]
 exclude = ["examples/**", "tests/**", "docs/**"]
-
-
 
 
