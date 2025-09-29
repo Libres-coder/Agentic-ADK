@@ -86,6 +86,7 @@
 		<module>ali-langengine-community/ali-langengine-myscale</module>
 		<module>ali-langengine-community/ali-langengine-marqo</module>
 		<module>ali-langengine-community/ali-langengine-chroma</module>
+		<module>ali-langengine-community/ali-langengine-proxima</module>
 		<module>ali-langengine-community/ali-langengine-txtai</module>
 		<module>ali-langengine-community/ali-langengine-typesense</module>
 		<module>ali-langengine-community/ali-langengine-vald</module>
@@ -175,6 +176,8 @@
 		<module>ali-langengine-community/ali-langengine-smtp</module>
     <module>ali-langengine-community/ali-langengine-deeplake</module>
     <module>ali-langengine-community/ali-langengine-rockset</module>
+    <module>ali-langengine-community/ali-langengine-hippo</module>
+    <module>ali-langengine-community/ali-langengine-greatdb</module>
     <module>ali-langengine-community/ali-langengine-usearch</module>
     <module>ali-langengine-community/ali-langengine-azuresearch</module>
   </modules>
