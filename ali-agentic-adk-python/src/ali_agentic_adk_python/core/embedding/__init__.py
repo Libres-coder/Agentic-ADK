@@ -21,8 +21,17 @@
 
 from .basic_embedding import BasicEmbedding
 from .openai_embedding import OpenAIEmbedding
+from .aws_embedding import AWSEmbedding
+from .bailian_embedding import BailianEmbedding
+from .cohere_embedding import CohereEmbedding
+from .google_embedding import GoogleEmbedding
+
 
 __all__ = [
     "BasicEmbedding",
     "OpenAIEmbedding",
+    "AWSEmbedding",
+    "BailianEmbedding",
+    "CohereEmbedding",
+    "GoogleEmbedding",
 ]
