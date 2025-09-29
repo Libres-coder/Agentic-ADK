@@ -9,40 +9,40 @@
 	<packaging>pom</packaging>
 	<name>ali-agentic-adk</name>
 	<description>Alibaba Agent Development Kit is an AI application development framework written in Java.</description>
-<!--	<url>https://github.com/AIDC-AI/Agentic-ADK</url>-->
+	<url>https://github.com/AIDC-AI/Agentic-ADK</url>
 
-<!--	<scm>-->
-<!--		<url>https://github.com/AIDC-AI/Agentic-ADK</url>-->
-<!--		<connection>scm:git:https://git@github.com/AIDC-AI/Agentic-ADK.git</connection>-->
-<!--	</scm>-->
+	<scm>
+		<url>https://github.com/AIDC-AI/Agentic-ADK</url>
+		<connection>scm:git:https://git@github.com/AIDC-AI/Agentic-ADK.git</connection>
+	</scm>
 
-<!--	<licenses>-->
-<!--		<license>-->
-<!--			<name>Apache 2.0</name>-->
-<!--			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
-<!--			<distribution>repo</distribution>-->
-<!--		</license>-->
-<!--	</licenses>-->
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
-<!--	<developers>-->
-<!--		<developer>-->
-<!--			<id>sunleepy</id>-->
-<!--			<name>sunleepy</name>-->
-<!--			<email>sunleepy@gmail.com</email>-->
-<!--			<organizationUrl>https://alibaba.com</organizationUrl>-->
-<!--		</developer>-->
-<!--	</developers>-->
+	<developers>
+		<developer>
+			<id>sunleepy</id>
+			<name>sunleepy</name>
+			<email>sunleepy@gmail.com</email>
+			<organizationUrl>https://alibaba.com</organizationUrl>
+		</developer>
+	</developers>
 
-<!--	<distributionManagement>-->
-<!--		<snapshotRepository>-->
-<!--			<id>ossrh</id>-->
-<!--			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--		</snapshotRepository>-->
-<!--		<repository>-->
-<!--			<id>ossrh</id>-->
-<!--			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-<!--		</repository>-->
-<!--	</distributionManagement>-->
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
 	<properties>
 		<maven.compiler.source>17</maven.compiler.source>
