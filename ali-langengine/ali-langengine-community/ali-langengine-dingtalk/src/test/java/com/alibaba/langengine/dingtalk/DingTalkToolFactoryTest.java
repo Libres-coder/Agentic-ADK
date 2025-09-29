@@ -113,7 +113,7 @@ class DingTalkToolFactoryTest {
             
             var result = messageTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -127,7 +127,7 @@ class DingTalkToolFactoryTest {
             
             var result = userTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
 
         @Test
@@ -141,7 +141,7 @@ class DingTalkToolFactoryTest {
             
             var result = departmentTool.run(toolInput, null);
             assertNotNull(result);
-            assertNotNull(result.getResult());
+            assertNotNull(result.getOutput());
         }
     }
 
