@@ -61,4 +61,19 @@ public class StellarDBParam {
      */
     private int readTimeout = 60000;
 
+    /**
+     * 批量操作大小
+     */
+    private int batchSize = 100;
+
+    /**
+     * 连接池最大连接数
+     */
+    private int maxConnections = 10;
+
+    /**
+     * 连接池最小空闲连接数
+     */
+    private int minIdleConnections = 2;
+
 }

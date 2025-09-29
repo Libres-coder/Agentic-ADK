@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class StellarDBService {
     private final String collection;
     private final StellarDBParam param;
     private final StellarDBClient client;
+    private volatile Integer cachedDimension;
 
     public StellarDBService(String serverUrl, String username, String password, String collection, StellarDBParam param) {
         this.collection = collection;
@@ -51,17 +53,7 @@ public class StellarDBService {
             client.connect();
             
             if (!client.hasCollection(collection)) {
-                int dimension = param.getVectorDimension();
-                if (dimension <= 0 && embedding != null) {
-                    // 通过embedding确定维度
-                    List<Document> testDocs = embedding.embedTexts(Lists.newArrayList("test"));
-                    if (!testDocs.isEmpty() && testDocs.get(0).getEmbedding() != null) {
-                        dimension = testDocs.get(0).getEmbedding().size();
-                    }
-                }
-                if (dimension <= 0) {
-                    throw new StellarDBException("INVALID_DIMENSION", "Cannot determine valid vector dimension");
-                }
+                int dimension = getDimension(embedding);
                 client.createCollection(collection, dimension);
             }
         } catch (Exception e) {
@@ -71,7 +63,7 @@ public class StellarDBService {
     }
 
     /**
-     * 添加文档
+     * 添加文档（支持批量操作）
      */
     public void addDocuments(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
@@ -79,28 +71,42 @@ public class StellarDBService {
         }
 
         try {
-            List<Map<String, Object>> stellarDocs = Lists.newArrayList();
-            
-            for (Document document : documents) {
-                Map<String, Object> stellarDoc = new HashMap<>();
-                stellarDoc.put(param.getFieldNameUniqueId(), document.getUniqueId());
-                stellarDoc.put(param.getFieldNamePageContent(), document.getPageContent());
-                
-                if (document.getEmbedding() != null) {
-                    List<Float> embeddings = document.getEmbedding().stream()
-                        .map(Double::floatValue)
-                        .collect(java.util.stream.Collectors.toList());
-                    stellarDoc.put(param.getFieldNameEmbedding(), embeddings);
-                }
-                
-                stellarDocs.add(stellarDoc);
+            int batchSize = param.getBatchSize();
+            for (int i = 0; i < documents.size(); i += batchSize) {
+                int endIndex = Math.min(i + batchSize, documents.size());
+                List<Document> batch = documents.subList(i, endIndex);
+                processBatch(batch);
             }
-            
-            client.insert(collection, stellarDocs);
         } catch (Exception e) {
             log.error("Failed to add documents to StellarDB", e);
             throw new StellarDBException("ADD_DOCUMENTS_ERROR", "Failed to add documents", e);
         }
+    }
+
+    /**
+     * 处理文档批次
+     */
+    private void processBatch(List<Document> documents) {
+        List<Map<String, Object>> stellarDocs = new ArrayList<>(documents.size());
+        
+        for (Document document : documents) {
+            Map<String, Object> stellarDoc = new HashMap<>();
+            stellarDoc.put(param.getFieldNameUniqueId(), document.getUniqueId());
+            stellarDoc.put(param.getFieldNamePageContent(), document.getPageContent());
+            
+            if (document.getEmbedding() != null) {
+                List<Double> embedding = document.getEmbedding();
+                List<Float> embeddings = new ArrayList<>(embedding.size());
+                for (Double value : embedding) {
+                    embeddings.add(value.floatValue());
+                }
+                stellarDoc.put(param.getFieldNameEmbedding(), embeddings);
+            }
+            
+            stellarDocs.add(stellarDoc);
+        }
+        
+        client.insert(collection, stellarDocs);
     }
 
     /**
@@ -118,9 +124,20 @@ public class StellarDBService {
             List<Document> documents = Lists.newArrayList();
             
             for (Map<String, Object> result : results) {
+                if (result == null) continue;
+                
                 Document document = new Document();
-                document.setUniqueId((String) result.get(param.getFieldNameUniqueId()));
-                document.setPageContent((String) result.get(param.getFieldNamePageContent()));
+                
+                // 安全获取字段值
+                String uniqueId = getStringValue(result, param.getFieldNameUniqueId());
+                String pageContent = getStringValue(result, param.getFieldNamePageContent());
+                
+                if (uniqueId != null) {
+                    document.setUniqueId(uniqueId);
+                }
+                if (pageContent != null) {
+                    document.setPageContent(pageContent);
+                }
                 
                 Object scoreObj = result.get(param.getFieldNameScore());
                 if (scoreObj instanceof Number) {
@@ -151,6 +168,39 @@ public class StellarDBService {
             log.error("Failed to delete documents from StellarDB", e);
             throw new StellarDBException("DELETE_ERROR", "Failed to delete documents", e);
         }
+    }
+
+    /**
+     * 获取向量维度，使用缓存避免重复计算
+     */
+    private int getDimension(Embeddings embedding) {
+        if (cachedDimension != null) {
+            return cachedDimension;
+        }
+        
+        int dimension = param.getVectorDimension();
+        if (dimension <= 0 && embedding != null) {
+            // 使用更小的测试输入以减少计算开销
+            List<Document> testDocs = embedding.embedTexts(Lists.newArrayList("a"));
+            if (!testDocs.isEmpty() && testDocs.get(0).getEmbedding() != null) {
+                dimension = testDocs.get(0).getEmbedding().size();
+            }
+        }
+        
+        if (dimension <= 0) {
+            throw new StellarDBException("INVALID_DIMENSION", "Cannot determine valid vector dimension");
+        }
+        
+        cachedDimension = dimension;
+        return dimension;
+    }
+
+    /**
+     * 安全获取字符串值
+     */
+    private String getStringValue(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        return value != null ? value.toString() : null;
     }
 
     /**

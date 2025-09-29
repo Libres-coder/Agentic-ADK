@@ -94,9 +94,13 @@ public class StellarDB extends VectorStore {
 
     @Override
     public List<Document> similaritySearch(String query, int k, Double maxDistanceValue, Integer type) {
+        if (embedding == null) {
+            throw new StellarDBException("EMBEDDING_NULL", "Embedding model is not initialized");
+        }
+        
         try {
             List<String> embeddingStrings = embedding.embedQuery(query, k);
-            if (CollectionUtils.isEmpty(embeddingStrings) || !embeddingStrings.get(0).startsWith("[")) {
+            if (CollectionUtils.isEmpty(embeddingStrings) || !isValidEmbeddingFormat(embeddingStrings.get(0))) {
                 return Lists.newArrayList();
             }
             
@@ -106,6 +110,13 @@ public class StellarDB extends VectorStore {
             log.error("Failed to perform similarity search in StellarDB", e);
             throw new StellarDBException("SEARCH_ERROR", "Failed to perform similarity search", e);
         }
+    }
+
+    /**
+     * 验证embedding格式是否有效（应为JSON数组格式）
+     */
+    private boolean isValidEmbeddingFormat(String embeddingString) {
+        return embeddingString != null && embeddingString.trim().startsWith("[");
     }
 
     /**

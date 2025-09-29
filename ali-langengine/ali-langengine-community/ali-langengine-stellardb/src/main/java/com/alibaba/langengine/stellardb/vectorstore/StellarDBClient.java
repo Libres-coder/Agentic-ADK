@@ -83,6 +83,12 @@ public class StellarDBClient {
      * 插入向量数据
      */
     public void insert(String collectionName, List<Map<String, Object>> documents) {
+        if (collectionName == null || collectionName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Collection name cannot be null or empty");
+        }
+        if (documents == null) {
+            throw new IllegalArgumentException("Documents cannot be null");
+        }
         // TODO: 实现真实的文档插入逻辑
         log.info("Inserting {} documents into collection {}", documents.size(), collectionName);
     }
@@ -100,6 +106,12 @@ public class StellarDBClient {
      * 删除文档
      */
     public void delete(String collectionName, List<String> ids) {
+        if (collectionName == null || collectionName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Collection name cannot be null or empty");
+        }
+        if (ids == null) {
+            throw new IllegalArgumentException("Document IDs cannot be null");
+        }
         // TODO: 实现真实的文档删除逻辑
         log.info("Deleting {} documents from collection {}", ids.size(), collectionName);
     }
