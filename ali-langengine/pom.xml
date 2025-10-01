@@ -206,6 +206,7 @@
     <module>ali-langengine-community/ali-langengine-greatdb</module>
     <module>ali-langengine-community/ali-langengine-stellardb</module>
     <module>ali-langengine-community/ali-langengine-arcneural</module>
+    <module>ali-langengine-community/ali-langengine-solr</module>
   </modules>
 
 	<dependencyManagement>
