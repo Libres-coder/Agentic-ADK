@@ -201,6 +201,7 @@
     <module>ali-langengine-community/ali-langengine-youtube</module>
     <module>ali-langengine-community/ali-langengine-usearch</module>
     <module>ali-langengine-community/ali-langengine-azuresearch</module>
+    <module>ali-langengine-community/ali-langengine-cosmosdb</module>
     <module>ali-langengine-community/ali-langengine-cvector</module>
     <module>ali-langengine-community/ali-langengine-hippo</module>
     <module>ali-langengine-community/ali-langengine-greatdb</module>
