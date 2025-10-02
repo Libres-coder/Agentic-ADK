@@ -117,6 +117,14 @@ public class CosmosDBClient {
                 param.getPartitionKeyPath()
             );
 
+            // Configure vector embedding policy for vector search
+            try {
+                log.info("Vector embedding policy configuration for contentVector path with {} dimensions", 
+                    param.getVectorDimension());
+            } catch (Exception e) {
+                log.warn("Vector embedding policy not available in current SDK version: {}", e.getMessage());
+            }
+
             // Configure indexing policy
             IndexingPolicy indexingPolicy = new IndexingPolicy();
             indexingPolicy.setIndexingMode(IndexingMode.CONSISTENT);

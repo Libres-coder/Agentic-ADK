@@ -40,30 +40,30 @@ import java.util.stream.Collectors;
 @Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class CosmosDB extends VectorStore {
+public class CosmosDB extends VectorStore implements AutoCloseable {
 
     /**
-     * 向量库的embedding
+     * Vector store embedding component
      */
     private Embeddings embedding;
 
     /**
-     * 标识一个唯一的容器，可以看做是某个业务，向量内容的集合标识；某个知识库内容，这个知识库所有的内容都应该是相同的containerName
+     * Container name identifier for vector content collections
      */
     private String containerName;
 
     /**
-     * 内部使用的client，不希望对外暴露
+     * Internal CosmosDB client for database operations
      */
-    private CosmosDBClient _client;
+    private CosmosDBClient client;
 
     /**
-     * 内部使用的service，不希望对外暴露
+     * Internal service layer for business logic
      */
-    private CosmosDBService _service;
+    private CosmosDBService service;
 
     /**
-     * 配置参数
+     * Configuration parameters
      */
     private CosmosDBParam param;
 
@@ -89,8 +89,8 @@ public class CosmosDB extends VectorStore {
             .containerName(this.containerName)
             .build();
 
-        this._client = new CosmosDBClient(param);
-        this._service = new CosmosDBService(_client);
+        this.client = new CosmosDBClient(param);
+        this.service = new CosmosDBService(client);
     }
 
     public CosmosDB(Embeddings embedding, CosmosDBParam param) {
@@ -98,8 +98,8 @@ public class CosmosDB extends VectorStore {
         this.param = param;
         this.containerName = param.getContainerName();
 
-        this._client = new CosmosDBClient(param);
-        this._service = new CosmosDBService(_client);
+        this.client = new CosmosDBClient(param);
+        this.service = new CosmosDBService(client);
     }
 
     public CosmosDB(String endpoint, String key, String databaseName, Embeddings embedding, String containerName) {
@@ -113,8 +113,8 @@ public class CosmosDB extends VectorStore {
             .containerName(this.containerName)
             .build();
 
-        this._client = new CosmosDBClient(param);
-        this._service = new CosmosDBService(_client);
+        this.client = new CosmosDBClient(param);
+        this.service = new CosmosDBService(client);
     }
 
     /**
@@ -150,12 +150,12 @@ public class CosmosDB extends VectorStore {
                     }
                 }
 
-                CosmosDBDocument cosmosDoc = _service.convertFromDocument(document);
+                CosmosDBDocument cosmosDoc = service.convertFromDocument(document);
                 cosmosDocuments.add(cosmosDoc);
             }
 
             if (!cosmosDocuments.isEmpty()) {
-                _service.addDocuments(cosmosDocuments);
+                service.addDocuments(cosmosDocuments);
             }
 
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public class CosmosDB extends VectorStore {
     }
 
     /**
-     * Cosmos DB向量库查询
+     * Cosmos DB vector search
      *
      * @param query
      * @param k
@@ -241,13 +241,13 @@ public class CosmosDB extends VectorStore {
                 .build();
 
             // Execute vector search
-            CosmosDBQueryResponse response = _service.searchByVector(request);
+            CosmosDBQueryResponse response = service.searchByVector(request);
 
             // Convert results to Document list
             List<Document> results = new ArrayList<>();
             if (response.getResults() != null) {
                 for (CosmosDBResult result : response.getResults()) {
-                    Document doc = _service.convertToDocument(result.getDocument());
+                    Document doc = service.convertToDocument(result.getDocument());
                     
                     // Add score to metadata
                     if (doc.getMetadata() == null) {
@@ -295,13 +295,13 @@ public class CosmosDB extends VectorStore {
                 .build();
 
             // Execute vector search
-            CosmosDBQueryResponse response = _service.searchByVector(request);
+            CosmosDBQueryResponse response = service.searchByVector(request);
 
             // Convert results to Document list
             List<Document> results = new ArrayList<>();
             if (response.getResults() != null) {
                 for (CosmosDBResult result : response.getResults()) {
-                    Document doc = _service.convertToDocument(result.getDocument());
+                    Document doc = service.convertToDocument(result.getDocument());
                     
                     // Add score to metadata
                     if (doc.getMetadata() == null) {
@@ -333,7 +333,7 @@ public class CosmosDB extends VectorStore {
         }
 
         try {
-            _service.deleteDocuments(ids);
+            service.deleteDocuments(ids);
             log.info("Deleted {} documents from Cosmos DB", ids.size());
         } catch (Exception e) {
             log.error("Failed to delete documents from Cosmos DB", e);
@@ -342,11 +342,17 @@ public class CosmosDB extends VectorStore {
     }
 
     /**
-     * 关闭客户端连接
+     * Close the client connection and release resources
      */
+    @Override
     public void close() {
-        if (_client != null) {
-            _client.close();
+        try {
+            if (client != null) {
+                client.close();
+                log.info("CosmosDB client closed successfully");
+            }
+        } catch (Exception e) {
+            log.warn("Error occurred while closing CosmosDB client: {}", e.getMessage());
         }
     }
 }

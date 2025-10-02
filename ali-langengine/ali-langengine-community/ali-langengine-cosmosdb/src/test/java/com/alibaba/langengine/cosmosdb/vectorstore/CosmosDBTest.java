@@ -65,8 +65,8 @@ public class CosmosDBTest {
 
         // Create a spy that doesn't call the real constructor
         cosmosDB = spy(new CosmosDB());
-        cosmosDB.set_client(mockClient);
-        cosmosDB.set_service(mockService);
+        cosmosDB.setClient(mockClient);
+        cosmosDB.setService(mockService);
         cosmosDB.setEmbedding(mockEmbedding);
         cosmosDB.setParam(param);
         cosmosDB.setContainerName(param.getContainerName());

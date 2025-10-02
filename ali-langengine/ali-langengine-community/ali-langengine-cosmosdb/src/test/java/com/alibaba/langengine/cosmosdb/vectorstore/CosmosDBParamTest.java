@@ -33,7 +33,7 @@ public class CosmosDBParamTest {
             .vectorDistanceMetric("euclidean")
             .topK(20)
             .connectionTimeout(45000L)
-            .requestTimeout(120000L)
+            .requestTimeout(10000L)
             .maxConnections(50)
             .autoCreateResources(false)
             .throughput(1000)
@@ -48,7 +48,7 @@ public class CosmosDBParamTest {
         assertEquals("euclidean", param.getVectorDistanceMetric());
         assertEquals(20, param.getTopK().intValue());
         assertEquals(45000L, param.getConnectionTimeout().longValue());
-        assertEquals(120000L, param.getRequestTimeout().longValue());
+        assertEquals(10000L, param.getRequestTimeout().longValue());
         assertEquals(50, param.getMaxConnections().intValue());
         assertFalse(param.getAutoCreateResources());
         assertEquals(1000, param.getThroughput().intValue());

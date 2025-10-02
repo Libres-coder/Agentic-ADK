@@ -170,6 +170,44 @@ public class CosmosDBParam {
         }
 
         public CosmosDBParam build() {
+            // Validate required parameters
+            if (endpoint == null || endpoint.trim().isEmpty()) {
+                throw new IllegalArgumentException("Endpoint cannot be null or empty");
+            }
+            if (key == null || key.trim().isEmpty()) {
+                throw new IllegalArgumentException("Key cannot be null or empty");
+            }
+            if (databaseName == null || databaseName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Database name cannot be null or empty");
+            }
+            if (containerName == null || containerName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Container name cannot be null or empty");
+            }
+            if (vectorDimension <= 0) {
+                throw new IllegalArgumentException("Vector dimension must be positive, got: " + vectorDimension);
+            }
+            if (topK <= 0) {
+                throw new IllegalArgumentException("TopK must be positive, got: " + topK);
+            }
+            if (connectionTimeout <= 0) {
+                throw new IllegalArgumentException("Connection timeout must be positive, got: " + connectionTimeout);
+            }
+            if (requestTimeout <= 0) {
+                throw new IllegalArgumentException("Request timeout must be positive, got: " + requestTimeout);
+            }
+            if (requestTimeout > 10000L) {
+                throw new IllegalArgumentException("Request timeout cannot exceed 10000ms due to Azure SDK limitation, got: " + requestTimeout);
+            }
+            if (maxConnections <= 0) {
+                throw new IllegalArgumentException("Max connections must be positive, got: " + maxConnections);
+            }
+            if (throughput <= 0) {
+                throw new IllegalArgumentException("Throughput must be positive, got: " + throughput);
+            }
+            if (partitionKeyPath == null || partitionKeyPath.trim().isEmpty()) {
+                throw new IllegalArgumentException("Partition key path cannot be null or empty");
+            }
+
             CosmosDBParam param = new CosmosDBParam();
             param.endpoint = this.endpoint;
             param.key = this.key;
