@@ -20,7 +20,7 @@ ali-langengine-community: Community open-source co-construction module.
 
 alibaba-langengine-demo: Related example module.
 
-For integration guidance, see `docs/接入手册.md`.
+For integration guidance (English), see `docs/Integration-Guide.md`.
 
 **maven**
 
