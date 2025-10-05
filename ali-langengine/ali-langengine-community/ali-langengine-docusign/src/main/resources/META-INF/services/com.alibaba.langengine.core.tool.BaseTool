@@ -7,5 +7,12 @@ com.alibaba.langengine.docusign.tool.DocuSignDownloadDocumentTool
 com.alibaba.langengine.docusign.tool.DocuSignListRecipientsTool
 com.alibaba.langengine.docusign.tool.DocuSignCreateTemplateTool
 com.alibaba.langengine.docusign.tool.DocuSignUpdateRecipientTool
+com.alibaba.langengine.docusign.tool.DocuSignAddDocumentTool
 com.alibaba.langengine.docusign.tool.DocuSignHealthCheckTool
+com.alibaba.langengine.docusign.tool.DocuSignBulkSendTool
+com.alibaba.langengine.docusign.tool.DocuSignListDocumentsTool
+com.alibaba.langengine.docusign.tool.DocuSignAddRecipientTool
+com.alibaba.langengine.docusign.tool.DocuSignGetAuditTrailTool
+com.alibaba.langengine.docusign.tool.DocuSignSendReminderTool
+com.alibaba.langengine.docusign.tool.DocuSignCreateEnvelopeFromDocumentTool
 
