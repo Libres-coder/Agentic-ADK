@@ -31,24 +31,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Slf4j
 @Data
-public class OmibaseService {
+public class OmibaseService implements AutoCloseable {
 
     private static final String EXCEPTION_COLLECTION_NOT_LOADED = "collection not loaded";
     
-    private String collection;
-    private OmibaseParam omibaseParam;
+    private final String collection;
+    private final OmibaseParam omibaseParam;
     private final OmibaseClient omibaseClient;
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     
     public OmibaseService(String serverUrl, String apiKey, String collection, OmibaseParam omibaseParam) {
+        validateConstructorParams(serverUrl, collection, omibaseParam);
+        
         this.collection = collection;
         this.omibaseParam = omibaseParam;
         this.omibaseClient = new OmibaseClient(serverUrl, apiKey, omibaseParam);
         
         log.info("OmibaseService initialized with serverUrl={}, collection={}", serverUrl, collection);
+    }
+
+    /**
+     * 验证构造函数参数
+     */
+    private void validateConstructorParams(String serverUrl, String collection, OmibaseParam omibaseParam) {
+        if (StringUtils.isBlank(serverUrl)) {
+            throw new IllegalArgumentException("Server URL cannot be null or empty");
+        }
+        if (StringUtils.isBlank(collection)) {
+            throw new IllegalArgumentException("Collection name cannot be null or empty");
+        }
+        if (omibaseParam == null) {
+            throw new IllegalArgumentException("OmibaseParam cannot be null");
+        }
+        omibaseParam.validate();
     }
 
     /**
@@ -62,7 +85,10 @@ public class OmibaseService {
      * 初始化集合
      */
     public void init(Embeddings embedding) {
+        rwLock.writeLock().lock();
         try {
+            checkNotClosed();
+            
             OmibaseParam param = loadParam();
             OmibaseParam.InitParam initParam = param.getInitParam();
             
@@ -81,6 +107,8 @@ public class OmibaseService {
         } catch (Exception e) {
             throw new OmibaseException("INIT_ERROR", 
                 "Failed to initialize collection: " + e.getMessage(), e);
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 
@@ -119,10 +147,14 @@ public class OmibaseService {
      */
     public void addDocuments(List<Document> documents) {
         if (CollectionUtils.isEmpty(documents)) {
+            log.debug("No documents to add");
             return;
         }
         
+        rwLock.readLock().lock();
         try {
+            checkNotClosed();
+            
             OmibaseParam param = loadParam();
             String fieldNameUniqueId = param.getFieldNameUniqueId();
             String fieldNamePageContent = param.getFieldNamePageContent();
@@ -132,43 +164,9 @@ public class OmibaseService {
             List<Map<String, Object>> documentMaps = Lists.newArrayList();
             
             for (Document document : documents) {
-                Map<String, Object> documentMap = new HashMap<>();
-                
-                // 设置文档ID
-                String uniqueId = document.getUniqueId();
-                if (StringUtils.isBlank(uniqueId)) {
-                    uniqueId = UUID.randomUUID().toString();
-                    document.setUniqueId(uniqueId);
-                }
-                documentMap.put(fieldNameUniqueId, uniqueId);
-                
-                // 设置文档内容
-                String content = document.getPageContent();
-                if (StringUtils.isNotBlank(content)) {
-                    // 限制内容长度
-                    int maxLength = param.getInitParam().getFieldPageContentMaxLength();
-                    if (content.length() > maxLength) {
-                        content = content.substring(0, maxLength);
-                    }
-                    documentMap.put(fieldNamePageContent, content);
-                }
-                
-                // 设置向量
-                List<Double> embedding = document.getEmbedding();
-                if (CollectionUtils.isNotEmpty(embedding)) {
-                    List<Float> embeddingFloat = Lists.newArrayList();
-                    for (Double value : embedding) {
-                        embeddingFloat.add(value.floatValue());
-                    }
-                    documentMap.put(fieldNameEmbedding, embeddingFloat);
-                }
-                
-                // 设置元数据
-                Map<String, Object> metadata = document.getMetadata();
-                if (MapUtils.isNotEmpty(metadata)) {
-                    documentMap.put(fieldNameMetadata, JSON.toJSONString(metadata));
-                }
-                
+                validateDocument(document);
+                Map<String, Object> documentMap = createDocumentMap(document, param, 
+                    fieldNameUniqueId, fieldNamePageContent, fieldNameEmbedding, fieldNameMetadata);
                 documentMaps.add(documentMap);
             }
             
@@ -179,7 +177,69 @@ public class OmibaseService {
         } catch (Exception e) {
             throw new OmibaseException("ADD_DOCUMENTS_ERROR", 
                 "Failed to add documents: " + e.getMessage(), e);
+        } finally {
+            rwLock.readLock().unlock();
         }
+    }
+
+    /**
+     * 验证文档
+     */
+    private void validateDocument(Document document) {
+        if (document == null) {
+            throw new IllegalArgumentException("Document cannot be null");
+        }
+        if (StringUtils.isBlank(document.getPageContent())) {
+            throw new IllegalArgumentException("Document page content cannot be null or empty");
+        }
+    }
+
+    /**
+     * 创建文档映射
+     */
+    private Map<String, Object> createDocumentMap(Document document, OmibaseParam param,
+                                                String fieldNameUniqueId, String fieldNamePageContent, 
+                                                String fieldNameEmbedding, String fieldNameMetadata) {
+        Map<String, Object> documentMap = new HashMap<>();
+        
+        // 设置文档ID
+        String uniqueId = document.getUniqueId();
+        if (StringUtils.isBlank(uniqueId)) {
+            uniqueId = UUID.randomUUID().toString();
+            document.setUniqueId(uniqueId);
+        }
+        documentMap.put(fieldNameUniqueId, uniqueId);
+        
+        // 设置文档内容
+        String content = document.getPageContent();
+        if (StringUtils.isNotBlank(content)) {
+            // 限制内容长度
+            int maxLength = param.getInitParam().getFieldPageContentMaxLength();
+            if (content.length() > maxLength) {
+                content = content.substring(0, maxLength);
+                log.debug("Content truncated for document {}: {} -> {} chars", 
+                    uniqueId, document.getPageContent().length(), maxLength);
+            }
+            documentMap.put(fieldNamePageContent, content);
+        }
+        
+        // 设置向量
+        List<Double> embedding = document.getEmbedding();
+        if (CollectionUtils.isNotEmpty(embedding)) {
+            List<Float> embeddingFloat = Lists.newArrayList();
+            for (Double value : embedding) {
+                embeddingFloat.add(value.floatValue());
+            }
+            documentMap.put(fieldNameEmbedding, embeddingFloat);
+        }
+        
+        // 设置元数据
+        Map<String, Object> metadata = document.getMetadata();
+        if (MapUtils.isNotEmpty(metadata)) {
+            documentMap.put(fieldNameMetadata, JSON.toJSONString(metadata));
+        }
+        
+        return documentMap;
     }
 
     /**
@@ -325,12 +385,36 @@ public class OmibaseService {
      * 关闭连接
      */
     public void close() {
+        rwLock.writeLock().lock();
         try {
-            if (omibaseClient != null) {
-                omibaseClient.close();
+            if (closed.compareAndSet(false, true)) {
+                if (omibaseClient != null) {
+                    omibaseClient.close();
+                }
+                log.debug("OmibaseService closed for collection: {}", collection);
             }
         } catch (Exception e) {
             log.warn("Error closing OmibaseService: {}", e.getMessage());
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * 检查服务是否已关闭
+     */
+    private void checkNotClosed() {
+        if (closed.get()) {
+            throw new IllegalStateException("OmibaseService has been closed");
+        }
+    }
+
+    @Override
+    public void finalize() throws Throwable {
+        try {
+            close();
+        } finally {
+            super.finalize();
         }
     }
 }

@@ -236,19 +236,80 @@ public class OmibaseClientTest {
     void testErrorHandling() {
         // Test that the client properly handles various error scenarios
         
-        // Test with invalid server URL format
+        // Test with valid URL - should work
         assertDoesNotThrow(() -> {
-            new OmibaseClient("invalid-url", "api-key", param);
-        });
-        
-        // Test with empty server URL
-        assertDoesNotThrow(() -> {
-            new OmibaseClient("", "api-key", param);
+            new OmibaseClient("http://localhost:8080", "api-key", param);
         });
         
         // Test with null parameter
-        assertThrows(NullPointerException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             new OmibaseClient("http://localhost:8080", "api-key", null);
         });
+        
+        // Test with empty/null server URL - should throw IllegalArgumentException now
+        assertThrows(IllegalArgumentException.class, () -> {
+            new OmibaseClient(null, "api-key", param);
+        });
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            new OmibaseClient("", "api-key", param);
+        });
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            new OmibaseClient("   ", "api-key", param);
+        });
+    }
+
+    @Test
+    void testCreateCollectionValidation() {
+        OmibaseParam.InitParam validInitParam = new OmibaseParam.InitParam();
+        
+        // 测试空集合名称
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection(null, 1536, validInitParam));
+        
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection("", 1536, validInitParam));
+        
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection("   ", 1536, validInitParam));
+        
+        // 测试无效维度
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection("test-collection", 0, validInitParam));
+        
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection("test-collection", -1, validInitParam));
+        
+        // 测试空的初始化参数
+        assertThrows(IllegalArgumentException.class, () ->
+                client.createCollection("test-collection", 1536, null));
+    }
+
+    @Test
+    void testRetryConfiguration() {
+        OmibaseParam paramWithRetry = new OmibaseParam();
+        paramWithRetry.setRetryCount(5);
+        paramWithRetry.setRetryInterval(500);
+        
+        OmibaseClient clientWithRetry = new OmibaseClient("http://localhost:8080", "api-key", paramWithRetry);
+        
+        assertNotNull(clientWithRetry);
+        assertEquals(5, clientWithRetry.getRetryCount());
+        assertEquals(500, clientWithRetry.getRetryInterval());
+    }
+
+    @Test
+    void testConfigurationSettings() {
+        OmibaseParam customParam = new OmibaseParam();
+        customParam.setConnectionTimeout(15000);
+        customParam.setReadTimeout(25000);
+        customParam.setMaxConnections(100);
+        
+        OmibaseClient customClient = new OmibaseClient("http://localhost:8080", "api-key", customParam);
+        
+        assertNotNull(customClient);
+        assertEquals("http://localhost:8080", customClient.getServerUrl());
+        assertEquals("api-key", customClient.getApiKey());
     }
 }

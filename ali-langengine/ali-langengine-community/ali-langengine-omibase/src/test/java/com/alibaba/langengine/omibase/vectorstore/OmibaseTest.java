@@ -48,7 +48,7 @@ public class OmibaseTest {
     @BeforeEach
     void setUp() {
         omibaseParam = new OmibaseParam();
-        omibase = new Omibase("test_collection", omibaseParam);
+        omibase = new Omibase("http://localhost:8080", "test-api-key", "test_collection", omibaseParam);
         omibase.setEmbedding(mockEmbedding);
         
         // Use reflection to set the mocked service
@@ -295,11 +295,14 @@ public class OmibaseTest {
 
     @Test
     void testConstructorWithCollection() {
+        // Create an omibase with just collection name and use system properties for server URL
+        // This test would need proper configuration to work in real environment
         String collection = "test-collection";
         
-        Omibase omibaseSimple = new Omibase(collection);
-        
-        assertNotNull(omibaseSimple);
-        assertEquals(collection, omibaseSimple.getCollection());
+        // For Mock testing, we'll validate that the proper exception is thrown
+        // when serverUrl is not provided
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Omibase(collection);
+        });
     }
 }

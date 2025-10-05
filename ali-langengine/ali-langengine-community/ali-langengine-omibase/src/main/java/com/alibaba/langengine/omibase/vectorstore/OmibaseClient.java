@@ -46,10 +46,17 @@ public class OmibaseClient {
     private final String apiKey;
     private final CloseableHttpClient httpClient;
     private final RequestConfig requestConfig;
+    private final int retryCount;
+    private final long retryInterval;
 
     public OmibaseClient(String serverUrl, String apiKey, OmibaseParam param) {
+        // 参数校验
+        validateParameters(serverUrl, param);
+        
         this.serverUrl = StringUtils.removeEnd(serverUrl, "/");
         this.apiKey = apiKey;
+        this.retryCount = param.getRetryCount();
+        this.retryInterval = param.getRetryInterval();
         
         // Configure connection pooling
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
@@ -65,14 +72,30 @@ public class OmibaseClient {
                 .setSocketTimeout(param.getReadTimeout())
                 .build();
                 
-        log.info("OmibaseClient initialized with serverUrl: {}", serverUrl);
+        log.info("OmibaseClient initialized with serverUrl: {}, maxConnections: {}", 
+            serverUrl, param.getMaxConnections());
+    }
+
+    /**
+     * 参数校验
+     */
+    private void validateParameters(String serverUrl, OmibaseParam param) {
+        if (StringUtils.isBlank(serverUrl)) {
+            throw new IllegalArgumentException("Server URL cannot be null or empty");
+        }
+        if (param == null) {
+            throw new IllegalArgumentException("OmibaseParam cannot be null");
+        }
+        param.validate();
     }
 
     /**
      * 创建集合
      */
     public void createCollection(String collectionName, int dimension, OmibaseParam.InitParam initParam) {
-        try {
+        validateCollectionParams(collectionName, dimension, initParam);
+        
+        executeWithRetry(() -> {
             String url = serverUrl + "/api/v1/collections";
             
             JSONObject request = new JSONObject();
@@ -93,10 +116,24 @@ public class OmibaseClient {
             }
             
             log.info("Collection created successfully: {}", collectionName);
-        } catch (Exception e) {
-            throw new OmibaseException("CREATE_COLLECTION_ERROR", 
-                "Error creating collection: " + e.getMessage(), e);
+            return null;
+        });
+    }
+
+    /**
+     * 验证集合创建参数
+     */
+    private void validateCollectionParams(String collectionName, int dimension, OmibaseParam.InitParam initParam) {
+        if (StringUtils.isBlank(collectionName)) {
+            throw new IllegalArgumentException("Collection name cannot be null or empty");
         }
+        if (dimension <= 0) {
+            throw new IllegalArgumentException("Dimension must be positive");
+        }
+        if (initParam == null) {
+            throw new IllegalArgumentException("InitParam cannot be null");
+        }
+        initParam.validate();
     }
 
     /**
@@ -278,5 +315,58 @@ public class OmibaseClient {
         } catch (IOException e) {
             log.warn("Error closing OmibaseClient: {}", e.getMessage());
         }
+    }
+
+    /**
+     * 带重试机制执行操作
+     */
+    private <T> T executeWithRetry(RetryableOperation<T> operation) {
+        Exception lastException = null;
+        
+        for (int attempt = 0; attempt <= retryCount; attempt++) {
+            try {
+                return operation.execute();
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < retryCount && isRetryableException(e)) {
+                    log.warn("Operation failed on attempt {} of {}, retrying in {}ms: {}", 
+                        attempt + 1, retryCount + 1, retryInterval, e.getMessage());
+                    try {
+                        Thread.sleep(retryInterval);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new OmibaseException("OPERATION_INTERRUPTED", 
+                            "Operation was interrupted", ie);
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        if (lastException instanceof OmibaseException) {
+            throw (OmibaseException) lastException;
+        } else {
+            throw new OmibaseException("OPERATION_FAILED_AFTER_RETRY", 
+                "Operation failed after " + (retryCount + 1) + " attempts", lastException);
+        }
+    }
+
+    /**
+     * 判断异常是否可重试
+     */
+    private boolean isRetryableException(Exception e) {
+        // 网络相关异常通常可以重试
+        return e instanceof IOException || 
+               (e instanceof OmibaseException && 
+                !((OmibaseException) e).getErrorCode().contains("VALIDATION"));
+    }
+
+    /**
+     * 可重试操作接口
+     */
+    @FunctionalInterface
+    private interface RetryableOperation<T> {
+        T execute() throws Exception;
     }
 }

@@ -24,6 +24,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ import static com.alibaba.langengine.omibase.OmibaseConfiguration.OMIBASE_SERVER
 @Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class Omibase extends VectorStore {
+public class Omibase extends VectorStore implements AutoCloseable {
 
     /**
      * embedding模型
@@ -294,5 +295,103 @@ public class Omibase extends VectorStore {
      */
     public OmibaseService getOmibaseService() {
         return omibaseService;
+    }
+
+    /**
+     * Builder pattern for creating Omibase instances
+     */
+    public static class Builder {
+        private String serverUrl;
+        private String apiKey;
+        private String collection;
+        private OmibaseParam omibaseParam;
+        private Embeddings embedding;
+
+        public Builder() {
+            this.omibaseParam = new OmibaseParam();
+        }
+
+        public Builder serverUrl(String serverUrl) {
+            this.serverUrl = serverUrl;
+            return this;
+        }
+
+        public Builder apiKey(String apiKey) {
+            this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder collection(String collection) {
+            this.collection = collection;
+            return this;
+        }
+
+        public Builder omibaseParam(OmibaseParam omibaseParam) {
+            this.omibaseParam = omibaseParam;
+            return this;
+        }
+
+        public Builder embedding(Embeddings embedding) {
+            this.embedding = embedding;
+            return this;
+        }
+
+        public Builder connectionTimeout(int connectionTimeout) {
+            this.omibaseParam.setConnectionTimeout(connectionTimeout);
+            return this;
+        }
+
+        public Builder readTimeout(int readTimeout) {
+            this.omibaseParam.setReadTimeout(readTimeout);
+            return this;
+        }
+
+        public Builder maxConnections(int maxConnections) {
+            this.omibaseParam.setMaxConnections(maxConnections);
+            return this;
+        }
+
+        public Builder retryCount(int retryCount) {
+            this.omibaseParam.setRetryCount(retryCount);
+            return this;
+        }
+
+        public Builder retryInterval(long retryInterval) {
+            this.omibaseParam.setRetryInterval(retryInterval);
+            return this;
+        }
+
+        public Omibase build() {
+            validateBuildParams();
+            
+            Omibase omibase;
+            if (StringUtils.isNotBlank(serverUrl)) {
+                omibase = new Omibase(serverUrl, apiKey, collection, omibaseParam);
+            } else {
+                omibase = new Omibase(collection, omibaseParam);
+            }
+            
+            if (embedding != null) {
+                omibase.setEmbedding(embedding);
+            }
+            
+            return omibase;
+        }
+
+        private void validateBuildParams() {
+            if (StringUtils.isBlank(collection)) {
+                throw new IllegalArgumentException("Collection name is required");
+            }
+            if (omibaseParam != null) {
+                omibaseParam.validate();
+            }
+        }
+    }
+
+    /**
+     * Create a new builder instance
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 }

@@ -65,9 +65,43 @@ public class OmibaseParam {
     private int maxConnections = 50;
 
     /**
+     * 重试次数
+     */
+    private int retryCount = 3;
+
+    /**
+     * 重试间隔(毫秒)
+     */
+    private long retryInterval = 1000;
+
+    /**
      * 初始化参数, 用于创建Collection
      */
     private InitParam initParam = new InitParam();
+
+    /**
+     * 验证参数的有效性
+     */
+    public void validate() {
+        if (connectionTimeout <= 0) {
+            throw new IllegalArgumentException("Connection timeout must be positive");
+        }
+        if (readTimeout <= 0) {
+            throw new IllegalArgumentException("Read timeout must be positive");
+        }
+        if (maxConnections <= 0) {
+            throw new IllegalArgumentException("Max connections must be positive");
+        }
+        if (retryCount < 0) {
+            throw new IllegalArgumentException("Retry count cannot be negative");
+        }
+        if (retryInterval < 0) {
+            throw new IllegalArgumentException("Retry interval cannot be negative");
+        }
+        if (initParam != null) {
+            initParam.validate();
+        }
+    }
 
     @Data
     public static class InitParam {
@@ -111,6 +145,30 @@ public class OmibaseParam {
          * 副本数量
          */
         private int replicaNum = 1;
+
+        /**
+         * 验证初始化参数的有效性
+         */
+        public void validate() {
+            if (fieldPageContentMaxLength <= 0) {
+                throw new IllegalArgumentException("Field page content max length must be positive");
+            }
+            if (fieldEmbeddingsDimension < 0) {
+                throw new IllegalArgumentException("Field embeddings dimension cannot be negative");
+            }
+            if (shardNum <= 0) {
+                throw new IllegalArgumentException("Shard number must be positive");
+            }
+            if (replicaNum <= 0) {
+                throw new IllegalArgumentException("Replica number must be positive");
+            }
+            if (indexType == null || indexType.trim().isEmpty()) {
+                throw new IllegalArgumentException("Index type cannot be null or empty");
+            }
+            if (metricType == null || metricType.trim().isEmpty()) {
+                throw new IllegalArgumentException("Metric type cannot be null or empty");
+            }
+        }
 
     }
 

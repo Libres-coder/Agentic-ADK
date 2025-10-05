@@ -284,4 +284,96 @@ public class OmibaseParamTest {
         assertEquals(24, initParam.getIndexBuildParams().get("M"));
         assertEquals(300, initParam.getIndexBuildParams().get("efConstruction"));
     }
+
+    // 参数校验测试
+    @Test
+    void testValidation() {
+        OmibaseParam param = new OmibaseParam();
+        
+        // 默认参数应该通过验证
+        assertDoesNotThrow(() -> param.validate());
+    }
+
+    @Test
+    void testValidationFailures() {
+        OmibaseParam param = new OmibaseParam();
+        
+        // 测试连接超时时间验证
+        param.setConnectionTimeout(-1);
+        assertThrows(IllegalArgumentException.class, () -> param.validate());
+        
+        param.setConnectionTimeout(30000);
+        param.setReadTimeout(0);
+        assertThrows(IllegalArgumentException.class, () -> param.validate());
+        
+        param.setReadTimeout(30000);
+        param.setMaxConnections(-5);
+        assertThrows(IllegalArgumentException.class, () -> param.validate());
+        
+        param.setMaxConnections(50);
+        param.setRetryCount(-1);
+        assertThrows(IllegalArgumentException.class, () -> param.validate());
+        
+        param.setRetryCount(3);
+        param.setRetryInterval(-100);
+        assertThrows(IllegalArgumentException.class, () -> param.validate());
+    }
+
+    @Test
+    void testInitParamValidation() {
+        OmibaseParam.InitParam initParam = new OmibaseParam.InitParam();
+        
+        // 默认参数应该通过验证
+        assertDoesNotThrow(() -> initParam.validate());
+    }
+
+    @Test
+    void testInitParamValidationFailures() {
+        OmibaseParam.InitParam initParam = new OmibaseParam.InitParam();
+        
+        // 测试页面内容最大长度验证
+        initParam.setFieldPageContentMaxLength(0);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setFieldPageContentMaxLength(8192);
+        initParam.setFieldEmbeddingsDimension(-1);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setFieldEmbeddingsDimension(1536);
+        initParam.setShardNum(0);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setShardNum(1);
+        initParam.setReplicaNum(-1);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setReplicaNum(1);
+        initParam.setIndexType(null);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setIndexType("");
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setIndexType("HNSW");
+        initParam.setMetricType(null);
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+        
+        initParam.setMetricType("  ");
+        assertThrows(IllegalArgumentException.class, () -> initParam.validate());
+    }
+
+    @Test
+    void testRetryConfiguration() {
+        OmibaseParam param = new OmibaseParam();
+        
+        // 测试默认重试设置
+        assertEquals(3, param.getRetryCount());
+        assertEquals(1000, param.getRetryInterval());
+        
+        // 测试修改重试设置
+        param.setRetryCount(5);
+        param.setRetryInterval(2000);
+        assertEquals(5, param.getRetryCount());
+        assertEquals(2000, param.getRetryInterval());
+    }
 }
