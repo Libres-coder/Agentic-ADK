@@ -150,6 +150,7 @@
 		<module>ali-langengine-community/ali-langengine-wenxin</module>
 		<module>ali-langengine-community/ali-langengine-douyin</module>
 		<module>ali-langengine-community/ali-langengine-zhihu</module>
+		<module>ali-langengine-community/ali-langengine-wikipedia</module>
 		<module>ali-langengine-community/ali-langengine-kagi</module>
     <module>ali-langengine-community/ali-langengine-aliyun-oss</module>
 		<module>ali-langengine-community/ali-langengine-qiniu-kodo</module>
