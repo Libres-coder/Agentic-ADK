@@ -1,0 +1,11 @@
+com.alibaba.langengine.docusign.tool.DocuSignListTemplatesTool
+com.alibaba.langengine.docusign.tool.DocuSignSendEnvelopeTool
+com.alibaba.langengine.docusign.tool.DocuSignGetEnvelopeStatusTool
+com.alibaba.langengine.docusign.tool.DocuSignListEnvelopesTool
+com.alibaba.langengine.docusign.tool.DocuSignVoidEnvelopeTool
+com.alibaba.langengine.docusign.tool.DocuSignDownloadDocumentTool
+com.alibaba.langengine.docusign.tool.DocuSignListRecipientsTool
+com.alibaba.langengine.docusign.tool.DocuSignCreateTemplateTool
+com.alibaba.langengine.docusign.tool.DocuSignUpdateRecipientTool
+com.alibaba.langengine.docusign.tool.DocuSignHealthCheckTool
+
