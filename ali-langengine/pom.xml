@@ -211,6 +211,7 @@
     <module>ali-langengine-community/ali-langengine-stellardb</module>
     <module>ali-langengine-community/ali-langengine-arcneural</module>
     <module>ali-langengine-community/ali-langengine-solr</module>
+		<module>ali-langengine-community/ali-langengine-docusign</module>
   </modules>
 
 	<dependencyManagement>
