@@ -46,6 +46,8 @@ public class LuceneClient implements Closeable {
     private QueryParser queryParser;
     private SearcherManager searcherManager;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private volatile boolean initialized = false;
+    private volatile boolean closed = false;
 
     public LuceneClient(LuceneParam param) {
         this.param = param;
@@ -53,9 +55,21 @@ public class LuceneClient implements Closeable {
 
     /**
      * 初始化客户端
+     * 
+     * @throws LuceneException 如果初始化失败
      */
     public void init() {
+        if (initialized) {
+            log.warn("LuceneClient已经初始化，跳过重复初始化");
+            return;
+        }
+        
+        lock.writeLock().lock();
         try {
+            if (initialized) {
+                return; // 双重检查
+            }
+            
             // 初始化目录
             if (param.getIndexPath() != null && !param.getIndexPath().isEmpty()) {
                 directory = org.apache.lucene.store.FSDirectory.open(java.nio.file.Paths.get(param.getIndexPath()));
@@ -85,17 +99,39 @@ public class LuceneClient implements Closeable {
             // 初始化查询解析器
             queryParser = new QueryParser(CONTENT_FIELD, analyzer);
 
+            initialized = true;
             log.info("Lucene客户端初始化完成");
         } catch (Exception e) {
             log.error("初始化Lucene客户端失败", e);
             throw new LuceneException(LuceneException.ErrorCode.INIT_FAILED, "初始化失败: " + e.getMessage());
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * 检查客户端状态
+     * 
+     * @throws IllegalStateException 如果客户端未初始化或已关闭
+     */
+    private void checkState() {
+        if (!initialized) {
+            throw new IllegalStateException("LuceneClient未初始化，请先调用init()方法");
+        }
+        if (closed) {
+            throw new IllegalStateException("LuceneClient已关闭，无法执行操作");
         }
     }
 
     /**
      * 添加文档
+     * 
+     * @param document 要添加的文档
+     * @param embedVector 文档的向量表示
+     * @throws LuceneException 如果添加失败
      */
     public void addDocument(Document document, List<Double> embedVector) {
+        checkState();
         lock.writeLock().lock();
         try {
             org.apache.lucene.document.Document luceneDoc = new org.apache.lucene.document.Document();

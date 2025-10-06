@@ -2,11 +2,6 @@ package com.alibaba.langengine.lucene;
 
 import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
-import com.alibaba.langengine.core.model.fastchat.completion.chat.ChatMessage;
-import com.alibaba.langengine.core.model.fastchat.completion.chat.ChatCompletionRequest;
-import com.alibaba.langengine.core.outputs.LLMResult;
-import com.alibaba.langengine.core.vectorstore.VectorStore;
-import com.alibaba.langengine.core.model.fastchat.completion.chat.ChatCompletionResult;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
