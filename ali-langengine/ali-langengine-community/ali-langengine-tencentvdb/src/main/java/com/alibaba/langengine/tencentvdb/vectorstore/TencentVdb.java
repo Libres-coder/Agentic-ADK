@@ -52,34 +52,28 @@ public class TencentVdb extends VectorStore {
 
     /**
      * 构造函数 - 使用默认配置
-     * 
+     *
      * @param collection 集合名称
      */
     public TencentVdb(String collection) {
-        this(collection, null);
+        this(TENCENT_VDB_SERVER_URL, TENCENT_VDB_USERNAME, TENCENT_VDB_PASSWORD,
+             TENCENT_VDB_DATABASE, collection, null);
     }
 
     /**
      * 构造函数 - 使用自定义参数
-     * 
+     *
      * @param collection 集合名称
      * @param tencentVdbParam 自定义参数
      */
     public TencentVdb(String collection, TencentVdbParam tencentVdbParam) {
-        this.collection = collection;
-        
-        // 从配置中获取连接信息
-        String serverUrl = TENCENT_VDB_SERVER_URL;
-        String username = TENCENT_VDB_USERNAME;
-        String password = TENCENT_VDB_PASSWORD;
-        String databaseName = TENCENT_VDB_DATABASE;
-        
-        this.tencentVdbService = new TencentVdbService(serverUrl, username, password, databaseName, collection, tencentVdbParam);
+        this(TENCENT_VDB_SERVER_URL, TENCENT_VDB_USERNAME, TENCENT_VDB_PASSWORD,
+             TENCENT_VDB_DATABASE, collection, tencentVdbParam);
     }
 
     /**
      * 构造函数 - 指定所有连接参数
-     * 
+     *
      * @param serverUrl 服务器URL
      * @param username 用户名
      * @param password 密码
@@ -87,10 +81,11 @@ public class TencentVdb extends VectorStore {
      * @param collection 集合名称
      * @param tencentVdbParam 自定义参数
      */
-    public TencentVdb(String serverUrl, String username, String password, String databaseName, 
+    public TencentVdb(String serverUrl, String username, String password, String databaseName,
                      String collection, TencentVdbParam tencentVdbParam) {
         this.collection = collection;
-        this.tencentVdbService = new TencentVdbService(serverUrl, username, password, databaseName, collection, tencentVdbParam);
+        this.tencentVdbService = new TencentVdbService(
+            serverUrl, username, password, databaseName, collection, tencentVdbParam);
     }
 
     /**
@@ -207,17 +202,6 @@ public class TencentVdb extends VectorStore {
         } catch (Exception e) {
             log.warn("Error closing Tencent Cloud VectorDB", e);
         }
-    }
-
-    /**
-     * 过滤文本内容，去除HTML标签等
-     */
-    private String filter(String value) {
-        if (value == null) {
-            return "";
-        }
-        value = value.replaceAll("<[^>]+>", ""); // 去掉所有HTML标签
-        return value.trim();
     }
 
 }

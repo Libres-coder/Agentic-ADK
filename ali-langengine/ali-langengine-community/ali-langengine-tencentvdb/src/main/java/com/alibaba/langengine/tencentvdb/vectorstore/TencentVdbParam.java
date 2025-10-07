@@ -15,9 +15,9 @@
  */
 package com.alibaba.langengine.tencentvdb.vectorstore;
 
-import com.alibaba.fastjson.JSON;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -47,12 +47,22 @@ public class TencentVdbParam {
     /**
      * 自定义搜索扩展参数
      */
-    private Map<String, Object> searchParams = JSON.parseObject("{\"ef\":64, \"nprobe\":16}");
+    private Map<String, Object> searchParams = createDefaultSearchParams();
 
     /**
      * 初始化参数, 用于创建Collection
      */
     private InitParam initParam = new InitParam();
+
+    /**
+     * 创建默认搜索参数
+     */
+    private static Map<String, Object> createDefaultSearchParams() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("ef", 64);
+        params.put("nprobe", 16);
+        return params;
+    }
 
     @Data
     public static class InitParam {
@@ -95,7 +105,17 @@ public class TencentVdbParam {
         /**
          * 构建索引时传入的额外参数
          */
-        private Map<String, Object> indexExtraParam = JSON.parseObject("{\"M\":16, \"efConstruction\":200}");
+        private Map<String, Object> indexExtraParam = createDefaultIndexExtraParam();
+
+        /**
+         * 创建默认索引额外参数
+         */
+        private static Map<String, Object> createDefaultIndexExtraParam() {
+            Map<String, Object> params = new HashMap<>();
+            params.put("M", 16);
+            params.put("efConstruction", 200);
+            return params;
+        }
 
     }
 

@@ -100,11 +100,10 @@ public class TencentVdbService {
         }
 
         try {
-            TencentVdbParam param = loadParam();
-            String fieldNameUniqueId = param.getFieldNameUniqueId();
-            String fieldNamePageContent = param.getFieldNamePageContent();
-            String fieldNameEmbedding = param.getFieldNameEmbedding();
-            String fieldNameMetadata = param.getFieldNameMetadata();
+            String fieldNameUniqueId = tencentVdbParam.getFieldNameUniqueId();
+            String fieldNamePageContent = tencentVdbParam.getFieldNamePageContent();
+            String fieldNameEmbedding = tencentVdbParam.getFieldNameEmbedding();
+            String fieldNameMetadata = tencentVdbParam.getFieldNameMetadata();
 
             List<Map<String, Object>> documentMaps = new ArrayList<>();
             for (Document document : documents) {
@@ -161,8 +160,7 @@ public class TencentVdbService {
         }
 
         try {
-            TencentVdbParam param = loadParam();
-            Map<String, Object> searchParams = new HashMap<>(param.getSearchParams());
+            Map<String, Object> searchParams = new HashMap<>(tencentVdbParam.getSearchParams());
             
             // 如果指定了最大距离值，添加到搜索参数中
             if (maxDistanceValue != null) {
@@ -173,7 +171,7 @@ public class TencentVdbService {
 
             List<Document> documents = new ArrayList<>();
             for (Map<String, Object> result : searchResults) {
-                Document document = convertToDocument(result, param);
+                Document document = convertToDocument(result);
                 if (document != null) {
                     documents.add(document);
                 }
@@ -220,20 +218,13 @@ public class TencentVdbService {
     }
 
     /**
-     * 加载参数配置
-     */
-    private TencentVdbParam loadParam() {
-        return tencentVdbParam != null ? tencentVdbParam : new TencentVdbParam();
-    }
-
-    /**
      * 将搜索结果转换为Document对象
      */
-    private Document convertToDocument(Map<String, Object> result, TencentVdbParam param) {
+    private Document convertToDocument(Map<String, Object> result) {
         try {
-            String fieldNameUniqueId = param.getFieldNameUniqueId();
-            String fieldNamePageContent = param.getFieldNamePageContent();
-            String fieldNameMetadata = param.getFieldNameMetadata();
+            String fieldNameUniqueId = tencentVdbParam.getFieldNameUniqueId();
+            String fieldNamePageContent = tencentVdbParam.getFieldNamePageContent();
+            String fieldNameMetadata = tencentVdbParam.getFieldNameMetadata();
 
             Document document = new Document();
             

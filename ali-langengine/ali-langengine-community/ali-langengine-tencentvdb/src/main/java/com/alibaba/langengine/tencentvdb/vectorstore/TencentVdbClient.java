@@ -46,7 +46,7 @@ import java.util.Map;
 
 @Slf4j
 @Data
-public class TencentVdbClient {
+public class TencentVdbClient implements VectorDbClient {
 
     private final String serverUrl;
     private final String username;
@@ -70,6 +70,7 @@ public class TencentVdbClient {
     /**
      * 初始化连接
      */
+    @Override
     public void connect() {
         try {
             log.info("Connecting to Tencent Cloud VectorDB at {}", serverUrl);
@@ -102,6 +103,7 @@ public class TencentVdbClient {
     /**
      * 关闭连接
      */
+    @Override
     public void close() {
         try {
             if (client != null) {
@@ -116,6 +118,7 @@ public class TencentVdbClient {
     /**
      * 创建集合
      */
+    @Override
     public void createCollection(String collectionName, int dimension) {
         try {
             CreateCollectionParam createParam = CreateCollectionParam.newBuilder()
@@ -142,6 +145,7 @@ public class TencentVdbClient {
     /**
      * 检查集合是否存在
      */
+    @Override
     public boolean hasCollection(String collectionName) {
         ensureConnected();
         try {
@@ -156,6 +160,7 @@ public class TencentVdbClient {
     /**
      * 插入向量数据
      */
+    @Override
     public void insert(String collectionName, List<Map<String, Object>> documents) {
         ensureConnected();
         try {
@@ -194,6 +199,7 @@ public class TencentVdbClient {
     /**
      * 向量搜索
      */
+    @Override
     public List<Map<String, Object>> search(String collectionName, List<Float> vector, int topK, Map<String, Object> searchParams) {
         ensureConnected();
         try {
@@ -239,6 +245,7 @@ public class TencentVdbClient {
     /**
      * 删除文档
      */
+    @Override
     public void delete(String collectionName, List<String> documentIds) {
         ensureConnected();
         try {
@@ -261,25 +268,10 @@ public class TencentVdbClient {
         if (floatList == null || floatList.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         List<Double> result = new ArrayList<>(floatList.size());
         for (Float f : floatList) {
             result.add(f.doubleValue());
-        }
-        return result;
-    }
-
-    /**
-     * 将Float列表转换为float数组
-     */
-    private float[] convertToFloatArray(List<Float> floatList) {
-        if (floatList == null || floatList.isEmpty()) {
-            return new float[0];
-        }
-        
-        float[] result = new float[floatList.size()];
-        for (int i = 0; i < floatList.size(); i++) {
-            result[i] = floatList.get(i);
         }
         return result;
     }
