@@ -198,6 +198,7 @@
     <module>ali-langengine-community/ali-langengine-sms</module>
     <module>ali-langengine-community/ali-langengine-tair</module>
     <module>ali-langengine-community/ali-langengine-tencent-translate</module>
+    <module>ali-langengine-community/ali-langengine-tencentvdb</module>
     <module>ali-langengine-community/ali-langengine-volcengine-translate</module>
     <module>ali-langengine-community/ali-langengine-wecom</module>
     <module>ali-langengine-community/ali-langengine-wework</module>
