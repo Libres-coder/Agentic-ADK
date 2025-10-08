@@ -18,12 +18,33 @@ package com.alibaba.langengine.atlas.vectorstore;
 
 public class AtlasException extends RuntimeException {
 
+    private final String errorCode;
+
     public AtlasException(String message) {
+        this("ATLAS_ERROR", message);
+    }
+
+    public AtlasException(String errorCode, String message) {
         super(message);
+        this.errorCode = errorCode;
     }
 
     public AtlasException(String message, Throwable cause) {
+        this("ATLAS_ERROR", message, cause);
+    }
+
+    public AtlasException(String errorCode, String message, Throwable cause) {
         super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("AtlasException[%s]: %s", errorCode, getMessage());
     }
 
 }
