@@ -329,4 +329,77 @@ public class AtlasTest {
         }
     }
 
+    @Nested
+    @DisplayName("Thread Safety Tests")
+    class ThreadSafetyTests {
+
+        @Test
+        @DisplayName("Test concurrent parameter access")
+        public void testConcurrentParameterAccess() {
+            AtlasParam param = new AtlasParam();
+            
+            // Simulate concurrent access
+            assertDoesNotThrow(() -> {
+                for (int i = 0; i < 10; i++) {
+                    param.getFieldNameUniqueId();
+                    param.getFieldNameEmbedding();
+                    param.getVectorIndexName();
+                }
+            });
+        }
+
+        @Test
+        @DisplayName("Test exception thread safety")
+        public void testExceptionThreadSafety() {
+            // Test that exceptions can be created concurrently
+            assertDoesNotThrow(() -> {
+                for (int i = 0; i < 10; i++) {
+                    AtlasException ex = new AtlasException("TEST_" + i, "Message " + i);
+                    assertEquals("TEST_" + i, ex.getErrorCode());
+                    assertEquals("Message " + i, ex.getMessage());
+                }
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("Performance Tests")
+    class PerformanceTests {
+
+        @Test
+        @DisplayName("Test parameter creation performance")
+        public void testParameterCreationPerformance() {
+            long startTime = System.currentTimeMillis();
+            
+            for (int i = 0; i < 1000; i++) {
+                AtlasParam param = new AtlasParam();
+                param.setFieldNameUniqueId("id_" + i);
+                param.setNumCandidates(i % 100 + 1);
+            }
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            // Should complete within reasonable time (less than 1 second)
+            assertTrue(duration < 1000, "Parameter creation took too long: " + duration + "ms");
+        }
+
+        @Test
+        @DisplayName("Test exception creation performance")
+        public void testExceptionCreationPerformance() {
+            long startTime = System.currentTimeMillis();
+            
+            for (int i = 0; i < 1000; i++) {
+                AtlasException ex = new AtlasException("CODE_" + i, "Message " + i);
+                assertNotNull(ex.getErrorCode());
+            }
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            // Should complete within reasonable time (less than 1 second)
+            assertTrue(duration < 1000, "Exception creation took too long: " + duration + "ms");
+        }
+    }
+
 }

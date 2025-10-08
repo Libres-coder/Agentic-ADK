@@ -70,11 +70,61 @@ public class Atlas extends VectorStore {
      * Initialize Atlas Vector Search collection and index
      */
     public void init() {
-        try {
-            atlasService.init(embedding);
-        } catch (Exception e) {
-            throw new AtlasException("init atlas failed", e);
+        synchronized (this) {
+            try {
+                atlasService.init(embedding);
+            } catch (Exception e) {
+                throw new AtlasException("INIT_FAILED", "init atlas failed", e);
+            }
         }
+    }
+
+    /**
+     * Add documents with batch processing
+     */
+    public void addDocumentsBatch(List<Document> documents) {
+        if (CollectionUtils.isEmpty(documents)) {
+            return;
+        }
+        documents = embedding.embedDocument(documents);
+        atlasService.addDocuments(documents);
+    }
+
+    /**
+     * Add documents asynchronously
+     */
+    public java.util.concurrent.CompletableFuture<Void> addDocumentsAsync(List<Document> documents) {
+        return java.util.concurrent.CompletableFuture.runAsync(() -> {
+            addDocuments(documents);
+        });
+    }
+
+    /**
+     * Perform similarity search with timeout
+     */
+    public List<Document> similaritySearchWithTimeout(String query, int k, long timeoutMs) {
+        java.util.concurrent.CompletableFuture<List<Document>> future = 
+            java.util.concurrent.CompletableFuture.supplyAsync(() -> similaritySearch(query, k));
+        
+        try {
+            return future.get(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            throw new AtlasException("SEARCH_TIMEOUT", "Search operation timed out", e);
+        }
+    }
+
+    /**
+     * Get service statistics
+     */
+    public String getStats() {
+        return atlasService.getConnectionStats();
+    }
+
+    /**
+     * Check if service is healthy
+     */
+    public boolean isHealthy() {
+        return atlasService.isConnected();
     }
 
     @Override
