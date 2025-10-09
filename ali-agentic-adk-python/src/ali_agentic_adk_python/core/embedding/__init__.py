@@ -30,6 +30,7 @@ from .mistral_embedding import MistralEmbedding
 from .minimax_embedding import MiniMaxEmbedding
 from .moonshot_embedding import MoonshotEmbedding
 from .qianfan_embedding import QianfanEmbedding
+from .doubao_embedding import DoubaoEmbedding
 from .voyage_embedding import VoyageEmbedding
 from .zhipu_embedding import ZhipuEmbedding
 
@@ -46,6 +47,7 @@ __all__ = [
     "MiniMaxEmbedding",
     "MoonshotEmbedding",
     "QianfanEmbedding",
+    "DoubaoEmbedding",
     "VoyageEmbedding",
     "ZhipuEmbedding",
 ]
