@@ -28,6 +28,7 @@ from .google_embedding import GoogleEmbedding
 from .huggingface_embedding import HuggingFaceEmbedding
 from .mistral_embedding import MistralEmbedding
 from .voyage_embedding import VoyageEmbedding
+from .zhipu_embedding import ZhipuEmbedding
 
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "HuggingFaceEmbedding",
     "MistralEmbedding",
     "VoyageEmbedding",
+    "ZhipuEmbedding",
 ]
