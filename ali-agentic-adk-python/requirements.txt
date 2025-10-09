@@ -6,6 +6,7 @@ dashscope
 openai
 boto3
 cohere
+requests
 
 # Alibaba Cloud SDKs
 alibabacloud_ecd20200930

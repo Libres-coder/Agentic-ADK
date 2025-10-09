@@ -25,6 +25,7 @@ from .aws_embedding import AWSEmbedding
 from .bailian_embedding import BailianEmbedding
 from .cohere_embedding import CohereEmbedding
 from .google_embedding import GoogleEmbedding
+from .huggingface_embedding import HuggingFaceEmbedding
 
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "BailianEmbedding",
     "CohereEmbedding",
     "GoogleEmbedding",
+    "HuggingFaceEmbedding",
 ]
