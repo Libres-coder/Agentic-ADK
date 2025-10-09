@@ -27,6 +27,7 @@ from .cohere_embedding import CohereEmbedding
 from .google_embedding import GoogleEmbedding
 from .huggingface_embedding import HuggingFaceEmbedding
 from .mistral_embedding import MistralEmbedding
+from .voyage_embedding import VoyageEmbedding
 
 
 __all__ = [
@@ -38,4 +39,5 @@ __all__ = [
     "GoogleEmbedding",
     "HuggingFaceEmbedding",
     "MistralEmbedding",
+    "VoyageEmbedding",
 ]
