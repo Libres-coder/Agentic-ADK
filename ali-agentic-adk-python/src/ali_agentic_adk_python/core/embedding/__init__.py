@@ -27,6 +27,7 @@ from .cohere_embedding import CohereEmbedding
 from .google_embedding import GoogleEmbedding
 from .huggingface_embedding import HuggingFaceEmbedding
 from .mistral_embedding import MistralEmbedding
+from .minimax_embedding import MiniMaxEmbedding
 from .voyage_embedding import VoyageEmbedding
 from .zhipu_embedding import ZhipuEmbedding
 
@@ -40,6 +41,7 @@ __all__ = [
     "GoogleEmbedding",
     "HuggingFaceEmbedding",
     "MistralEmbedding",
+    "MiniMaxEmbedding",
     "VoyageEmbedding",
     "ZhipuEmbedding",
 ]
