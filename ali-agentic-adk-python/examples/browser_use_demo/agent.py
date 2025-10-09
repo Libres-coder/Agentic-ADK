@@ -19,14 +19,14 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import os
 import logging
 
 from google.adk.agents import LlmAgent
 
-from examples.browser_use_test.brain_agent import BrainAgent
+from examples.browser_use_demo.brain_agent import BrainAgent
 from promt import *
 from google.adk.tools import FunctionTool
+from ali_agentic_adk_python.config import get_runtime_settings
 from src.ali_agentic_adk_python.core.model.dashscope_llm import DashscopeLLM
 
 from src.ali_agentic_adk_python.core.utils.prompt_utils import PromptUtils
@@ -41,12 +41,12 @@ from src.ali_agentic_adk_python.extension.web.utils.snowflake import StringBased
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from dotenv import load_dotenv
-load_dotenv()
+runtime_settings = get_runtime_settings()
+dashscope_settings = runtime_settings.dashscope()
+if dashscope_settings is None:
+    raise RuntimeError("DashScope configuration is missing. Set DASHSCOPE_API_KEY in the environment.")
 
-api_key = os.getenv("DASHSCOPE_API_KEY")
-model_name = "qwen3-max-preview"
-model = DashscopeLLM(api_key=api_key, model=model_name)
+model = DashscopeLLM.from_settings(dashscope_settings, model="qwen3-max-preview")
 
 adk_browser_use_properties = BrowserUseProperties()
 ecd_command_service = EcdService(adk_browser_use_properties)
