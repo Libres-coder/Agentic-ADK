@@ -72,7 +72,8 @@ public class IpLocationResponse {
 	private String rectangle;
 
 	private boolean isEmpty(Object obj) {
-		if (obj instanceof List<?> list) {
+		if (obj instanceof List<?>) {
+            List<?> list = (List<?>) obj;
 			return list.isEmpty();
 		}
 		return obj == null || obj.toString().isEmpty();
