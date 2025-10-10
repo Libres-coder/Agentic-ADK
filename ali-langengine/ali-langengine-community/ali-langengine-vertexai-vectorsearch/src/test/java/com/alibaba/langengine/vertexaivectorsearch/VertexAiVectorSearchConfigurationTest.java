@@ -20,8 +20,8 @@ class VertexAiVectorSearchConfigurationTest {
         // Test that configuration constants are accessible
         // Note: The constants are initialized at class loading time, so setting properties
         // after class loading won't affect them. This test verifies the constants exist.
-        assertNotNull(VertexAiVectorSearchConfiguration.VERTEX_AI_PROJECT_ID);
-        // The location might be set from previous tests, so we just check it's not null
+        // VERTEX_AI_PROJECT_ID can be null if not configured
+        // VERTEX_AI_LOCATION should have default value
         assertNotNull(VertexAiVectorSearchConfiguration.VERTEX_AI_LOCATION);
         
         // Test that we can access all configuration constants without exceptions

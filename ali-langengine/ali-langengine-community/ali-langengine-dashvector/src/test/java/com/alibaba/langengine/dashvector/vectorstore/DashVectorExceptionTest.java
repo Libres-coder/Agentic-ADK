@@ -71,5 +71,50 @@ public class DashVectorExceptionTest {
         DashVectorException exception = new DashVectorException("Test message");
         assertTrue(exception instanceof RuntimeException);
     }
+    
+    @Test
+    public void testErrorCodeConstructor() {
+        DashVectorException exception = new DashVectorException(
+            DashVectorException.ErrorCode.CONNECTION_FAILED, "Connection failed");
+        
+        assertEquals("Connection failed", exception.getMessage());
+        assertEquals("DASHVECTOR_001", exception.getErrorCode());
+        assertTrue(exception.getTimestamp() > 0);
+    }
+    
+    @Test
+    public void testErrorCodeWithCauseConstructor() {
+        Throwable cause = new RuntimeException("Root cause");
+        DashVectorException exception = new DashVectorException(
+            DashVectorException.ErrorCode.AUTHENTICATION_FAILED, "Auth failed", cause);
+        
+        assertEquals("Auth failed", exception.getMessage());
+        assertEquals("DASHVECTOR_002", exception.getErrorCode());
+        assertEquals(cause, exception.getCause());
+        assertTrue(exception.getTimestamp() > 0);
+    }
+    
+    @Test
+    public void testTimestampIsSet() {
+        long beforeException = System.currentTimeMillis();
+        DashVectorException exception = new DashVectorException("Test message");
+        long afterException = System.currentTimeMillis();
+        
+        assertTrue(exception.getTimestamp() >= beforeException);
+        assertTrue(exception.getTimestamp() <= afterException);
+    }
+    
+    @Test
+    public void testAllErrorCodes() {
+        DashVectorException.ErrorCode[] errorCodes = DashVectorException.ErrorCode.values();
+        assertTrue(errorCodes.length > 0);
+        
+        for (DashVectorException.ErrorCode errorCode : errorCodes) {
+            assertNotNull(errorCode.getCode());
+            assertNotNull(errorCode.getDescription());
+            assertFalse(errorCode.getCode().isEmpty());
+            assertFalse(errorCode.getDescription().isEmpty());
+        }
+    }
 
 }

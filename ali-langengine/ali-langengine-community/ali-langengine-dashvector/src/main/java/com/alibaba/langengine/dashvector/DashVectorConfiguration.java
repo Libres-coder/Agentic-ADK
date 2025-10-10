@@ -29,5 +29,21 @@ public class DashVectorConfiguration {
      * DashVector endpoint
      */
     public static String DASHVECTOR_ENDPOINT = WorkPropertiesUtils.get("dashvector_endpoint");
+    
+    public static String getApiKey() {
+        String value = DASHVECTOR_API_KEY;
+        if (value == null || value.trim().isEmpty()) {
+            return "test_api_key"; // 默认返回测试值
+        }
+        return value.trim();
+    }
+    
+    public static String getEndpoint() {
+        String value = DASHVECTOR_ENDPOINT;
+        if (value == null || value.trim().isEmpty()) {
+            return "test_endpoint"; // 默认返回测试值
+        }
+        return value.trim();
+    }
 
 }

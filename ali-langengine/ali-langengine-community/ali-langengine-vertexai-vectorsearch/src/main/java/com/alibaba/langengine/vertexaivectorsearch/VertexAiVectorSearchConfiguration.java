@@ -30,8 +30,8 @@ public class VertexAiVectorSearchConfiguration {
     /**
      * Google Cloud Project Location/Region
      */
-    public static final String VERTEX_AI_LOCATION = System.getProperty("vertex.ai.location", 
-        System.getenv("VERTEX_AI_LOCATION"));
+    public static final String VERTEX_AI_LOCATION = getConfigValue("vertex.ai.location", 
+        "VERTEX_AI_LOCATION", "us-central1");
 
     /**
      * Google Cloud Service Account Key Path
@@ -42,14 +42,22 @@ public class VertexAiVectorSearchConfiguration {
     /**
      * Default Index Display Name
      */
-    public static final String DEFAULT_INDEX_DISPLAY_NAME = System.getProperty("vertex.ai.index.display.name",
-        System.getenv("VERTEX_AI_INDEX_DISPLAY_NAME"));
+    public static final String DEFAULT_INDEX_DISPLAY_NAME = getConfigValue("vertex.ai.index.display.name",
+        "VERTEX_AI_INDEX_DISPLAY_NAME", "vector_search_index");
 
     /**
      * Default Endpoint Display Name
      */
-    public static final String DEFAULT_ENDPOINT_DISPLAY_NAME = System.getProperty("vertex.ai.endpoint.display.name",
-        System.getenv("VERTEX_AI_ENDPOINT_DISPLAY_NAME"));
+    public static final String DEFAULT_ENDPOINT_DISPLAY_NAME = getConfigValue("vertex.ai.endpoint.display.name",
+        "VERTEX_AI_ENDPOINT_DISPLAY_NAME", "vector_search_endpoint");
+
+    private static String getConfigValue(String systemProperty, String envVar, String defaultValue) {
+        String value = System.getProperty(systemProperty);
+        if (value == null) {
+            value = System.getenv(envVar);
+        }
+        return value != null ? value : defaultValue;
+    }
 
     static {
         log.info("VertexAiVectorSearchConfiguration initialized");

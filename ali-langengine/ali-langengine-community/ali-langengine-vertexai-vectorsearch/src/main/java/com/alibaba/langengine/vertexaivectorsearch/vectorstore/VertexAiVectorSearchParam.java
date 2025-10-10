@@ -57,9 +57,42 @@ public class VertexAiVectorSearchParam {
     private int neighborsCount = 10;
 
     /**
+     * Google Cloud project ID
+     */
+    private String projectId;
+
+    /**
+     * Google Cloud location/region
+     */
+    private String location = "us-central1";
+
+    /**
+     * Number of leaves to search
+     */
+    private int numLeaves = 1000;
+
+    /**
+     * Approximate number of neighbors fraction
+     */
+    private double approximateNumNeighborsFraction = 0.1;
+
+    /**
      * Initialization parameters for creating index
      */
     private IndexInitParam indexInitParam = new IndexInitParam();
+
+    // Getter and setter methods for backward compatibility
+    public int getNumNeighbors() {
+        return neighborsCount;
+    }
+
+    public void setNumNeighbors(int numNeighbors) {
+        this.neighborsCount = numNeighbors;
+    }
+
+    public IndexInitParam getInitParam() {
+        return indexInitParam;
+    }
 
     @Data
     public static class IndexInitParam {
@@ -104,6 +137,12 @@ public class VertexAiVectorSearchParam {
          * Maximum number of replicas for auto scaling
          */
         private int maxReplicaCount = 10;
+
+    }
+
+    // Alias for backward compatibility
+    @Data
+    public static class InitParam extends IndexInitParam {
 
     }
 

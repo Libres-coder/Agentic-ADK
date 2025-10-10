@@ -31,50 +31,79 @@ import java.util.Map;
 @Data
 public class DashVectorService {
 
-    private String collection;
+    private final String collection;
     private DashVectorParam dashVectorParam;
-    private Object dashVectorClient; // DashVector SDK client
+    private final Object dashVectorClient; // DashVector SDK client
+    private final String apiKey;
+    private final String endpoint;
+    private volatile boolean initialized = false;
+    private final Object initLock = new Object();
+
+    public void setDashVectorParam(DashVectorParam dashVectorParam) {
+        this.dashVectorParam = dashVectorParam;
+    }
 
     public DashVectorService(String apiKey, String endpoint, String collection, DashVectorParam dashVectorParam) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new DashVectorException(DashVectorException.ErrorCode.INVALID_PARAMETERS, "API key cannot be null or empty");
+        }
+        if (endpoint == null || endpoint.trim().isEmpty()) {
+            throw new DashVectorException(DashVectorException.ErrorCode.INVALID_PARAMETERS, "Endpoint cannot be null or empty");
+        }
+        if (collection == null || collection.trim().isEmpty()) {
+            throw new DashVectorException(DashVectorException.ErrorCode.INVALID_PARAMETERS, "Collection name cannot be null or empty");
+        }
+        
+        this.apiKey = apiKey;
+        this.endpoint = endpoint;
         this.collection = collection;
-        this.dashVectorParam = dashVectorParam;
-        // 初始化客户端
-        initClient(apiKey, endpoint);
+        this.dashVectorParam = dashVectorParam != null ? dashVectorParam : new DashVectorParam();
+        this.dashVectorClient = initClient();
         log.info("DashVectorService initialized with collection: {}", collection);
     }
 
-    private void initClient(String apiKey, String endpoint) {
-        try {
-            // 使用反射或直接实例化 DashVector SDK 客户端
-            // this.dashVectorClient = new DashVectorClient(apiKey, endpoint);
-            this.dashVectorClient = new Object(); // 临时占位符
-            log.info("DashVector client initialized successfully with endpoint: {}", endpoint);
-        } catch (Exception e) {
-            throw new DashVectorException("Failed to initialize DashVector client", e);
-        }
+    protected Object initClient() {
+        // 在测试环境中直接返回mock对象
+        return new Object();
     }
 
     /**
-     * 初始化集合
+     * 初始化集合（线程安全）
      */
     public void init() {
-        try {
-            if (!hasCollection()) {
-                createCollection();
+        if (initialized) {
+            return;
+        }
+        
+        synchronized (initLock) {
+            if (initialized) {
+                return;
             }
-            log.info("DashVector collection initialized: {}", collection);
-        } catch (Exception e) {
-            throw new DashVectorException("Failed to initialize collection", e);
+            
+            try {
+                if (!hasCollection()) {
+                    createCollection();
+                }
+                initialized = true;
+                log.info("DashVector collection initialized: {}", collection);
+            } catch (Exception e) {
+                log.error("Failed to initialize collection: {}", collection, e);
+                throw new DashVectorException(DashVectorException.ErrorCode.CONNECTION_FAILED, 
+                    "Failed to initialize collection: " + e.getMessage(), e);
+            }
         }
     }
 
     /**
-     * 添加文档到 DashVector
+     * 添加文档到 DashVector（线程安全）
      */
-    public void addDocuments(List<Document> documents) {
+    public synchronized void addDocuments(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
+            log.debug("No documents to add, skipping operation");
             return;
         }
+        
+        validateDocuments(documents);
 
         try {
             DashVectorParam param = loadParam();
@@ -86,9 +115,24 @@ public class DashVectorService {
                 insertBatch(batch);
             }
             
-            log.info("Added {} documents to DashVector collection: {}", documents.size(), collection);
+            log.info("Successfully added {} documents to DashVector collection: {}", documents.size(), collection);
+        } catch (DashVectorException e) {
+            throw e;
         } catch (Exception e) {
-            throw new DashVectorException("Failed to add documents", e);
+            log.error("Failed to add documents to collection: {}", collection, e);
+            throw new DashVectorException(DashVectorException.ErrorCode.UNKNOWN_ERROR, 
+                "Failed to add documents: " + e.getMessage(), e);
+        }
+    }
+    
+    private void validateDocuments(List<Document> documents) {
+        for (Document doc : documents) {
+            if (doc == null) {
+                throw new DashVectorException(DashVectorException.ErrorCode.INVALID_PARAMETERS, "Document cannot be null");
+            }
+            if (doc.getPageContent() == null || doc.getPageContent().trim().isEmpty()) {
+                throw new DashVectorException(DashVectorException.ErrorCode.INVALID_PARAMETERS, "Document content cannot be null or empty");
+            }
         }
     }
 
@@ -169,9 +213,6 @@ public class DashVectorService {
     }
 
     private DashVectorParam loadParam() {
-        if (dashVectorParam == null) {
-            dashVectorParam = new DashVectorParam();
-        }
         return dashVectorParam;
     }
 

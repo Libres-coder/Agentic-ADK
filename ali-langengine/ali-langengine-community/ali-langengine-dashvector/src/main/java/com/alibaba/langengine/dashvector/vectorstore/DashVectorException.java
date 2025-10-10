@@ -18,28 +18,72 @@ package com.alibaba.langengine.dashvector.vectorstore;
 
 public class DashVectorException extends RuntimeException {
 
-    private String errorCode;
+    public enum ErrorCode {
+        CONNECTION_FAILED("DASHVECTOR_001", "Failed to connect to DashVector"),
+        AUTHENTICATION_FAILED("DASHVECTOR_002", "Authentication failed"),
+        COLLECTION_NOT_FOUND("DASHVECTOR_003", "Collection not found"),
+        INVALID_PARAMETERS("DASHVECTOR_004", "Invalid parameters"),
+        OPERATION_TIMEOUT("DASHVECTOR_005", "Operation timeout"),
+        CONNECTION_LIMIT_EXCEEDED("DASHVECTOR_006", "Connection limit exceeded"),
+        UNKNOWN_ERROR("DASHVECTOR_999", "Unknown error");
+        
+        private final String code;
+        private final String description;
+        
+        ErrorCode(String code, String description) {
+            this.code = code;
+            this.description = description;
+        }
+        
+        public String getCode() { return code; }
+        public String getDescription() { return description; }
+    }
+
+    private final String errorCode;
+    private final long timestamp;
 
     public DashVectorException(String message) {
         super(message);
+        this.errorCode = null;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public DashVectorException(String message, Throwable cause) {
         super(message, cause);
+        this.errorCode = null;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public DashVectorException(String errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public DashVectorException(String errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
+        this.timestamp = System.currentTimeMillis();
+    }
+    
+    public DashVectorException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode.getCode();
+        this.timestamp = System.currentTimeMillis();
+    }
+    
+    public DashVectorException(ErrorCode errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode.getCode();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String getErrorCode() {
         return errorCode;
+    }
+    
+    public long getTimestamp() {
+        return timestamp;
     }
 
 }
