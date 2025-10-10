@@ -216,6 +216,7 @@
 		<module>ali-langengine-community/ali-langengine-docusign</module>
 		<module>ali-langengine-community/ali-langengine-vertexai-vectorsearch</module>
 		<module>ali-langengine-community/ali-langengine-atlas</module>
+		<module>ali-langengine-community/ali-langengine-dashvector</module>
   </modules>
 
 	<dependencyManagement>
