@@ -28,4 +28,15 @@ public class VectorDbRustParam {
     private boolean autoCreateCollection = true;
     private int shardNumber = 1;
     private int replicationFactor = 1;
+    
+    // Connection pool settings
+    private int maxConnections = 10;
+    private int minConnections = 2;
+    private long connectionTimeoutMs = 30000;
+    private long idleTimeoutMs = 300000;
+    
+    // Batch operation settings
+    private int batchSize = 100;
+    private int maxRetries = 3;
+    private long retryDelayMs = 1000;
 }

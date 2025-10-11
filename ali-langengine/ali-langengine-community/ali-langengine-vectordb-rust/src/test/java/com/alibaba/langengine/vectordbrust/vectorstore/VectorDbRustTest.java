@@ -38,11 +38,25 @@ public class VectorDbRustTest {
         param.setReplicationFactor(3);
         param.setAutoCreateCollection(false);
         param.setFieldNameContent("text");
+        param.setMaxConnections(20);
+        param.setBatchSize(200);
 
         assertEquals(768, param.getVectorSize());
         assertEquals(2, param.getShardNumber());
         assertEquals(3, param.getReplicationFactor());
         assertFalse(param.isAutoCreateCollection());
         assertEquals("text", param.getFieldNameContent());
+        assertEquals(20, param.getMaxConnections());
+        assertEquals(200, param.getBatchSize());
+    }
+    
+    @Test
+    public void testConnectionPoolDefaults() {
+        VectorDbRustParam param = new VectorDbRustParam();
+        assertEquals(10, param.getMaxConnections());
+        assertEquals(2, param.getMinConnections());
+        assertEquals(30000, param.getConnectionTimeoutMs());
+        assertEquals(100, param.getBatchSize());
+        assertEquals(3, param.getMaxRetries());
     }
 }

@@ -23,90 +23,144 @@ import com.tencent.tcvectordb.model.Collection;
 import com.tencent.tcvectordb.model.Database;
 import com.tencent.tcvectordb.model.DocField;
 import com.tencent.tcvectordb.model.param.collection.CreateCollectionParam;
-import com.tencent.tcvectordb.model.param.collection.FieldType;
-import com.tencent.tcvectordb.model.param.collection.IndexType;
-import com.tencent.tcvectordb.model.param.collection.MetricType;
-import com.tencent.tcvectordb.model.param.database.ConnectParam;
 import com.tencent.tcvectordb.model.param.dml.InsertParam;
 import com.tencent.tcvectordb.model.param.dml.SearchByVectorParam;
-import com.tencent.tcvectordb.model.param.enums.ReadConsistencyEnum;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Data
 public class VectorDbRustService {
 
-    private String databaseName;
-    private String collectionName;
-    private VectorDbRustParam param;
-    private final VectorDBClient client;
-    private Database database;
+    private final String databaseName;
+    private final String collectionName;
+    private final VectorDbRustParam param;
+    private final VectorDbConnectionPool connectionPool;
+    private final BatchOperationUtil batchUtil;
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private volatile Database database;
+    private volatile boolean initialized = false;
 
     public VectorDbRustService(String url, String apiKey, String databaseName, String collectionName, VectorDbRustParam param) {
-        this.databaseName = databaseName;
-        this.collectionName = collectionName;
+        this.databaseName = validateInput(databaseName, "Database name");
+        this.collectionName = validateInput(collectionName, "Collection name");
         this.param = param != null ? param : new VectorDbRustParam();
-        
-        ConnectParam connectParam = ConnectParam.newBuilder()
-                .withUrl(url)
-                .withUsername("root")
-                .withKey(apiKey)
-                .withTimeout(30)
-                .build();
-        this.client = new VectorDBClient(connectParam, ReadConsistencyEnum.EVENTUAL_CONSISTENCY);
-        log.info("VectorDbRustService initialized: url={}, database={}, collection={}", url, databaseName, collectionName);
+        this.connectionPool = new VectorDbConnectionPool(url, apiKey, this.param);
+        this.batchUtil = new BatchOperationUtil(this.param);
+        log.info("VectorDbRustService initialized: database={}, collection={}", databaseName, collectionName);
+    }
+
+    private String validateInput(String input, String fieldName) {
+        if (StringUtils.isBlank(input)) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or empty");
+        }
+        return input.trim();
     }
 
     public void init(Embeddings embedding) {
+        lock.writeLock().lock();
         try {
-            if (!hasDatabase()) {
-                createDatabase();
+            if (initialized) {
+                return;
             }
-            database = client.database(databaseName);
             
-            if (param.isAutoCreateCollection() && !hasCollection()) {
-                createCollection(embedding);
+            VectorDBClient client = connectionPool.getConnection();
+            try {
+                if (!hasDatabase(client)) {
+                    createDatabase(client);
+                }
+                database = client.database(databaseName);
+                
+                if (param.isAutoCreateCollection() && !hasCollection(client)) {
+                    createCollection(client, embedding);
+                }
+                initialized = true;
+                log.info("VectorDbRustService initialized successfully");
+            } finally {
+                connectionPool.returnConnection(client);
             }
         } catch (Exception e) {
-            log.error("init VectorDB failed", e);
+            log.error("Failed to initialize VectorDB", e);
             throw new VectorDbRustException("Failed to initialize VectorDB", e);
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     public void addDocuments(List<Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            log.warn("No documents to add");
+            return;
+        }
+        
+        ensureInitialized();
+        
         try {
-            List<com.tencent.tcvectordb.model.Document> docs = new ArrayList<>();
-            for (Document doc : documents) {
-                List<Double> vector = doc.getEmbedding();
-                
-                com.tencent.tcvectordb.model.Document.Builder builder = com.tencent.tcvectordb.model.Document.newBuilder();
-                if (StringUtils.isNotBlank(doc.getUniqueId())) {
-                    builder.withId(doc.getUniqueId());
-                }
-                builder.withVector(vector);
-                builder.addDocField(new DocField(param.getFieldNameContent(), doc.getPageContent()));
-                docs.add(builder.build());
-            }
-
-            Collection collection = database.describeCollection(collectionName);
-            InsertParam insertParam = InsertParam.newBuilder().withDocuments(docs).build();
-            collection.upsert(insertParam);
-            log.info("Added {} documents to collection {}", documents.size(), collectionName);
+            batchUtil.executeBatch(documents, this::addDocumentsBatch);
+            log.info("Successfully added {} documents", documents.size());
         } catch (Exception e) {
-            log.error("addDocuments failed", e);
+            log.error("Failed to add documents", e);
             throw new VectorDbRustException("Failed to add documents", e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public List<Document> similaritySearch(List<Double> embeddings, int k) {
+    private Void addDocumentsBatch(List<Document> batch) {
+        VectorDBClient client = null;
         try {
-            Collection collection = database.describeCollection(collectionName);
+            client = connectionPool.getConnection();
+            List<com.tencent.tcvectordb.model.Document> docs = batch.stream()
+                .map(this::convertDocument)
+                .collect(Collectors.toList());
+
+            Collection collection = client.database(databaseName).describeCollection(collectionName);
+            InsertParam insertParam = InsertParam.newBuilder().withDocuments(docs).build();
+            collection.upsert(insertParam);
+            
+            log.debug("Added batch of {} documents", batch.size());
+            return null;
+        } catch (Exception e) {
+            log.error("Failed to add document batch", e);
+            throw new VectorDbRustException("Failed to add document batch", e);
+        } finally {
+            if (client != null) {
+                connectionPool.returnConnection(client);
+            }
+        }
+    }
+
+    private com.tencent.tcvectordb.model.Document convertDocument(Document doc) {
+        if (doc.getEmbedding() == null || doc.getEmbedding().isEmpty()) {
+            throw new IllegalArgumentException("Document embedding cannot be null or empty");
+        }
+        
+        com.tencent.tcvectordb.model.Document.Builder builder = com.tencent.tcvectordb.model.Document.newBuilder();
+        if (StringUtils.isNotBlank(doc.getUniqueId())) {
+            builder.withId(doc.getUniqueId());
+        }
+        builder.withVector(doc.getEmbedding());
+        builder.addDocField(new DocField(param.getFieldNameContent(), 
+            StringUtils.defaultString(doc.getPageContent(), "")));
+        return builder.build();
+    }
+
+    public List<Document> similaritySearch(List<Double> embeddings, int k) {
+        if (embeddings == null || embeddings.isEmpty()) {
+            log.warn("Empty embeddings provided for search");
+            return Lists.newArrayList();
+        }
+        if (k <= 0) {
+            throw new IllegalArgumentException("k must be positive");
+        }
+        
+        ensureInitialized();
+        
+        VectorDBClient client = null;
+        try {
+            client = connectionPool.getConnection();
+            Collection collection = client.database(databaseName).describeCollection(collectionName);
             
             SearchByVectorParam searchParam = SearchByVectorParam.newBuilder()
                     .withVectors(Collections.singletonList(embeddings))
@@ -120,46 +174,60 @@ public class VectorDbRustService {
                 return Lists.newArrayList();
             }
             
-            return results.get(0).stream().map(tcDoc -> {
-                Document doc = new Document();
-                doc.setScore(tcDoc.getScore());
-                try {
-                    Object contentObj = tcDoc.getDoc();
-                    if (contentObj instanceof Map) {
-                        Map<String, Object> docMap = (Map<String, Object>) contentObj;
-                        Object content = docMap.get(param.getFieldNameContent());
-                        if (content != null) {
-                            doc.setPageContent(content.toString());
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn("Failed to get content from document", e);
-                }
-                doc.setUniqueId(tcDoc.getId());
-                return doc;
-            }).collect(Collectors.toList());
+            return results.get(0).stream()
+                .map(this::convertSearchResult)
+                .collect(Collectors.toList());
+                
         } catch (Exception e) {
-            log.error("similaritySearch failed", e);
-            throw new VectorDbRustException("Failed to search", e);
+            log.error("Similarity search failed", e);
+            throw new VectorDbRustException("Similarity search failed", e);
+        } finally {
+            if (client != null) {
+                connectionPool.returnConnection(client);
+            }
         }
     }
 
-    public void createDatabase() {
+    @SuppressWarnings("unchecked")
+    private Document convertSearchResult(com.tencent.tcvectordb.model.Document tcDoc) {
+        Document doc = new Document();
+        doc.setScore(tcDoc.getScore());
+        doc.setUniqueId(tcDoc.getId());
+        
+        try {
+            Object contentObj = tcDoc.getDoc();
+            if (contentObj instanceof Map) {
+                Map<String, Object> docMap = (Map<String, Object>) contentObj;
+                Object content = docMap.get(param.getFieldNameContent());
+                if (content != null) {
+                    doc.setPageContent(content.toString());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to extract content from search result", e);
+        }
+        
+        return doc;
+    }
+
+    private void createDatabase(VectorDBClient client) {
         try {
             client.createDatabase(databaseName);
             log.info("Created database: {}", databaseName);
         } catch (Exception e) {
-            log.error("createDatabase failed", e);
+            log.error("Failed to create database: {}", databaseName, e);
             throw new VectorDbRustException("Failed to create database", e);
         }
     }
 
-    public void createCollection(Embeddings embedding) {
+    private void createCollection(VectorDBClient client, Embeddings embedding) {
         try {
             int vectorSize = param.getVectorSize();
             if (vectorSize <= 0 && embedding != null) {
                 List<Document> testDocs = embedding.embedTexts(Lists.newArrayList("test"));
-                vectorSize = testDocs.get(0).getEmbedding().size();
+                if (!testDocs.isEmpty() && testDocs.get(0).getEmbedding() != null) {
+                    vectorSize = testDocs.get(0).getEmbedding().size();
+                }
             }
 
             CreateCollectionParam createParam = CreateCollectionParam.newBuilder()
@@ -169,27 +237,27 @@ public class VectorDbRustService {
                     .withDescription("Created by ali-langengine")
                     .build();
 
-            database.createCollection(createParam);
+            client.database(databaseName).createCollection(createParam);
             log.info("Created collection: {}", collectionName);
         } catch (Exception e) {
-            log.error("createCollection failed", e);
+            log.error("Failed to create collection: {}", collectionName, e);
             throw new VectorDbRustException("Failed to create collection", e);
         }
     }
 
-    public boolean hasDatabase() {
+    private boolean hasDatabase(VectorDBClient client) {
         try {
-            database = client.database(databaseName);
-            return database != null;
+            Database db = client.database(databaseName);
+            return db != null;
         } catch (Exception e) {
             log.debug("Database not found: {}", databaseName);
             return false;
         }
     }
 
-    public boolean hasCollection() {
+    private boolean hasCollection(VectorDBClient client) {
         try {
-            Collection collection = database.describeCollection(collectionName);
+            Collection collection = client.database(databaseName).describeCollection(collectionName);
             return collection != null;
         } catch (Exception e) {
             log.debug("Collection not found: {}", collectionName);
@@ -198,22 +266,55 @@ public class VectorDbRustService {
     }
 
     public void deleteCollection() {
+        ensureInitialized();
+        
+        VectorDBClient client = null;
         try {
-            database.dropCollection(collectionName);
+            client = connectionPool.getConnection();
+            client.database(databaseName).dropCollection(collectionName);
             log.info("Deleted collection: {}", collectionName);
         } catch (Exception e) {
-            log.error("deleteCollection failed", e);
+            log.error("Failed to delete collection: {}", collectionName, e);
             throw new VectorDbRustException("Failed to delete collection", e);
+        } finally {
+            if (client != null) {
+                connectionPool.returnConnection(client);
+            }
+        }
+    }
+
+    private void ensureInitialized() {
+        if (!initialized) {
+            throw new IllegalStateException("Service not initialized. Call init() first.");
         }
     }
 
     public void close() {
+        lock.writeLock().lock();
         try {
-            if (client != null) {
-                client.close();
+            if (batchUtil != null) {
+                batchUtil.shutdown();
             }
-        } catch (Exception e) {
-            log.error("close client failed", e);
+            if (connectionPool != null) {
+                connectionPool.close();
+            }
+            initialized = false;
+            log.info("VectorDbRustService closed");
+        } finally {
+            lock.writeLock().unlock();
         }
+    }
+
+    // Getters for monitoring
+    public int getActiveConnections() {
+        return connectionPool != null ? connectionPool.getActiveConnections() : 0;
+    }
+
+    public int getAvailableConnections() {
+        return connectionPool != null ? connectionPool.getAvailableConnections() : 0;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
     }
 }
