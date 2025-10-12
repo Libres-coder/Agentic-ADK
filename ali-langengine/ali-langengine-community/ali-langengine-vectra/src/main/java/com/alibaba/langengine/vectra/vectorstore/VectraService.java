@@ -26,6 +26,8 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 
@@ -36,6 +38,15 @@ public class VectraService {
     private final String collectionName;
     private final VectraClient vectraClient;
     private final VectraParam vectraParam;
+    
+    // Circuit breaker and metrics
+    private final AtomicInteger failureCount = new AtomicInteger(0);
+    private final AtomicLong lastFailureTime = new AtomicLong(0);
+    private final AtomicLong operationCount = new AtomicLong(0);
+    private final AtomicLong successCount = new AtomicLong(0);
+    private static final int FAILURE_THRESHOLD = 5;
+    private static final long CIRCUIT_BREAKER_TIMEOUT = 60000; // 1 minute
+    private static final int MAX_RETRY_ATTEMPTS = 3;
 
     public VectraService(String serverUrl, String apiKey, String collectionName, VectraParam vectraParam) {
         this.collectionName = collectionName;
@@ -94,14 +105,15 @@ public class VectraService {
     }
 
     /**
-     * Add documents to the collection
+     * Add documents to the collection with retry and circuit breaker
      */
     public void addDocuments(List<Document> documents) {
         if (CollectionUtils.isEmpty(documents)) {
             return;
         }
-
-        try {
+        
+        checkCircuitBreaker();
+        executeWithRetry(() -> {
             List<Map<String, Object>> vectors = new ArrayList<>();
 
             for (Document document : documents) {
@@ -138,30 +150,26 @@ public class VectraService {
             }
 
             vectraClient.insertVectors(collectionName, vectors);
+            recordSuccess();
             log.debug("Successfully added {} documents to collection: {}", documents.size(), collectionName);
-
-        } catch (Exception e) {
-            log.error("Failed to add documents to Vectra collection: {}", e.getMessage());
-            throw new VectraException("ADD_DOCUMENTS_FAILED", "Failed to add documents to collection: " + collectionName, e);
-        }
+            return null;
+        }, "ADD_DOCUMENTS_FAILED", "Failed to add documents to collection: " + collectionName);
     }
 
     /**
-     * Perform similarity search
+     * Perform similarity search with retry and circuit breaker
      */
     public List<Document> similaritySearch(List<Float> queryVector, int k, Double maxDistanceValue) {
         if (CollectionUtils.isEmpty(queryVector)) {
             return Collections.emptyList();
         }
-
-        try {
+        
+        checkCircuitBreaker();
+        return executeWithRetry(() -> {
             List<com.tencent.tcvectordb.model.Document> searchResults = vectraClient.searchVectors(collectionName, queryVector, k, maxDistanceValue);
+            recordSuccess();
             return parseSearchResults(searchResults);
-
-        } catch (Exception e) {
-            log.error("Failed to perform similarity search in Vectra collection: {}", e.getMessage());
-            throw new VectraException("SIMILARITY_SEARCH_FAILED", "Failed to perform similarity search in collection: " + collectionName, e);
-        }
+        }, "SIMILARITY_SEARCH_FAILED", "Failed to perform similarity search in collection: " + collectionName);
     }
 
     /**
@@ -222,6 +230,81 @@ public class VectraService {
     }
 
     /**
+     * Circuit breaker check
+     */
+    private void checkCircuitBreaker() {
+        if (failureCount.get() >= FAILURE_THRESHOLD) {
+            long timeSinceLastFailure = System.currentTimeMillis() - lastFailureTime.get();
+            if (timeSinceLastFailure < CIRCUIT_BREAKER_TIMEOUT) {
+                throw new VectraException("CIRCUIT_BREAKER_OPEN", 
+                    "Circuit breaker is open. Too many failures: " + failureCount.get());
+            } else {
+                // Reset circuit breaker
+                failureCount.set(0);
+                log.info("Circuit breaker reset after timeout");
+            }
+        }
+    }
+    
+    /**
+     * Execute operation with retry mechanism
+     */
+    private <T> T executeWithRetry(RetryableOperation<T> operation, String errorCode, String errorMessage) {
+        operationCount.incrementAndGet();
+        Exception lastException = null;
+        
+        for (int attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+            try {
+                return operation.execute();
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("Operation failed on attempt {}/{}: {}", attempt, MAX_RETRY_ATTEMPTS, e.getMessage());
+                
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    try {
+                        Thread.sleep(1000 * attempt); // Exponential backoff
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        }
+        
+        recordFailure();
+        throw new VectraException(errorCode, errorMessage, lastException);
+    }
+    
+    private void recordSuccess() {
+        successCount.incrementAndGet();
+        failureCount.set(0); // Reset failure count on success
+    }
+    
+    private void recordFailure() {
+        failureCount.incrementAndGet();
+        lastFailureTime.set(System.currentTimeMillis());
+    }
+    
+    /**
+     * Get service metrics
+     */
+    public Map<String, Object> getMetrics() {
+        Map<String, Object> metrics = new HashMap<>();
+        metrics.put("operationCount", operationCount.get());
+        metrics.put("successCount", successCount.get());
+        metrics.put("failureCount", failureCount.get());
+        metrics.put("successRate", operationCount.get() > 0 ? 
+            (double) successCount.get() / operationCount.get() : 0.0);
+        metrics.put("circuitBreakerOpen", failureCount.get() >= FAILURE_THRESHOLD);
+        return metrics;
+    }
+    
+    @FunctionalInterface
+    private interface RetryableOperation<T> {
+        T execute() throws Exception;
+    }
+
+    /**
      * Close the service and release resources
      */
     public void close() {
@@ -229,6 +312,7 @@ public class VectraService {
             if (vectraClient != null) {
                 vectraClient.close();
             }
+            log.info("VectraService closed. Final metrics: {}", getMetrics());
         } catch (Exception e) {
             log.error("Error closing Vectra service: {}", e.getMessage());
         }
