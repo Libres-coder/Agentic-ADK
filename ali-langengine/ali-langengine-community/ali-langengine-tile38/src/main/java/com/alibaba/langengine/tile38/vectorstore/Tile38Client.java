@@ -30,28 +30,20 @@ import java.util.Map;
 @Slf4j
 public class Tile38Client {
 
-    private final RedisClient redisClient;
-    private final StatefulRedisConnection<String, String> connection;
-    private final RedisCommands<String, String> commands;
+    private final Tile38ConnectionPool connectionPool;
+    private final Tile38SecurityValidator validator;
+    private final String apiKey;
 
     public Tile38Client(Tile38Param param) {
         try {
-            RedisURI.Builder uriBuilder = RedisURI.Builder
-                    .redis(param.getHost(), param.getPort())
-                    .withTimeout(Duration.ofMillis(param.getTimeout()));
-
-            if (StringUtils.isNotEmpty(param.getPassword())) {
-                uriBuilder.withPassword(param.getPassword().toCharArray());
-            }
-
-            RedisURI redisURI = uriBuilder.build();
-            this.redisClient = RedisClient.create(redisURI);
-            this.connection = redisClient.connect();
-            this.commands = connection.sync();
-
-            log.info("Tile38 client connected to {}:{}", param.getHost(), param.getPort());
+            this.connectionPool = new Tile38ConnectionPool(param);
+            this.validator = new Tile38SecurityValidator(param.isEnableValidation());
+            this.apiKey = param.getApiKey();
+            
+            log.info("Tile38 client initialized with connection pool for {}:{}", 
+                param.getHost(), param.getPort());
         } catch (Exception e) {
-            throw new Tile38Exception("CONNECT_ERROR", "Failed to connect to Tile38 server", e);
+            throw new Tile38Exception("CONNECT_ERROR", "Failed to initialize Tile38 client", e);
         }
     }
 
@@ -59,12 +51,24 @@ public class Tile38Client {
      * Set a point in a collection
      */
     public String set(String collection, String id, double lat, double lon, Map<String, String> fields) {
+        validator.validateCollectionName(collection);
+        validator.validateDocumentId(id);
+        validator.validateCoordinates(lat, lon);
+        if (fields != null) {
+            validator.validateFieldCount(fields.size());
+        }
+
+        StatefulRedisConnection<String, String> connection = null;
         try {
+            connection = connectionPool.borrowConnection();
+            RedisCommands<String, String> commands = connection.sync();
+            
             StringBuilder cmd = new StringBuilder();
             cmd.append("SET ").append(collection).append(" ").append(id);
             
             if (fields != null && !fields.isEmpty()) {
                 for (Map.Entry<String, String> entry : fields.entrySet()) {
+                    validator.validateContent(entry.getValue());
                     cmd.append(" FIELD ").append(entry.getKey()).append(" ").append(entry.getValue());
                 }
             }
@@ -74,28 +78,10 @@ public class Tile38Client {
             return commands.eval(cmd.toString(), null);
         } catch (Exception e) {
             throw new Tile38Exception("SET_ERROR", "Failed to set point in collection: " + collection, e);
-        }
-    }
-
-    /**
-     * Set an object with vector data
-     */
-    public String setObject(String collection, String id, String geoJson, Map<String, String> fields) {
-        try {
-            StringBuilder cmd = new StringBuilder();
-            cmd.append("SET ").append(collection).append(" ").append(id);
-            
-            if (fields != null && !fields.isEmpty()) {
-                for (Map.Entry<String, String> entry : fields.entrySet()) {
-                    cmd.append(" FIELD ").append(entry.getKey()).append(" ").append(entry.getValue());
-                }
+        } finally {
+            if (connection != null) {
+                connectionPool.returnConnection(connection);
             }
-            
-            cmd.append(" OBJECT ").append(geoJson);
-            
-            return commands.eval(cmd.toString(), null);
-        } catch (Exception e) {
-            throw new Tile38Exception("SET_OBJECT_ERROR", "Failed to set object in collection: " + collection, e);
         }
     }
 
@@ -103,11 +89,20 @@ public class Tile38Client {
      * Search nearby points
      */
     public List<Object> nearby(String collection, double lat, double lon, int limit) {
+        validator.validateCollectionName(collection);
+        validator.validateCoordinates(lat, lon);
+        
+        StatefulRedisConnection<String, String> connection = null;
         try {
+            connection = connectionPool.borrowConnection();
             String cmd = String.format("NEARBY %s POINT %f %f LIMIT %d", collection, lat, lon, limit);
-            return (List<Object>) commands.eval(cmd, null);
+            return (List<Object>) connection.sync().eval(cmd, null);
         } catch (Exception e) {
             throw new Tile38Exception("NEARBY_ERROR", "Failed to search nearby in collection: " + collection, e);
+        } finally {
+            if (connection != null) {
+                connectionPool.returnConnection(connection);
+            }
         }
     }
 
@@ -115,23 +110,20 @@ public class Tile38Client {
      * Search within a radius
      */
     public List<Object> within(String collection, double lat, double lon, double radius, int limit) {
+        validator.validateCollectionName(collection);
+        validator.validateCoordinates(lat, lon);
+        
+        StatefulRedisConnection<String, String> connection = null;
         try {
+            connection = connectionPool.borrowConnection();
             String cmd = String.format("WITHIN %s CIRCLE %f %f %f LIMIT %d", collection, lat, lon, radius, limit);
-            return (List<Object>) commands.eval(cmd, null);
+            return (List<Object>) connection.sync().eval(cmd, null);
         } catch (Exception e) {
             throw new Tile38Exception("WITHIN_ERROR", "Failed to search within radius in collection: " + collection, e);
-        }
-    }
-
-    /**
-     * Get an object by id
-     */
-    public Object get(String collection, String id) {
-        try {
-            String cmd = String.format("GET %s %s", collection, id);
-            return commands.eval(cmd, null);
-        } catch (Exception e) {
-            throw new Tile38Exception("GET_ERROR", "Failed to get object from collection: " + collection, e);
+        } finally {
+            if (connection != null) {
+                connectionPool.returnConnection(connection);
+            }
         }
     }
 
@@ -139,11 +131,20 @@ public class Tile38Client {
      * Delete an object by id
      */
     public String del(String collection, String id) {
+        validator.validateCollectionName(collection);
+        validator.validateDocumentId(id);
+        
+        StatefulRedisConnection<String, String> connection = null;
         try {
+            connection = connectionPool.borrowConnection();
             String cmd = String.format("DEL %s %s", collection, id);
-            return commands.eval(cmd, null);
+            return connection.sync().eval(cmd, null);
         } catch (Exception e) {
             throw new Tile38Exception("DELETE_ERROR", "Failed to delete object from collection: " + collection, e);
+        } finally {
+            if (connection != null) {
+                connectionPool.returnConnection(connection);
+            }
         }
     }
 
@@ -151,37 +152,31 @@ public class Tile38Client {
      * Drop a collection
      */
     public String drop(String collection) {
+        validator.validateCollectionName(collection);
+        
+        StatefulRedisConnection<String, String> connection = null;
         try {
+            connection = connectionPool.borrowConnection();
             String cmd = String.format("DROP %s", collection);
-            return commands.eval(cmd, null);
+            return connection.sync().eval(cmd, null);
         } catch (Exception e) {
             throw new Tile38Exception("DROP_ERROR", "Failed to drop collection: " + collection, e);
+        } finally {
+            if (connection != null) {
+                connectionPool.returnConnection(connection);
+            }
         }
     }
 
     /**
-     * Execute raw command
-     */
-    public Object execute(String command) {
-        try {
-            return commands.eval(command, null);
-        } catch (Exception e) {
-            throw new Tile38Exception("EXECUTE_ERROR", "Failed to execute command: " + command, e);
-        }
-    }
-
-    /**
-     * Close the client connection
+     * Close the client connection pool
      */
     public void close() {
         try {
-            if (connection != null) {
-                connection.close();
+            if (connectionPool != null) {
+                connectionPool.close();
             }
-            if (redisClient != null) {
-                redisClient.shutdown();
-            }
-            log.info("Tile38 client connection closed");
+            log.info("Tile38 client connection pool closed");
         } catch (Exception e) {
             log.error("Error closing Tile38 client", e);
         }

@@ -35,7 +35,7 @@ public class Tile38ServiceTest {
     @BeforeEach
     public void setUp() {
         mockClient = mock(Tile38Client.class);
-        service = new Tile38Service(mockClient, collectionName);
+        service = new Tile38Service(mockClient, collectionName, 100, 1000);
     }
 
     @Test

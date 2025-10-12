@@ -93,8 +93,15 @@ public class Tile38ClientTest {
                 .timeout(1000)
                 .build();
 
-        // This should throw a Tile38Exception due to connection failure
-        assertThrows(Tile38Exception.class, () -> new Tile38Client(invalidParam));
+        // Create client (this won't fail immediately)
+        Tile38Client client = new Tile38Client(invalidParam);
+        
+        // This should throw a Tile38Exception when trying to use the connection
+        assertThrows(Tile38Exception.class, () -> {
+            client.set("test", "id1", 1.0, 1.0, null);
+        });
+        
+        client.close();
     }
 
 }

@@ -29,10 +29,14 @@ public class Tile38Service {
 
     private final Tile38Client client;
     private final String collectionName;
+    private final Tile38BatchProcessor batchProcessor;
+    private final int maxResultSize;
 
-    public Tile38Service(Tile38Client client, String collectionName) {
+    public Tile38Service(Tile38Client client, String collectionName, int batchSize, int maxResultSize) {
         this.client = client;
         this.collectionName = collectionName;
+        this.batchProcessor = new Tile38BatchProcessor(client, collectionName, batchSize);
+        this.maxResultSize = maxResultSize;
     }
 
     /**
@@ -138,6 +142,51 @@ public class Tile38Service {
             log.error("Failed to drop collection {}", collectionName, e);
             throw new Tile38Exception("DROP_COLLECTION_ERROR", 
                 "Failed to drop collection: " + collectionName, e);
+        }
+    }
+
+    /**
+     * Batch add documents using parallel processing
+     */
+    public void batchAddDocuments(List<Document> documents) {
+        if (CollectionUtils.isEmpty(documents)) {
+            return;
+        }
+        
+        try {
+            batchProcessor.batchAddDocuments(documents);
+            log.info("Batch added {} documents to collection {}", documents.size(), collectionName);
+        } catch (Exception e) {
+            log.error("Failed to batch add documents to collection {}", collectionName, e);
+            throw new Tile38Exception("BATCH_ADD_ERROR", 
+                "Failed to batch add documents", e);
+        }
+    }
+
+    /**
+     * Batch delete documents
+     */
+    public void batchDeleteDocuments(List<String> documentIds) {
+        if (CollectionUtils.isEmpty(documentIds)) {
+            return;
+        }
+        
+        try {
+            batchProcessor.batchDeleteDocuments(documentIds);
+            log.info("Batch deleted {} documents from collection {}", documentIds.size(), collectionName);
+        } catch (Exception e) {
+            log.error("Failed to batch delete documents from collection {}", collectionName, e);
+            throw new Tile38Exception("BATCH_DELETE_ERROR", 
+                "Failed to batch delete documents", e);
+        }
+    }
+
+    /**
+     * Shutdown the service and cleanup resources
+     */
+    public void shutdown() {
+        if (batchProcessor != null) {
+            batchProcessor.shutdown();
         }
     }
 

@@ -63,4 +63,45 @@ public class Tile38Param {
     @Builder.Default
     private String distanceMetric = "cosine";
 
+    /**
+     * Connection pool size
+     */
+    @Builder.Default
+    private int poolSize = 10;
+
+    /**
+     * Connection pool max idle time in seconds
+     */
+    @Builder.Default
+    private int maxIdleTime = 300;
+
+    /**
+     * Enable SSL/TLS
+     */
+    @Builder.Default
+    private boolean enableSsl = false;
+
+    /**
+     * API key for authentication
+     */
+    private String apiKey;
+
+    /**
+     * Batch size for bulk operations
+     */
+    @Builder.Default
+    private int batchSize = 100;
+
+    /**
+     * Enable input validation
+     */
+    @Builder.Default
+    private boolean enableValidation = true;
+
+    /**
+     * Maximum query result size
+     */
+    @Builder.Default
+    private int maxResultSize = 1000;
+
 }

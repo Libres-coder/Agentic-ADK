@@ -19,6 +19,7 @@ import com.alibaba.langengine.core.embeddings.Embeddings;
 import com.alibaba.langengine.core.indexes.Document;
 import com.alibaba.langengine.core.vectorstore.VectorStore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +32,7 @@ import static com.alibaba.langengine.tile38.Tile38Configuration.*;
 
 @Slf4j
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class Tile38 extends VectorStore {
 
     /**
@@ -66,7 +68,7 @@ public class Tile38 extends VectorStore {
                 .build();
                 
         this._client = new Tile38Client(param);
-        this._service = new Tile38Service(_client, this.collectionName);
+        this._service = new Tile38Service(_client, this.collectionName, param.getBatchSize(), param.getMaxResultSize());
     }
 
     public Tile38(Tile38Param param, Embeddings embedding) {
@@ -74,7 +76,7 @@ public class Tile38 extends VectorStore {
             UUID.randomUUID().toString() : param.getCollectionName();
         this.embedding = embedding;
         this._client = new Tile38Client(param);
-        this._service = new Tile38Service(_client, this.collectionName);
+        this._service = new Tile38Service(_client, this.collectionName, param.getBatchSize(), param.getMaxResultSize());
     }
 
     /**
@@ -187,9 +189,36 @@ public class Tile38 extends VectorStore {
     }
 
     /**
+     * Batch add documents using parallel processing
+     */
+    public void batchAddDocuments(List<Document> documents) {
+        try {
+            _service.batchAddDocuments(documents);
+        } catch (Exception e) {
+            log.error("Failed to batch add documents to Tile38", e);
+            throw new Tile38Exception("BATCH_ADD_ERROR", "Failed to batch add documents", e);
+        }
+    }
+
+    /**
+     * Batch delete documents
+     */
+    public void batchDeleteDocuments(List<String> documentIds) {
+        try {
+            _service.batchDeleteDocuments(documentIds);
+        } catch (Exception e) {
+            log.error("Failed to batch delete documents from Tile38", e);
+            throw new Tile38Exception("BATCH_DELETE_ERROR", "Failed to batch delete documents", e);
+        }
+    }
+
+    /**
      * Close the Tile38 client connection
      */
     public void close() {
+        if (_service != null) {
+            _service.shutdown();
+        }
         if (_client != null) {
             _client.close();
         }
