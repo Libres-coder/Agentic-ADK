@@ -47,8 +47,7 @@ class BrainAgent(BaseAgent):
         self._planning_runner = None
         self._browser_use_runner = None
         self._planning_finished_map = {}
-        # 存储会话的执行进度
-        self._session_progress: Dict[str, Dict[str, Any]] = {}
+        self._session_progress: Dict[str, Dict[str, Any]] = {}      
         self._current_request_id = None
 
 
@@ -59,14 +58,12 @@ class BrainAgent(BaseAgent):
         session_id = ctx.session.id
 
 
-        # 判断是否已完成planning或者有待恢复的步骤
         if self._planning_finished_map.get(session_id, False) or self._has_pending_execution(session_id):
 
             if self._has_pending_execution(session_id):
                 logger.info(f"检测到会话 {session_id} 有待恢复的步骤，继续执行")
                 progress = self._session_progress[session_id]
                 steps = progress["steps"]
-                # 标记为恢复执行状态
                 progress["status"] = "resuming"
             else:
                 steps = self._extract_steps_from_content(user_content)
@@ -100,7 +97,6 @@ class BrainAgent(BaseAgent):
             runner = self._planning_runner
             session = await self._generate_session(session_id, runner, app_name="planningAgent")
 
-            # 收集所有事件
             events = []
             async for event in runner.run_async(user_id="user", session_id=session.id, new_message=user_content):
                 events.append(event)
@@ -112,9 +108,9 @@ class BrainAgent(BaseAgent):
 
             last_content = last_event.content.parts[0].text if last_event.content.parts else ""
 
-            # 解析planning agent的JSON steps列表
+
             import json
-            # 去除可能的markdown包裹
+
             cleaned_content = last_content.strip()
             if cleaned_content.startswith('```json') and cleaned_content.endswith('```'):
                 cleaned_content = cleaned_content[7:-3].strip()
@@ -128,7 +124,6 @@ class BrainAgent(BaseAgent):
                 logger.warning(f"解析planning结果失败: {e}，使用原始内容作为单个步骤")
                 steps = [last_content]
 
-            # 验证steps是否有效
             if not steps or (len(steps) == 1 and not steps[0].strip()):
                 logger.error("planning结果为空或无效")
                 yield last_event
@@ -157,7 +152,7 @@ class BrainAgent(BaseAgent):
                     yield e
                 if self._is_open_website_step(step):
                     self._save_progress(session_id, i + 1, steps)
-                return # 暂停执行，等待用户下次交互
+                return
 
 
     def parse_structured_data(self, input_str: str):
@@ -190,10 +185,8 @@ class BrainAgent(BaseAgent):
     def _extract_steps_from_content(self, content_text) -> List[str]:
         """从用户内容中提取步骤列表"""
 
-        # 尝试JSON解析
         try:
             if isinstance(content_text, str):
-                # 尝试解析JSON格式的步骤
                 parsed = json.loads(content_text)
                 if isinstance(parsed, dict) and "steps" in parsed:
                     return parsed["steps"]
@@ -202,9 +195,7 @@ class BrainAgent(BaseAgent):
         except (json.JSONDecodeError, TypeError):
             pass
 
-        # 如果是字符串列表格式
         if isinstance(content_text, str):
-            # 检查是否是Python列表字符串格式
             content_text = content_text.strip()
             if content_text.startswith('[') and content_text.endswith(']'):
                 try:
@@ -223,7 +214,6 @@ class BrainAgent(BaseAgent):
         open_keywords = ["打开", "访问", "进入"]
         website_keywords = ["网站", "页面", "小红书", "淘宝", "京东", "百度", "微博", "抖音"]
 
-        # 检查是否包含打开相关的关键词
         has_open_keyword = any(keyword in step_lower for keyword in open_keywords)
         has_website_keyword = any(keyword in step_lower for keyword in website_keywords)
 

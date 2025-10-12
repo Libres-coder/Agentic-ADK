@@ -218,6 +218,7 @@
 		<module>ali-langengine-community/ali-langengine-vertexai-vectorsearch</module>
 		<module>ali-langengine-community/ali-langengine-atlas</module>
 		<module>ali-langengine-community/ali-langengine-dashvector</module>
+		<module>ali-langengine-community/ali-langengine-vectordb-rust</module>
   </modules>
 
 	<dependencyManagement>
