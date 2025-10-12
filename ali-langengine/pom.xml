@@ -216,6 +216,7 @@
 		<module>ali-langengine-community/ali-langengine-docusign</module>
 		<module>ali-langengine-community/ali-langengine-vectordb-rust</module>
 		<module>ali-langengine-community/ali-langengine-vectra</module>
+		<module>ali-langengine-community/ali-langengine-tile38</module>
   </modules>
 
 	<dependencyManagement>
