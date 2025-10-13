@@ -37,6 +37,7 @@ from .tencent_embedding import TencentEmbedding
 from .voyage_embedding import VoyageEmbedding
 from .zhipu_embedding import ZhipuEmbedding
 from .yi_embedding import YiEmbedding
+from .sensenova_embedding import SenseNovaEmbedding
 
 
 __all__ = [
@@ -58,4 +59,5 @@ __all__ = [
     "VoyageEmbedding",
     "ZhipuEmbedding",
     "YiEmbedding",
+    "SenseNovaEmbedding",
 ]
