@@ -21,6 +21,7 @@
 
 from .basic_embedding import BasicEmbedding
 from .openai_embedding import OpenAIEmbedding
+from .azure_openai_embedding import AzureOpenAIEmbedding
 from .aws_embedding import AWSEmbedding
 from .bailian_embedding import BailianEmbedding
 from .cohere_embedding import CohereEmbedding
@@ -45,6 +46,7 @@ from .siliconflow_embedding import SiliconFlowEmbedding
 __all__ = [
     "BasicEmbedding",
     "OpenAIEmbedding",
+    "AzureOpenAIEmbedding",
     "AWSEmbedding",
     "BailianEmbedding",
     "CohereEmbedding",
