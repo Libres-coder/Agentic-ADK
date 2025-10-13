@@ -26,6 +26,7 @@ from .bailian_embedding import BailianEmbedding
 from .cohere_embedding import CohereEmbedding
 from .google_embedding import GoogleEmbedding
 from .huggingface_embedding import HuggingFaceEmbedding
+from .jina_embedding import JinaEmbedding
 from .mistral_embedding import MistralEmbedding
 from .minimax_embedding import MiniMaxEmbedding
 from .moonshot_embedding import MoonshotEmbedding
@@ -49,6 +50,7 @@ __all__ = [
     "CohereEmbedding",
     "GoogleEmbedding",
     "HuggingFaceEmbedding",
+    "JinaEmbedding",
     "MistralEmbedding",
     "MiniMaxEmbedding",
     "MoonshotEmbedding",
