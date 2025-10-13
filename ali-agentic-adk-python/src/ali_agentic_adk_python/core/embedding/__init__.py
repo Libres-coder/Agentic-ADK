@@ -36,6 +36,7 @@ from .deepseek_embedding import DeepSeekEmbedding
 from .tencent_embedding import TencentEmbedding
 from .voyage_embedding import VoyageEmbedding
 from .zhipu_embedding import ZhipuEmbedding
+from .yi_embedding import YiEmbedding
 
 
 __all__ = [
@@ -56,4 +57,5 @@ __all__ = [
     "TencentEmbedding",
     "VoyageEmbedding",
     "ZhipuEmbedding",
+    "YiEmbedding",
 ]
