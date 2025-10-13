@@ -41,6 +41,7 @@ from .zhipu_embedding import ZhipuEmbedding
 from .yi_embedding import YiEmbedding
 from .sensenova_embedding import SenseNovaEmbedding
 from .siliconflow_embedding import SiliconFlowEmbedding
+from .ollama_embedding import OllamaEmbedding
 
 
 __all__ = [
@@ -66,4 +67,5 @@ __all__ = [
     "YiEmbedding",
     "SenseNovaEmbedding",
     "SiliconFlowEmbedding",
+    "OllamaEmbedding",
 ]
