@@ -33,6 +33,7 @@ from .qianfan_embedding import QianfanEmbedding
 from .doubao_embedding import DoubaoEmbedding
 from .anthropic_embedding import AnthropicEmbedding
 from .deepseek_embedding import DeepSeekEmbedding
+from .tencent_embedding import TencentEmbedding
 from .voyage_embedding import VoyageEmbedding
 from .zhipu_embedding import ZhipuEmbedding
 
@@ -52,6 +53,7 @@ __all__ = [
     "DoubaoEmbedding",
     "AnthropicEmbedding",
     "DeepSeekEmbedding",
+    "TencentEmbedding",
     "VoyageEmbedding",
     "ZhipuEmbedding",
 ]
