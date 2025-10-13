@@ -14,25 +14,43 @@
  * limitations under the License.
  */
 
-package com.alibaba.langengine.amap.sdk;
+package com.alibaba.langengine.amap.sdk.request;
 
-public final class AMapConstant {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-	private AMapConstant() {
-
-	}
-
-	public static final String AMAP_BASE_URL = "https://restapi.amap.com/v3";
+/**
+ * Request class for IP location service
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class IpLocationRequest {
 
 	/**
-	 * The default timeout in seconds for API requests.
+	 * IP address to locate
 	 */
-	public static int DEFAULT_TIMEOUT = 30;
+	@JsonProperty("ip")
+	private String ip;
 
-	public static final String PLACE_SEARCH_API_ENDPOINT = "/place/text";
+	/**
+	 * Digital signature
+	 */
+	@JsonProperty("sig")
+	private String sig;
 
-	public static final String WEATHER_API_ENDPOINT = "/weather/weatherInfo";
+	public String getIp() {
+		return ip;
+	}
 
-	public static final String IP_LOCATION_API_ENDPOINT = "/ip";
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getSig() {
+		return sig;
+	}
+
+	public void setSig(String sig) {
+		this.sig = sig;
+	}
 
 }
