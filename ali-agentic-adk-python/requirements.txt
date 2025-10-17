@@ -6,6 +6,8 @@ dashscope
 openai
 boto3
 cohere
+requests
+tencentcloud-sdk-python
 
 # Alibaba Cloud SDKs
 alibabacloud_ecd20200930
