@@ -18,10 +18,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Map;
 
 /**
- * Basic graph workflow examples
+ * DESCRIPTION
  *
- * @author Libres-coder
- * @date 2025/10/18
+ * @author baliang.smy
+ * @date 2025/8/4 10:34
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { Application.class })
