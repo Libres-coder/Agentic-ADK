@@ -45,7 +45,7 @@ class PIIType(Enum):
     ID_CARD = ("id_card", r"[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]", 6, 4)
     EMAIL = ("email", r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", 2, -1)
     BANK_CARD = ("bank_card", r"\d{13,19}", 4, 4)
-    IP_ADDRESS = ("ip_address", r"\b(?:\d{1,3}\.){3}\d{1,3}\b", -1, -1)
+    IP_ADDRESS = ("ip_address", r"(?<![.\d])\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?![.\d])", -1, -1)
     PASSWORD = ("password", r"(?i)(password|passwd|pwd)[\"']?\s*[:=]\s*[\"']?([^\"'\s,}]+)", -1, -1)
 
     def __init__(self, type_name: str, pattern: str, prefix_keep: int, suffix_keep: int):

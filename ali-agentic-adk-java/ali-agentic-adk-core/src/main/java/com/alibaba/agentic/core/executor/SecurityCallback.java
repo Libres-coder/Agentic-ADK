@@ -123,10 +123,14 @@ public class SecurityCallback implements Callback {
                                stage, detectedWords.size());
                     
                     if (blockOnSensitiveWord) {
-                        throw new SecurityException(
+                        SecurityException secEx = new SecurityException(
                             "Sensitive word detected in " + stage + ". Request blocked.");
+                        logger.error("[SecurityCallback] {}", secEx.getMessage());
+                        throw secEx;
                     }
                 }
+            } catch (SecurityException e) {
+                throw e;
             } catch (Exception e) {
                 logger.error("[SecurityCallback] Error during sensitive word filter: {}", e.getMessage());
             }
