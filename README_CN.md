@@ -30,7 +30,11 @@ Agentic ADK 是阿里国际AI Business推出基于 [Google-ADK](https://google.g
 * 提供**上百个API工具**，并推出MCP集成网关。
 * **DeepResearch/RAG、ComputerUse、BrowserUse、Sandbox**等Agentic AI最佳实践。
 * 智能体会话的上下文扩展实现，包括Session、Memory、Artifact等等，内置长短记忆插件。
-* 提供Prompt自动化调优、安全风控相关代理样例。
+* 提供Prompt自动化调优、**安全风控能力**：
+  * **敏感词/黑词过滤**：基于DFA算法的高性能敏感词检测和过滤，支持自定义词库和多种替换策略
+  * **数据脱敏保护**：自动识别和脱敏PII信息（手机号、身份证、邮箱、银行卡等），保护用户隐私
+  * **简单易用**：工具可独立使用，也可通过安全回调实现自动化检查
+  * [查看安全能力指南](docs/Security-Guide_CN.md) | [快速开始示例](#安全能力示例)
 
 ![架构图](https://zos-oss-ol.oss-cn-hangzhou.aliyuncs.com/data/be03cd4383682bd6e8095ebf8472a0d1.png)
 

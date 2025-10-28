@@ -31,7 +31,11 @@ Agentic ADK is an Agent application development framework launched by Alibaba In
 * Offers hundreds of API tools and introduces the MCP integration gateway.
 * **DeepResearch/RAG, ComputerUse, BrowserUse, Sandbox**, and other best practices for Agentic AI.
 * Implementation of context extension for agent conversations, including Session, Memory, Artifact, and more, with built-in short and long-term memory plugins.
-* Provides prompt automation tuning and security risk control-related agent examples.
+* **Security and Risk Control Capabilities**:
+  * **Sensitive Word Filtering**: High-performance sensitive word detection and filtering based on DFA algorithm, supporting custom word libraries and multiple replacement strategies
+  * **Data Masking Protection**: Automatically identify and mask PII (phone numbers, ID cards, emails, bank cards, etc.) to protect user privacy
+  * **Security Callback Mechanism**: Automatically perform security checks before and after Agent execution, record security events
+  * [View Security Guide](docs/Security-Guide.md)
 
 ![Architecture Diagram](https://zos-oss-ol.oss-cn-hangzhou.aliyuncs.com/data/be03cd4383682bd6e8095ebf8472a0d1.png)
 
